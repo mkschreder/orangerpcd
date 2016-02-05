@@ -2,8 +2,8 @@ all: jucid;
 
 CFLAGS:=-g -Wall
 
-jucid: main.c
-	$(CC) $(CFLAGS) -std=gnu99 -o $@ $^ -lblobpack -lusys -lubus2 
+jucid: juci_luaobject.c main.c
+	$(CC) $(CFLAGS) -std=gnu99 -o $@ $^ -lblobpack -lusys -lutype -llua5.2 -lubus2 
 
 clean: 
 	rm -f *.o jucid
