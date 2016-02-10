@@ -8,7 +8,7 @@
 
 #include <libubus2/libubus2.h>
 #include <libubus2/json_websocket.h>
-#include <libubus2/json_socket.h>
+#include <libubus2/ubus_cli_js.h>
 #include <libutype/avl-cmp.h>
 
 #include "juci_luaobject.h"
@@ -93,10 +93,16 @@ int main(int argc, char **argv){
 	}
 
     ubus_server_t server = ubus_srv_ws_new(www_root); 
+	ubus_client_t client = ubus_cli_js_new(); 
+
+	if(ubus_client_connect(client, "192.168.2.1:1234") < 0){
+		fprintf(stderr, "Failed to connect to ubus json socket!\n"); 
+		return -1; 
+	}
 
     if(ubus_server_listen(server, "ws://localhost:1234") < 0){
         fprintf(stderr, "server could not listen on specified socket!\n"); 
-        return 0;                       
+        return -1;                       
     }
 
 	signal(SIGINT, handle_sigint); 
@@ -118,16 +124,35 @@ int main(int argc, char **argv){
 		blob_dump_json(&out); 
 	}
 
+	struct ubus_message *msg = ubus_message_new(); 
+	blob_put_json(&msg->buf, "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"list\",\"params\":[\"*\"]}"); 
+	ubus_client_send(client, &msg); 
+
+	msg = ubus_message_new(); 
+	blob_reset(&msg->buf); 
+	blob_put_json(&msg->buf, "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"list\",\"params\":[\"*\"]}"); 
+	ubus_client_send(client, &msg); 
+
+	uint32_t peer = 0; 
     while(running){                     
         struct ubus_message *msg = NULL;         
-        if(ubus_server_recv(server, &msg) < 1){  
+		if(ubus_client_recv(client, &msg) > 0){
+			//printf("got client message: "); 
+			//blob_dump_json(&msg->buf); 
+			msg->peer = peer;  
+			printf("sending reply to %08x\n", msg->peer); 
+			ubus_server_send(server, &msg); 
+		}
+        if(ubus_server_recv(server, &msg) < 0){  
             continue;                   
         }
         printf("got message from %08x: ", msg->peer); 
         blob_dump_json(&msg->buf);
-        if(ubus_server_send(server, &msg) < 0){  
+		peer = msg->peer; 
+		ubus_client_send(client, &msg); 
+        /*if(ubus_server_send(server, &msg) < 0){  
             printf("could not send echo reply!\n");  
-        }
+        }*/
     }
 
 	printf("cleaning up\n"); 
