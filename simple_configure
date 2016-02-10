@@ -1,0 +1,18 @@
+#!/bin/sh
+
+echo "" > config.h
+
+# test for lua5.2 headers
+cat > /tmp/test.h << EOF
+#include <lua5.2/lua.h>
+EOF
+gcc -E /tmp/test.h 2>&1 > /dev/null && echo "#define HAVE_LUA52_H" >> config.h
+
+# test for lua headers (on openwrt)
+cat > /tmp/test.h << EOF
+#include <lua/lua.h>
+EOF
+gcc -E /tmp/test.h 2>&1 > /dev/null && echo "#define HAVE_LUA_H" >> config.h
+
+rm /tmp/test.h
+
