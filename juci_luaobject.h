@@ -1,8 +1,6 @@
 #pragma once
 
-#include <lua5.2/lua.h>
-#include <lua5.2/lauxlib.h>
-#include <lua5.2/lualib.h>
+#include "internal.h"
 
 #include <blobpack/blobpack.h>
 #include <libutype/avl.h>

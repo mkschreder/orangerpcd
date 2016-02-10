@@ -7,8 +7,7 @@
 #include <dirent.h>
 
 #include <libubus2/libubus2.h>
-#include <libubus2/json_websocket.h>
-#include <libubus2/ubus_cli_js.h>
+#include <libubus2/ubus_srv_ws.h>
 #include <libutype/avl-cmp.h>
 
 #include "juci_luaobject.h"

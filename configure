@@ -1,0 +1,25 @@
+#!/bin/sh
+
+echo "" > config.h
+echo "" > config.mk
+
+# test for lua5.2 headers
+cat > /tmp/test.h << EOF
+#include <lua5.2/lua.h>
+EOF
+$CC $CFLAGS -E /tmp/test.h 2>&1 > /dev/null && {
+	echo "#define HAVE_LUA52_H" >> config.h
+	echo "LDFLAGS+=-llua5.2" >> config.mk
+}
+
+# test for lua headers (on openwrt)
+cat > /tmp/test.h << EOF
+#include <lua.h>
+EOF
+$CC $CFLAGS -E /tmp/test.h 2>&1 > /dev/null && {
+	echo "#define HAVE_LUA_H" >> config.h
+	echo "LDFLAGS+=-llua" >> config.mk
+}
+
+rm /tmp/test.h
+
