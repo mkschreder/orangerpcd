@@ -7,6 +7,8 @@
 #include <dirent.h>
 
 #include <libubus2/libubus2.h>
+#include <libubus2/ubus_cli.h>
+#include <libubus2/ubus_cli_js.h>
 #include <libubus2/ubus_srv_ws.h>
 #include <libubus2/ubus_cli_js.h>
 #include <libutype/avl-cmp.h>

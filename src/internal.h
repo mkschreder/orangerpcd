@@ -1,7 +1,6 @@
 #pragma once 
-#include "config.h"
 
-#ifdef HAVE_LUA52_H
+#ifdef HAVE_LUA5_2_LUA_H
 #include <lua5.2/lua.h>
 #include <lua5.2/lauxlib.h>
 #include <lua5.2/lualib.h>
