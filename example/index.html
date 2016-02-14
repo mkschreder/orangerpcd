@@ -1,0 +1,30 @@
+<!doctype html>
+<html>
+<head>
+<title>JUCI Server Example</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<script type="text/javascript" src="angular.min.js"></script>
+<script type="text/javascript" src="rpc2.js"></script>
+<script type="text/javascript" src="jquery.min.js"></script>
+</head>
+<body>
+	<script type="text/javascript">
+	var app = angular.module("myApp", []); 
+	app.controller("exampleApp", function($scope){
+		$scope.result = "none"; 
+		RPC.$connect("ws://localhost:1234").done(function(){
+			$scope.onSend = function(){
+				RPC.$call("/simple","print_hello", { message: "Hello World!" }).done(function(){
+					console.log("Call completed!"); 
+				}); 
+			}
+		}); 
+	}); 
+	</script>
+	<div ng-app="myApp" ng-controller="exampleApp">
+		<div>{{result}}</div>
+		<input type="text" ng-model="command"></input>
+		<button ng-click="onSend()">Send</button>
+	</div>
+</body>
+</html>

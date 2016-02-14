@@ -8,6 +8,7 @@
 struct juci_luaobject {
 	struct avl_node avl; 
 	char *name; 
+	struct blob signature; 
 	lua_State *lua; 
 }; 
 

@@ -7,6 +7,16 @@ struct juci_luaobject* juci_luaobject_new(const char *name){
 	strcpy(self->name, name); 
 	self->avl.key = self->name; 
 	luaL_openlibs(self->lua); 
+	blob_init(&self->signature, 0, 0); 
+
+	lua_getglobal(self->lua, "package"); 
+	lua_getfield(self->lua, -1, "path"); 
+	char newpath[255];
+	snprintf(newpath, 255, "./lualib/?.lua;./lualib/juci/?.lua;%s;?.lua", lua_tostring(self->lua, -1)); 
+	lua_pop(self->lua, 1); 
+	lua_pushstring(self->lua, newpath); 
+	lua_setfield(self->lua, -2, "path"); 
+	lua_pop(self->lua, 1); 
 	return self; 
 }
 
@@ -27,44 +37,20 @@ int juci_luaobject_load(struct juci_luaobject *self, const char *file){
 	}
 	// this just dumps the returned object
 	lua_pushnil(self->lua); 
-	const char *k, *v; 
+	const char *k; 
+	blob_offset_t root = blob_open_table(&self->signature); 
 	while(lua_next(self->lua, -2)){
-		v = lua_tostring(self->lua, -1); 
 		lua_pop(self->lua, 1); 
 		k = lua_tostring(self->lua, -1); 
-		printf("return k=>%s v=>%s\n", k, v); 
+		blob_put_string(&self->signature, k); 
+		blob_offset_t m = blob_open_array(&self->signature); 
+		blob_close_array(&self->signature, m); 
 	}
-/*	
-	lua_getfield(self->lua, -1, "print_hello"); 
-	lua_pcall(self->lua, 0, 1, 0); 
-	lua_pop(self->lua, 1); 
-
-	lua_getfield(self->lua, -1, "print_hello"); 
-	lua_pcall(self->lua, 0, 1, 0); 
-
-
-	// call function
-	lua_getglobal(self->lua, "print_hello"); 
-	lua_newtable(self->lua); 
-	lua_pushliteral(self->lua, "test"); 
-	lua_pushliteral(self->lua, "This is a string"); 
-	lua_settable(self->lua, -3); 
-	if(lua_pcall(self->lua, 1, 1, 0)){
-		fprintf(stderr, "plugin init failed for %s\n", fname); 
-	}
-	lua_pushnil(self->lua); 
-	while(lua_next(self->lua, -2)){
-		v = lua_tostring(self->lua, -1); 
-		lua_pop(self->lua, 1); 
-		k = lua_tostring(self->lua, -1); 
-		printf("return k=>%s v=>%s\n", k, v); 
-	}
-	*/
+	blob_close_table(&self->signature, root); 
 	return 0; 
 }
 
 static void _lua_pushblob(lua_State *lua, struct blob_field *msg){
-	int nc = -1; 
 	lua_newtable(lua); 
 	struct blob_field *key, *child; 
 	blob_field_for_each_kv(msg, key, child){
@@ -82,40 +68,110 @@ static void _lua_pushblob(lua_State *lua, struct blob_field *msg){
 				lua_pushnil(lua); 	
 				break; 
 		}
-		nc-=2; 
+		lua_settable(lua, -3); 
 	}
-	lua_settable(lua, nc); 
+}
+
+static bool _lua_format_blob_is_array(lua_State *L){
+	lua_Integer prv = 0;
+	lua_Integer cur = 0;
+
+	lua_pushnil(L); 
+	while(lua_next(L, -2)){
+#ifdef LUA_TINT
+		if (lua_type(L, -2) != LUA_TNUMBER && lua_type(L, -2) != LUA_TINT)
+#else
+		if (lua_type(L, -2) != LUA_TNUMBER)
+#endif
+		{
+			lua_pop(L, 2);
+			return false;
+		}
+
+		cur = lua_tointeger(L, -2);
+
+		if ((cur - 1) != prv){
+			lua_pop(L, 2);
+			return false;
+		}
+
+		prv = cur;
+		lua_pop(L, 1); 
+	}
+
+	return true;
+}
+
+static int _lua_format_blob(lua_State *L, struct blob *b, bool table){
+	bool rv = true;
+
+	//luaL_checktype(self->lua, 2, LUA_TTABLE); 	
+	lua_pushnil(L); 
+	while(lua_next(L, -2)){
+		lua_pushvalue(L, -2); 
+
+		const char *key = table ? lua_tostring(L, -1) : NULL;
+		//printf("value %s > %s\n", key, luaL_typename(L, -2)); 
+
+		if(key) blob_put_string(b, key); 
+
+		switch (lua_type(L, -2)){
+			case LUA_TBOOLEAN:
+				blob_put_int(b, (uint8_t)lua_toboolean(L, -2));
+				break;
+		#ifdef LUA_TINT
+			case LUA_TINT:
+		#endif
+			case LUA_TNUMBER:
+				blob_put_int(b, (uint32_t)lua_tointeger(L, -2));
+				break;
+			case LUA_TSTRING:
+			case LUA_TUSERDATA:
+			case LUA_TLIGHTUSERDATA:
+				blob_put_string(b, lua_tostring(L, -2));
+				break;
+			case LUA_TTABLE:
+				lua_pushvalue(L, -2); 
+				if (_lua_format_blob_is_array(L)){
+					blob_offset_t c = blob_open_array(b);
+					rv = _lua_format_blob(L, b, false);
+					blob_close_array(b, c);
+				} else {
+					blob_offset_t c = blob_open_table(b);
+					rv = _lua_format_blob(L, b, true);
+					blob_close_table(b, c);
+				}
+				// pop the value of the table we pushed earlier
+				lua_pop(L, 1); 
+				break;
+			default:
+				rv = false;
+				break;
+		}
+		// pop both the value we pushed and the item require to be poped after calling next
+		lua_pop(L, 2); 
+	}
+	//lua_pop(L, 1); 
+	return rv;
 }
 
 int juci_luaobject_call(struct juci_luaobject *self, const char *method, struct blob_field *in, struct blob *out){
+	if(!self) return -1; 
 	lua_getfield(self->lua, -1, method); 
 	if(!lua_isfunction(self->lua, -1)){
 		fprintf(stderr, "error calling %s on %s: field is not a function!\n", method, self->name); 
 		return -1; 
 	}
-	if(in){
-		_lua_pushblob(self->lua, in); 
-	}
-	if(lua_pcall(self->lua, (in)?1:0, (out)?1:0, 0) != 0){
+	if(in) _lua_pushblob(self->lua, in); 
+	else lua_newtable(self->lua); 
+	if(lua_pcall(self->lua, 1, 1, 0) != 0){
 		fprintf(stderr, "error calling %s: %s\n", method, lua_tostring(self->lua, -1)); 
 		return -1; 
 	}
-
-	if(out){
-		lua_pushnil(self->lua); 
-		while(lua_next(self->lua, -2)){
-			if(lua_isstring(self->lua, 0)){
-				const char *v = lua_tostring(self->lua, -1); lua_pop(self->lua, 1);  
-				const char *k = lua_tostring(self->lua, -1); 
-				if(k && v){
-					blob_put_string(out, k); 
-					blob_put_string(out, v); 
-				}
-			} else {
-				lua_pop(self->lua, 2);  
-				//lua_pop(self->lua, 1); 
-			}
-		}
-	}
+	blob_offset_t t = blob_open_table(out); 
+	_lua_format_blob(self->lua, out, true); 
+	blob_close_table(out, t); 
+	
+	lua_pop(self->lua, 1); 	
 	return 0; 
 }
