@@ -58,7 +58,7 @@ int main(int argc, char **argv){
 	const char *plugin_dir = "plugins"; 
 
 	int c = 0; 	
-	while((c = getopt(argc, argv, "d:l")) != -1){
+	while((c = getopt(argc, argv, "d:l:p:")) != -1){
 		switch(c){
 			case 'd': 
 				www_root = optarg; 
