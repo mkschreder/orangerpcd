@@ -2,6 +2,8 @@
 
 static int l_json_parse(lua_State *L);
 
+#define JUCI_LUA_LIB_PATH "/usr/lib/juci/lib/"
+
 struct juci_luaobject* juci_luaobject_new(const char *name){
 	struct juci_luaobject *self = calloc(1, sizeof(struct juci_luaobject)); 
 	self->lua = luaL_newstate(); 
@@ -15,7 +17,9 @@ struct juci_luaobject* juci_luaobject_new(const char *name){
 	lua_getglobal(self->lua, "package"); 
 	lua_getfield(self->lua, -1, "path"); 
 	char newpath[255];
-	snprintf(newpath, 255, "./lualib/?.lua;./lualib/juci/?.lua;%s;?.lua", lua_tostring(self->lua, -1)); 
+	char *lua_libs = getenv("JUCI_LUA_LIB_PATH"); 
+	if(!lua_libs) lua_libs = JUCI_LUA_LIB_PATH; 
+	snprintf(newpath, 255, "%s/?.lua;%s/juci/?.lua;%s;?.lua", JUCI_LUA_LIB_PATH, JUCI_LUA_LIB_PATH, lua_tostring(self->lua, -1)); 
 	lua_pop(self->lua, 1); 
 	lua_pushstring(self->lua, newpath); 
 	lua_setfield(self->lua, -2, "path"); 
