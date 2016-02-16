@@ -149,16 +149,15 @@ static int _ubus_socket_callback(struct lws *wsi, enum lws_callback_reasons reas
 			while(!list_empty(&(*user)->tx_queue)){
 				// TODO: handle partial writes correctly 
 				struct ubus_srv_ws_frame *frame = list_first_entry(&(*user)->tx_queue, struct ubus_srv_ws_frame, list);
-				int n = lws_write(wsi, &frame->buf[LWS_SEND_BUFFER_PRE_PADDING], frame->len, LWS_WRITE_TEXT);// | LWS_WRITE_NO_FIN);
-				if(n < 0) { pthread_mutex_unlock(&self->qlock); return 1; }
-				frame->sent_count += n; 
-				if(frame->sent_count >= frame->len){
-					list_del_init(&frame->list); 
-					ubus_srv_ws_frame_delete(&frame); 
-				} else {
-					pthread_mutex_unlock(&self->qlock); 
-					printf("not final fragment!\n"); 
-					return -1; 
+				while(frame->sent_count < frame->len){
+					int n = lws_write(wsi, &frame->buf[LWS_SEND_BUFFER_PRE_PADDING], frame->len, LWS_WRITE_TEXT);// | LWS_WRITE_NO_FIN);
+					if(n < 0) { pthread_mutex_unlock(&self->qlock); return 1; }
+					frame->sent_count += n; 
+					if(frame->sent_count >= frame->len){
+						list_del_init(&frame->list); 
+						ubus_srv_ws_frame_delete(&frame); 
+						break; 
+					}
 				}
 			}
 			pthread_mutex_unlock(&self->qlock); 
