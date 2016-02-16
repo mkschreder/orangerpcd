@@ -7,12 +7,9 @@ AM_INIT_AUTOMAKE
 
 AC_PROG_CC
 
-AC_CHECK_HEADERS([lua5.1/lua.h])
-AC_CHECK_HEADERS([lua5.2/lua.h])
-AC_CHECK_HEADERS([lua.h])
-AC_CHECK_LIB(lua5.1,lua_close,[LIBLUA_LINK="-llua5.1"]) 
-AC_CHECK_LIB(lua5.2,lua_close,[LIBLUA_LINK="-llua5.2"]) 
-AC_CHECK_LIB(lua,lua_close,[LIBLUA_LINK="-llua"]) 
+AC_CHECK_HEADERS([lua5.1/lua.h],[LIBLUA_LINK="-llua5.1"])
+AC_CHECK_HEADERS([lua5.2/lua.h],[LIBLUA_LINK="-llua5.2"])
+AC_CHECK_HEADERS([lua.h],[LIBLUA_LINK="-llua"])
 AC_SUBST(LIBLUA_LINK) 
 
 AC_OUTPUT(Makefile src/Makefile)
