@@ -56,6 +56,7 @@ struct ubus_srv_ws_client {
 	struct ubus_id id; 
 	struct list_head tx_queue; 
 	struct ubus_message *msg; // incoming message
+	struct lws *wsi; 
 	bool disconnect;
 }; 
 
@@ -112,6 +113,8 @@ static int _ubus_socket_callback(struct lws *wsi, enum lws_callback_reasons reas
 	struct ubus_srv_ws_client **user = (struct ubus_srv_ws_client **)_user; 
 	
 	if(user && *user && (*user)->disconnect) return -1; 
+	
+	//printf("%d.", reason); fflush(stdout); 
 
 	int32_t peer_id = lws_get_socket_fd(wsi); 
 	switch(reason){
@@ -124,6 +127,7 @@ static int _ubus_socket_callback(struct lws *wsi, enum lws_callback_reasons reas
 			lws_get_peer_addresses(wsi, peer_id, hostname, sizeof(hostname), ipaddr, sizeof(ipaddr)); 
 			DEBUG("connection established! %s %s %d %08x\n", hostname, ipaddr, peer_id, client->id.id); 
 			//if(self->on_message) self->on_message(&self->api, (*user)->id.id, UBUS_MSG_PEER_CONNECTED, 0, NULL); 
+			client->wsi = wsi; 
 			lws_callback_on_writable(wsi); 	
 			break; 
 		}
@@ -140,20 +144,24 @@ static int _ubus_socket_callback(struct lws *wsi, enum lws_callback_reasons reas
 			break; 
 		}
 		case LWS_CALLBACK_SERVER_WRITEABLE: {
-			if(list_empty(&(*user)->tx_queue)){
-				lws_callback_on_writable(wsi); 	
-				break; 
+			struct ubus_srv_ws *self = (struct ubus_srv_ws*)proto->user; 
+			pthread_mutex_lock(&self->qlock); 
+			while(!list_empty(&(*user)->tx_queue)){
+				// TODO: handle partial writes correctly 
+				struct ubus_srv_ws_frame *frame = list_first_entry(&(*user)->tx_queue, struct ubus_srv_ws_frame, list);
+				int n = lws_write(wsi, &frame->buf[LWS_SEND_BUFFER_PRE_PADDING], frame->len, LWS_WRITE_TEXT);// | LWS_WRITE_NO_FIN);
+				if(n < 0) { pthread_mutex_unlock(&self->qlock); return 1; }
+				frame->sent_count += n; 
+				if(frame->sent_count >= frame->len){
+					list_del_init(&frame->list); 
+					ubus_srv_ws_frame_delete(&frame); 
+				} else {
+					pthread_mutex_unlock(&self->qlock); 
+					printf("not final fragment!\n"); 
+					return -1; 
+				}
 			}
-			// TODO: handle partial writes correctly 
-			struct ubus_srv_ws_frame *frame = list_first_entry(&(*user)->tx_queue, struct ubus_srv_ws_frame, list);
-			int n = lws_write(wsi, &frame->buf[LWS_SEND_BUFFER_PRE_PADDING], frame->len, LWS_WRITE_TEXT);// | LWS_WRITE_NO_FIN);
-			if(n < 0) return -1; 
-			frame->sent_count += n; 
-			if(frame->sent_count >= frame->len){
-				list_del_init(&frame->list); 
-				ubus_srv_ws_frame_delete(&frame); 
-			}
-			lws_callback_on_writable(wsi); 	
+			pthread_mutex_unlock(&self->qlock); 
 			//lws_rx_flow_control(wsi, 1); 
 			break; 
 		}
@@ -179,7 +187,7 @@ static int _ubus_socket_callback(struct lws *wsi, enum lws_callback_reasons reas
 				ERROR("got bad message\n"); 
 			}
 			//lws_rx_flow_control(wsi, 0); 
-			//lws_callback_on_writable(wsi); 	
+			lws_callback_on_writable(wsi); 	
 			break; 
 		}
 		
@@ -213,10 +221,10 @@ static int _ubus_socket_callback(struct lws *wsi, enum lws_callback_reasons reas
 			return 1; 
        	} break;     
             //lws_close_and_free_session(context, wsi,                                   LWS_CLOSE_STATUS_NORMAL);
-		default: 
-			break; 
+		default: { 
+			
+		} break; 
 	}; 
-
 	return 0; 
 }
 
@@ -274,7 +282,7 @@ static void *_websocket_server_thread(void *ptr){
 	struct ubus_srv_ws *self = (struct ubus_srv_ws*)ptr; 
 	while(!self->shutdown){
 		if(!self->ctx) { sleep(1); continue;} 
-		lws_service(self->ctx, 1000);	
+		lws_service(self->ctx, 10);	
 	}
 	pthread_exit(0); 
 	return 0; 
@@ -293,6 +301,7 @@ static int _websocket_send(juci_server_t socket, struct ubus_message **msg){
 	struct ubus_srv_ws_frame *frame = ubus_srv_ws_frame_new(blob_head(&(*msg)->buf)); 
 	list_add_tail(&frame->list, &client->tx_queue); 	
 	pthread_mutex_unlock(&self->qlock); 
+	lws_callback_on_writable(client->wsi); 	
 	ubus_message_delete(msg); 
 	return 0; 
 }
@@ -328,7 +337,6 @@ static int _websocket_recv(juci_server_t socket, struct ubus_message **msg, unsi
 		// unlock the mutex and wait for a new event. timeout if no event received for a timeout.  
 		// this will lock mutex after either timeout or if condition is signalled
 		if(pthread_cond_timedwait(&self->rx_ready, &self->qlock, &t) == ETIMEDOUT){
-			TRACE("conditional timed out\n"); 
 			// we still need to unlock the mutex before we exit
 			pthread_mutex_unlock(&self->qlock); 
 			return -EAGAIN; 
