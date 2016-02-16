@@ -1,3 +1,4 @@
+#include "internal.h"
 #include "juci_luaobject.h"
 
 static int l_json_parse(lua_State *L);
@@ -20,6 +21,7 @@ struct juci_luaobject* juci_luaobject_new(const char *name){
 	char *lua_libs = getenv("JUCI_LUA_LIB_PATH"); 
 	if(!lua_libs) lua_libs = JUCI_LUA_LIB_PATH; 
 	snprintf(newpath, 255, "%s/?.lua;%s/juci/?.lua;%s;?.lua", JUCI_LUA_LIB_PATH, JUCI_LUA_LIB_PATH, lua_tostring(self->lua, -1)); 
+	DEBUG("LUA: using lua path: %s\n", newpath); 
 	lua_pop(self->lua, 1); 
 	lua_pushstring(self->lua, newpath); 
 	lua_setfield(self->lua, -2, "path"); 

@@ -6,6 +6,8 @@
 #include "juci.h"
 #include "juci_luaobject.h"
 
+int juci_debug_level = 0; 
+
 int juci_load_plugins(struct juci *self, const char *path, const char *base_path){
     int rv = 0; 
     if(!base_path) base_path = path; 

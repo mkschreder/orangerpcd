@@ -71,7 +71,6 @@ struct ubus_srv_ws_frame *ubus_srv_ws_frame_new(struct blob_field *msg){
 	struct ubus_srv_ws_frame *self = calloc(1, sizeof(struct ubus_srv_ws_frame)); 
 	INIT_LIST_HEAD(&self->list); 
 	char *json = blob_field_to_json(msg); 
-	//printf("frame: %s\n", json); 
 	self->len = strlen(json); 
 	self->buf = calloc(1, LWS_SEND_BUFFER_PRE_PADDING + self->len + LWS_SEND_BUFFER_POST_PADDING); 
 	memcpy(self->buf + LWS_SEND_BUFFER_PRE_PADDING, json, self->len); 
@@ -123,16 +122,16 @@ static int _ubus_socket_callback(struct lws *wsi, enum lws_callback_reasons reas
 			*user = client; 
 			char hostname[255], ipaddr[255]; 
 			lws_get_peer_addresses(wsi, peer_id, hostname, sizeof(hostname), ipaddr, sizeof(ipaddr)); 
-			printf("connection established! %s %s %d %08x\n", hostname, ipaddr, peer_id, client->id.id); 
+			DEBUG("connection established! %s %s %d %08x\n", hostname, ipaddr, peer_id, client->id.id); 
 			//if(self->on_message) self->on_message(&self->api, (*user)->id.id, UBUS_MSG_PEER_CONNECTED, 0, NULL); 
 			lws_callback_on_writable(wsi); 	
 			break; 
 		}
 		case LWS_CALLBACK_CLIENT_CONNECTION_ERROR:
-			printf("websocket: client error\n"); 
+			DEBUG("websocket: client error\n"); 
 			break; 
 		case LWS_CALLBACK_CLOSED: {
-			printf("websocket: client disconnected %p %p\n", _user, *user); 
+			DEBUG("websocket: client disconnected %p %p\n", _user, *user); 
 			struct ubus_srv_ws *self = (struct ubus_srv_ws*)proto->user; 
 			//if(self->on_message) self->on_message(&self->api, (*user)->id.id, UBUS_MSG_PEER_DISCONNECTED, 0, NULL); 
 			ubus_id_free(&self->clients, &(*user)->id); 
@@ -149,7 +148,6 @@ static int _ubus_socket_callback(struct lws *wsi, enum lws_callback_reasons reas
 			struct ubus_srv_ws_frame *frame = list_first_entry(&(*user)->tx_queue, struct ubus_srv_ws_frame, list);
 			int n = lws_write(wsi, &frame->buf[LWS_SEND_BUFFER_PRE_PADDING], frame->len, LWS_WRITE_TEXT);// | LWS_WRITE_NO_FIN);
 			if(n < 0) return -1; 
-			//printf("wrote %d bytes of %d\n", n, frame->len); 
 			frame->sent_count += n; 
 			if(frame->sent_count >= frame->len){
 				list_del_init(&frame->list); 
@@ -168,7 +166,6 @@ static int _ubus_socket_callback(struct lws *wsi, enum lws_callback_reasons reas
 			if(blob_put_json(&(*user)->msg->buf, in)){
 				//struct blob_field *rpcobj = blob_field_first_child(blob_head(&self->buf)); 
 				//TODO: add message to queue
-				//printf("websocket message: "); 
 				//blob_dump_json(&(*user)->msg->buf); 
 
 				// place the message on the queue
@@ -179,7 +176,7 @@ static int _ubus_socket_callback(struct lws *wsi, enum lws_callback_reasons reas
 				pthread_cond_signal(&self->rx_ready); 
 				pthread_mutex_unlock(&self->qlock); 
 			} else {
-				printf("got bad message\n"); 
+				ERROR("got bad message\n"); 
 			}
 			//lws_rx_flow_control(wsi, 0); 
 			//lws_callback_on_writable(wsi); 	
@@ -187,13 +184,13 @@ static int _ubus_socket_callback(struct lws *wsi, enum lws_callback_reasons reas
 		}
 		
 		case LWS_CALLBACK_CLIENT_ESTABLISHED:
-			printf("Client connected!\n"); 
+			DEBUG("Client connected!\n"); 
 			// TODO: implement once we support outgoing websocket connections
 			break;
 		case LWS_CALLBACK_HTTP: {
 			struct ubus_srv_ws *self = (struct ubus_srv_ws*)proto->user; 
             char *requested_uri = (char *) in;
-            printf("requested URI: %s\n", requested_uri);
+            DEBUG("requested URI: %s\n", requested_uri);
            
             if (strcmp(requested_uri, "/") == 0) 
 				requested_uri = "/index.html"; 
@@ -203,7 +200,7 @@ static int _ubus_socket_callback(struct lws *wsi, enum lws_callback_reasons reas
 		   
 			// join current working direcotry to the resource path
 			sprintf(resource_path, "%s%s", self->www_root, requested_uri);
-			printf("resource path: %s\n", resource_path);
+			DEBUG("resource path: %s\n", resource_path);
 		   
 			char *extension = strrchr(resource_path, '.');
 		  	const char *mime = mimetype_lookup(extension); 
@@ -226,7 +223,7 @@ static int _ubus_socket_callback(struct lws *wsi, enum lws_callback_reasons reas
 void _websocket_destroy(juci_server_t socket){
 	struct ubus_srv_ws *self = container_of(socket, struct ubus_srv_ws, api); 
 	self->shutdown = true; 
-	printf("joining..\n"); 
+	DEBUG("websocket: joining worker thread..\n"); 
 	pthread_join(self->thread, NULL); 
 	pthread_mutex_destroy(&self->qlock); 
 	pthread_cond_destroy(&self->rx_ready); 
@@ -238,7 +235,7 @@ void _websocket_destroy(juci_server_t socket){
 	}
 
 	if(self->ctx) lws_context_destroy(self->ctx); 
-	printf("context destroyed\n"); 
+	DEBUG("websocket: context destroyed\n"); 
 	free(self->protocols); 
 	free(self);  
 }
@@ -331,7 +328,7 @@ static int _websocket_recv(juci_server_t socket, struct ubus_message **msg, unsi
 		// unlock the mutex and wait for a new event. timeout if no event received for a timeout.  
 		// this will lock mutex after either timeout or if condition is signalled
 		if(pthread_cond_timedwait(&self->rx_ready, &self->qlock, &t) == ETIMEDOUT){
-			//printf("timeout\n"); 
+			TRACE("conditional timed out\n"); 
 			// we still need to unlock the mutex before we exit
 			pthread_mutex_unlock(&self->qlock); 
 			return -EAGAIN; 

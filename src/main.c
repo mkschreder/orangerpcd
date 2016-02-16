@@ -18,7 +18,7 @@
 bool running = true; 
 
 void handle_sigint(){
-	printf("Interrupted!\n"); 
+	DEBUG("Interrupted!\n"); 
 	running = false; 
 }
 
@@ -58,7 +58,7 @@ int main(int argc, char **argv){
 	const char *plugin_dir = "plugins"; 
 
 	int c = 0; 	
-	while((c = getopt(argc, argv, "d:l:p:")) != -1){
+	while((c = getopt(argc, argv, "d:l:p:v")) != -1){
 		switch(c){
 			case 'd': 
 				www_root = optarg; 
@@ -68,6 +68,9 @@ int main(int argc, char **argv){
 				break; 
 			case 'p': 
 				plugin_dir = optarg; 
+				break; 
+			case 'v': 
+				juci_debug_level++; 
 				break; 
 			default: break; 
 		}
@@ -101,9 +104,11 @@ int main(int argc, char **argv){
             continue;                   
         }
 		clock_gettime(CLOCK_MONOTONIC, &tse); 
-		printf("waited %lus %luns for message\n", tse.tv_sec - tss.tv_sec, tse.tv_nsec - tss.tv_nsec); 
-        printf("got message from %08x: ", msg->peer); 
-        blob_dump_json(&msg->buf);
+		TRACE("waited %lus %luns for message\n", tse.tv_sec - tss.tv_sec, tse.tv_nsec - tss.tv_nsec); 
+        if(juci_debug_level > 2){
+			DEBUG("got message from %08x: ", msg->peer); 
+        	blob_dump_json(&msg->buf);
+		}
 		struct blob_field *rpc_method = NULL, *params = NULL, *method = NULL, *object = NULL, *args = NULL; 
 		uint32_t rpc_id = 0; 
 		rpcmsg_parse_call(&msg->buf, &rpc_id, &rpc_method, &params); 
@@ -119,7 +124,7 @@ int main(int argc, char **argv){
 
 		if(rpc_method && strcmp(blob_field_get_string(rpc_method), "call") == 0){
 			if(!rpcmsg_parse_params(params, &object, &method, &args)){
-				printf("Could not parse call params!\n"); 
+				DEBUG("Could not parse call params!\n"); 
 			}
 			juci_call(&app, blob_field_get_string(object), blob_field_get_string(method), args, &result->buf); 
 		} else if(rpc_method && strcmp(blob_field_get_string(rpc_method), "list") == 0){
@@ -128,11 +133,11 @@ int main(int argc, char **argv){
 		}
 
 		blob_close_table(&result->buf, t); 
-		printf("sending back: "); blob_dump_json(&result->buf); 
+		DEBUG("sending back: "); blob_dump_json(&result->buf); 
 		ubus_server_send(server, &result); 		
     }
 
-	printf("cleaning up\n"); 
+	DEBUG("cleaning up\n"); 
 	ubus_server_delete(server); 
 
 	return 0; 
