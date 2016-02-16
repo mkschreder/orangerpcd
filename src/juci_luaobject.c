@@ -20,8 +20,8 @@ struct juci_luaobject* juci_luaobject_new(const char *name){
 	char newpath[255];
 	char *lua_libs = getenv("JUCI_LUA_LIB_PATH"); 
 	if(!lua_libs) lua_libs = JUCI_LUA_LIB_PATH; 
-	snprintf(newpath, 255, "%s/?.lua;%s/juci/?.lua;%s;?.lua", JUCI_LUA_LIB_PATH, JUCI_LUA_LIB_PATH, lua_tostring(self->lua, -1)); 
-	DEBUG("LUA: using lua path: %s\n", newpath); 
+	snprintf(newpath, 255, "%s/?.lua;%s/juci/?.lua;%s;?.lua", lua_libs, lua_libs, lua_tostring(self->lua, -1)); 
+	TRACE("LUA: using lua path: %s\n", newpath); 
 	lua_pop(self->lua, 1); 
 	lua_pushstring(self->lua, newpath); 
 	lua_setfield(self->lua, -2, "path"); 
