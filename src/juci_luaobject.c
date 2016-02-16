@@ -138,7 +138,7 @@ static int _lua_format_blob(lua_State *L, struct blob *b, bool table){
 
 	if(lua_type(L, -1) != LUA_TTABLE) {
 		DEBUG("%s: can only format a table (or array)\n", __FUNCTION__); 
-		return rv; 
+		return false; 
 	}
 
 	lua_pushnil(L); 
@@ -191,11 +191,13 @@ static int _lua_format_blob(lua_State *L, struct blob *b, bool table){
 
 int juci_luaobject_call(struct juci_luaobject *self, const char *method, struct blob_field *in, struct blob *out){
 	if(!self) return -1; 
+
 	lua_getfield(self->lua, -1, method); 
 	if(!lua_isfunction(self->lua, -1)){
 		ERROR("can not call %s on %s: field is not a function!\n", method, self->name); 
 		return -1; 
 	}
+
 	if(in) _lua_pushblob(self->lua, in, true); 
 	else lua_newtable(self->lua); 
 

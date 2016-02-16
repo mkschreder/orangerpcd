@@ -105,7 +105,7 @@ int main(int argc, char **argv){
         }
 		clock_gettime(CLOCK_MONOTONIC, &tse); 
 		TRACE("waited %lus %luns for message\n", tse.tv_sec - tss.tv_sec, tse.tv_nsec - tss.tv_nsec); 
-        if(juci_debug_level > 2){
+        if(juci_debug_level >= JUCI_DBG_DEBUG){
 			DEBUG("got message from %08x: ", msg->peer); 
         	blob_dump_json(&msg->buf);
 		}

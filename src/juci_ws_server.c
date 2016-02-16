@@ -121,6 +121,7 @@ static int _ubus_socket_callback(struct lws *wsi, enum lws_callback_reasons reas
 		case LWS_CALLBACK_ESTABLISHED: {
 			struct ubus_srv_ws *self = (struct ubus_srv_ws*)proto->user; 
 			struct ubus_srv_ws_client *client = ubus_srv_ws_client_new(lws_get_socket_fd(wsi)); 
+			pthread_mutex_lock(&self->qlock); 
 			ubus_id_alloc(&self->clients, &client->id, 0); 
 			*user = client; 
 			char hostname[255], ipaddr[255]; 
@@ -128,6 +129,7 @@ static int _ubus_socket_callback(struct lws *wsi, enum lws_callback_reasons reas
 			DEBUG("connection established! %s %s %d %08x\n", hostname, ipaddr, peer_id, client->id.id); 
 			//if(self->on_message) self->on_message(&self->api, (*user)->id.id, UBUS_MSG_PEER_CONNECTED, 0, NULL); 
 			client->wsi = wsi; 
+			pthread_mutex_unlock(&self->qlock); 
 			lws_callback_on_writable(wsi); 	
 			break; 
 		}
@@ -137,9 +139,11 @@ static int _ubus_socket_callback(struct lws *wsi, enum lws_callback_reasons reas
 		case LWS_CALLBACK_CLOSED: {
 			DEBUG("websocket: client disconnected %p %p\n", _user, *user); 
 			struct ubus_srv_ws *self = (struct ubus_srv_ws*)proto->user; 
+			pthread_mutex_lock(&self->qlock); 
 			//if(self->on_message) self->on_message(&self->api, (*user)->id.id, UBUS_MSG_PEER_DISCONNECTED, 0, NULL); 
 			ubus_id_free(&self->clients, &(*user)->id); 
 			ubus_srv_ws_client_delete(user); 	
+			pthread_mutex_unlock(&self->qlock); 
 			*user = 0; 
 			break; 
 		}
@@ -150,7 +154,12 @@ static int _ubus_socket_callback(struct lws *wsi, enum lws_callback_reasons reas
 				// TODO: handle partial writes correctly 
 				struct ubus_srv_ws_frame *frame = list_first_entry(&(*user)->tx_queue, struct ubus_srv_ws_frame, list);
 				int n = lws_write(wsi, &frame->buf[LWS_SEND_BUFFER_PRE_PADDING], frame->len, LWS_WRITE_TEXT);// | LWS_WRITE_NO_FIN);
-				if(n < 0) { pthread_mutex_unlock(&self->qlock); return 1; }
+				if(n < 0) { 
+					DEBUG("error while sending data over websocket!\n"); 
+					pthread_mutex_unlock(&self->qlock); 
+					// disconnect
+					return 1; 
+				}
 				frame->sent_count += n; 
 				if(frame->sent_count >= frame->len){
 					list_del_init(&frame->list); 
@@ -158,7 +167,7 @@ static int _ubus_socket_callback(struct lws *wsi, enum lws_callback_reasons reas
 				} else {
 					pthread_mutex_unlock(&self->qlock); 
 					printf("not final fragment!\n"); 
-					lws_callback_on_writable(wsi); 
+					//lws_callback_on_writable(wsi); 
 					return 0; 
 				}
 			}
@@ -171,6 +180,7 @@ static int _ubus_socket_callback(struct lws *wsi, enum lws_callback_reasons reas
 			assert(user); 
 			if(!user) break; 
 			struct ubus_srv_ws *self = (struct ubus_srv_ws*)proto->user; 
+			pthread_mutex_lock(&self->qlock); 
 			blob_reset(&(*user)->msg->buf); 
 			if(blob_put_json(&(*user)->msg->buf, in)){
 				//struct blob_field *rpcobj = blob_field_first_child(blob_head(&self->buf)); 
@@ -178,25 +188,19 @@ static int _ubus_socket_callback(struct lws *wsi, enum lws_callback_reasons reas
 				//blob_dump_json(&(*user)->msg->buf); 
 
 				// place the message on the queue
-				pthread_mutex_lock(&self->qlock); 
 				(*user)->msg->peer = (*user)->id.id; 
-				list_add(&(*user)->msg->list, &self->rx_queue); 
+				list_add_tail(&(*user)->msg->list, &self->rx_queue); 
 				(*user)->msg = ubus_message_new(); 
 				pthread_cond_signal(&self->rx_ready); 
-				pthread_mutex_unlock(&self->qlock); 
 			} else {
 				ERROR("got bad message\n"); 
 			}
+			pthread_mutex_unlock(&self->qlock); 
 			//lws_rx_flow_control(wsi, 0); 
 			lws_callback_on_writable(wsi); 	
 			break; 
 		}
-		
-		case LWS_CALLBACK_CLIENT_ESTABLISHED:
-			DEBUG("Client connected!\n"); 
-			// TODO: implement once we support outgoing websocket connections
-			break;
-		case LWS_CALLBACK_HTTP: {
+		/*case LWS_CALLBACK_HTTP: {
 			struct ubus_srv_ws *self = (struct ubus_srv_ws*)proto->user; 
             char *requested_uri = (char *) in;
             DEBUG("requested URI: %s\n", requested_uri);
@@ -220,8 +224,7 @@ static int _ubus_socket_callback(struct lws *wsi, enum lws_callback_reasons reas
 			if(lws_send_pipe_choked(wsi)) break; 
 			// return 1 so that the connection shall be closed
 			return 1; 
-       	} break;     
-            //lws_close_and_free_session(context, wsi,                                   LWS_CLOSE_STATUS_NORMAL);
+       	} break;  */   
 		default: { 
 			
 		} break; 
@@ -314,23 +317,27 @@ static void *_websocket_userdata(juci_server_t socket, void *ptr){
 	return ptr; 
 }
 
-static int _websocket_recv(juci_server_t socket, struct ubus_message **msg, unsigned long long timeout_us){
-	struct ubus_srv_ws *self = container_of(socket, struct ubus_srv_ws, api); 
-
-	struct timespec t; 
+static void _timeout_us(struct timespec *t, unsigned long long timeout_us){
 	unsigned long long sec = (timeout_us >= 1000000UL)?(timeout_us / 1000000UL):0; 
 	unsigned long long nsec = (timeout_us - sec * 1000000UL) * 1000UL; 
 
 	// figure out the exact timeout we should wait for the conditional 
-	clock_gettime(CLOCK_REALTIME, &t); 
-	t.tv_nsec += nsec; 
-	t.tv_sec += sec; 
+	clock_gettime(CLOCK_REALTIME, t); 
+	t->tv_nsec += nsec; 
+	t->tv_sec += sec; 
 	// nanoseconds can sometimes be more than 1sec but never more than 2.  
 	// TODO: is there no function somewhere for properly adding a timeout to timespec? 
-	if(t.tv_nsec >= 1000000000UL){
-		t.tv_nsec -= 1000000000UL; 
-		t.tv_sec++; 
+	if(t->tv_nsec >= 1000000000UL){
+		t->tv_nsec -= 1000000000UL; 
+		t->tv_sec++; 
 	}
+}
+
+static int _websocket_recv(juci_server_t socket, struct ubus_message **msg, unsigned long long timeout_us){
+	struct ubus_srv_ws *self = container_of(socket, struct ubus_srv_ws, api); 
+
+	struct timespec t; 
+	_timeout_us(&t, timeout_us); 
 
 	// lock mutex to check for the queue
 	pthread_mutex_lock(&self->qlock); 
@@ -343,11 +350,8 @@ static int _websocket_recv(juci_server_t socket, struct ubus_message **msg, unsi
 			return -EAGAIN; 
 		}
 	}
-	if(list_empty(&self->rx_queue)) {
-		// mutex is locked by our previous lock so unlock it here. 
-		pthread_mutex_unlock(&self->qlock); 
-		return -EAGAIN; 
-	}
+
+	// pop a message from the stack
 	struct ubus_message *m = list_first_entry(&self->rx_queue, struct ubus_message, list); 
 	list_del_init(&m->list); 
 	*msg = m; 
