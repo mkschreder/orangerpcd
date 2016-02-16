@@ -133,7 +133,10 @@ int main(int argc, char **argv){
 		}
 
 		blob_close_table(&result->buf, t); 
-		DEBUG("sending back: "); blob_dump_json(&result->buf); 
+		if(juci_debug_level > 2){
+			DEBUG("sending back: "); 
+			blob_dump_json(&result->buf); 
+		}
 		ubus_server_send(server, &result); 		
     }
 

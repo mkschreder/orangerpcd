@@ -16,10 +16,15 @@
 #error "Lua headers not found!"
 #endif
 
+#define JUCI_DBG_NONE 0
+#define JUCI_DBG_INFO 1
+#define JUCI_DBG_DEBUG 2
+#define JUCI_DBG_TRACE 3
+
 extern int juci_debug_level; 
-#define TRACE(...) { if(juci_debug_level > 2){ printf(__VA_ARGS__); } }
-#define DEBUG(...) { if(juci_debug_level > 1){ printf(__VA_ARGS__); } }
-#define INFO(...) { if(juci_debug_level > 0){ printf(__VA_ARGS__); } }
+#define TRACE(...) { if(juci_debug_level >= JUCI_DBG_TRACE){ printf(__VA_ARGS__); } }
+#define DEBUG(...) { if(juci_debug_level >= JUCI_DBG_DEBUG){ printf(__VA_ARGS__); } }
+#define INFO(...) { if(juci_debug_level >= JUCI_DBG_INFO){ printf(__VA_ARGS__); } }
 #define ERROR(...) { fprintf(stderr, __VA_ARGS__); }
 
 

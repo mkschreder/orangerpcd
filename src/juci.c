@@ -13,7 +13,7 @@ int juci_load_plugins(struct juci *self, const char *path, const char *base_path
     if(!base_path) base_path = path; 
     DIR *dir = opendir(path); 
     if(!dir){
-        fprintf(stderr, "%s: error: could not open directory %s\n", __FUNCTION__, path); 
+        ERROR("could not open directory %s\n", path); 
         return -ENOENT; 
     }
     struct dirent *ent = 0; 
@@ -36,10 +36,10 @@ int juci_load_plugins(struct juci *self, const char *path, const char *base_path
 
 			if(strcmp(ext, ".lua") != 0) continue; 
 			objname[len - strlen(ext)] = 0; 
-			printf("loading plugin %s of %s at base %s\n", objname, fname, base_path); 
+			INFO("loading plugin %s of %s at base %s\n", objname, fname, base_path); 
 			struct juci_luaobject *obj = juci_luaobject_new(objname); 
 			if(juci_luaobject_load(obj, fname) != 0 || avl_insert(&self->objects, &obj->avl) != 0){
-				fprintf(stderr, "ERR: could not load plugin %s\n", fname); 
+				ERROR("ERR: could not load plugin %s\n", fname); 
 				juci_luaobject_delete(&obj); 
 				continue; 
 			}
@@ -57,7 +57,7 @@ void juci_init(struct juci *self){
 int juci_call(struct juci *self, const char *object, const char *method, struct blob_field *args, struct blob *out){
 	struct avl_node *avl = avl_find(&self->objects, object); 
 	if(!avl) {
-		fprintf(stderr, "object not found: %s\n", object); 
+		ERROR("object not found: %s\n", object); 
 		return -ENOENT; 
 	}
 	struct juci_luaobject *obj = container_of(avl, struct juci_luaobject, avl); 

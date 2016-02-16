@@ -45,11 +45,11 @@ void juci_luaobject_delete(struct juci_luaobject **self){
 
 int juci_luaobject_load(struct juci_luaobject *self, const char *file){
 	if(luaL_loadfile(self->lua, file) != 0){
-		fprintf(stderr, "could not load plugin: %s\n", lua_tostring(self->lua, -1)); 
+		ERROR("could not load plugin: %s\n", lua_tostring(self->lua, -1)); 
 		return -1; 
 	}
 	if(lua_pcall(self->lua, 0, 1, 0) != 0){
-		fprintf(stderr, "could not run plugin: %s\n", lua_tostring(self->lua, -1)); 
+		ERROR("could not run plugin: %s\n", lua_tostring(self->lua, -1)); 
 		return -1; 
 	}
 	// this just dumps the returned object
@@ -137,7 +137,7 @@ static int _lua_format_blob(lua_State *L, struct blob *b, bool table){
 	bool rv = true;
 
 	if(lua_type(L, -1) != LUA_TTABLE) {
-		printf("%s: can only format a table (or array)\n", __FUNCTION__); 
+		DEBUG("%s: can only format a table (or array)\n", __FUNCTION__); 
 		return rv; 
 	}
 
@@ -146,7 +146,6 @@ static int _lua_format_blob(lua_State *L, struct blob *b, bool table){
 		lua_pushvalue(L, -2); 
 
 		const char *key = table ? lua_tostring(L, -1) : NULL;
-		//printf("value %s > %s\n", key, luaL_typename(L, -2)); 
 
 		if(key) blob_put_string(b, key); 
 
@@ -194,14 +193,14 @@ int juci_luaobject_call(struct juci_luaobject *self, const char *method, struct 
 	if(!self) return -1; 
 	lua_getfield(self->lua, -1, method); 
 	if(!lua_isfunction(self->lua, -1)){
-		fprintf(stderr, "error calling %s on %s: field is not a function!\n", method, self->name); 
+		ERROR("can not call %s on %s: field is not a function!\n", method, self->name); 
 		return -1; 
 	}
 	if(in) _lua_pushblob(self->lua, in, true); 
 	else lua_newtable(self->lua); 
 
 	if(lua_pcall(self->lua, 1, 1, 0) != 0){
-		fprintf(stderr, "error calling %s: %s\n", method, lua_tostring(self->lua, -1)); 
+		ERROR("error calling %s: %s\n", method, lua_tostring(self->lua, -1)); 
 		return -1; 
 	}
 
@@ -218,8 +217,10 @@ static int l_json_parse(lua_State *L){
 	struct blob tmp; 
 	blob_init(&tmp, 0, 0); 
 	blob_put_json(&tmp, str); 	
-	printf("lua blob: "); 
-	blob_dump_json(&tmp); 
+	if(juci_debug_level >= JUCI_DBG_TRACE){
+		TRACE("lua blob: "); 
+		blob_dump_json(&tmp); 
+	}
 	_lua_pushblob(L, blob_field_first_child(blob_head(&tmp)), true); 	
 	blob_free(&tmp); 
 	return 1; 
