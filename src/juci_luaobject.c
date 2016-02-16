@@ -195,6 +195,9 @@ int juci_luaobject_call(struct juci_luaobject *self, const char *method, struct 
 	lua_getfield(self->lua, -1, method); 
 	if(!lua_isfunction(self->lua, -1)){
 		ERROR("can not call %s on %s: field is not a function!\n", method, self->name); 
+		// add an empty object
+		blob_offset_t t = blob_open_table(out); 
+		blob_close_table(out, t); 
 		return -1; 
 	}
 
