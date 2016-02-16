@@ -76,7 +76,6 @@ struct ubus_srv_ws_frame *ubus_srv_ws_frame_new(struct blob_field *msg){
 	self->buf = calloc(1, LWS_SEND_BUFFER_PRE_PADDING + self->len + LWS_SEND_BUFFER_POST_PADDING); 
 	memcpy(self->buf + LWS_SEND_BUFFER_PRE_PADDING, json, self->len); 
 	free(json); 
-	self->sent_count = 0; 
 	return self; 
 }
 
@@ -153,7 +152,20 @@ static int _ubus_socket_callback(struct lws *wsi, enum lws_callback_reasons reas
 			while(!list_empty(&(*user)->tx_queue)){
 				// TODO: handle partial writes correctly 
 				struct ubus_srv_ws_frame *frame = list_first_entry(&(*user)->tx_queue, struct ubus_srv_ws_frame, list);
-				int n = lws_write(wsi, &frame->buf[LWS_SEND_BUFFER_PRE_PADDING], frame->len, LWS_WRITE_TEXT);// | LWS_WRITE_NO_FIN);
+				int left = frame->len - frame->sent_count; 
+				int len = left; 
+				int flags; 
+				if(frame->sent_count == 0){
+					flags = LWS_WRITE_TEXT; 
+				} else {
+					flags = LWS_WRITE_CONTINUATION; 
+				}
+				// fragment the message by standard mtu size. 
+				if(left > 1500){
+					len = 1500; 
+					flags |= LWS_WRITE_NO_FIN; 
+				} 
+				int n = lws_write(wsi, &frame->buf[LWS_SEND_BUFFER_PRE_PADDING]+frame->sent_count, len, flags);
 				if(n < 0) { 
 					DEBUG("error while sending data over websocket!\n"); 
 					pthread_mutex_unlock(&self->qlock); 
@@ -161,18 +173,19 @@ static int _ubus_socket_callback(struct lws *wsi, enum lws_callback_reasons reas
 					return 1; 
 				}
 				frame->sent_count += n; 
+				DEBUG("sent %d out of %d bytes\n", frame->sent_count, frame->len); 
 				if(frame->sent_count >= frame->len){
 					list_del_init(&frame->list); 
 					ubus_srv_ws_frame_delete(&frame); 
 				} else {
 					pthread_mutex_unlock(&self->qlock); 
 					printf("not final fragment!\n"); 
-					//lws_callback_on_writable(wsi); 
+					lws_callback_on_writable(wsi); 
 					return 0; 
 				}
 			}
 			pthread_mutex_unlock(&self->qlock); 
-			//lws_rx_flow_control(wsi, 1); 
+			lws_rx_flow_control(wsi, 1); 
 			break; 
 		}
 		case LWS_CALLBACK_RECEIVE: {
@@ -196,7 +209,7 @@ static int _ubus_socket_callback(struct lws *wsi, enum lws_callback_reasons reas
 				ERROR("got bad message\n"); 
 			}
 			pthread_mutex_unlock(&self->qlock); 
-			//lws_rx_flow_control(wsi, 0); 
+			lws_rx_flow_control(wsi, 0); 
 			lws_callback_on_writable(wsi); 	
 			break; 
 		}
