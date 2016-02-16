@@ -20,7 +20,7 @@ local function get_port_status()
 			}); 
 		end
 	end
-	print(json.encode(state)); 
+	return state; 
 end
 
 return {

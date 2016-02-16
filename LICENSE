@@ -1,0 +1,9 @@
+JUCI Backend Server is distributed under GNU GPLv3 with additional permissions
+(as defined in section 7 of GNU GPLv3) specified below. 
+
+(a) You are hereby allowed to include this software into signed firmware images
+which are based on OpenWRT linux distribution and which run on embedded systems
+without having to reveal specific signing keys in accordance with GPLv3 section
+3 (Protecting Users' Legal Rights From Anti-Circumvention Law) in order to
+allow execution of modified versions of this software on such devices.  
+

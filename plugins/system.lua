@@ -2,6 +2,4 @@
 
 local ubus = require("juci/ubus"); 
 
-return ubus.bind({
-	["."] = { "board", "info" }
-}); 
+return ubus.bind("system", { "board", "info" });  

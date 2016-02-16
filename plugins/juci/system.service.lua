@@ -1,11 +1,7 @@
 #!/usr/bin/lua 
 
 local juci = require("juci/core"); 
-local dirent = require("posix.dirent")
 local json = require("juci/json"); 
-require("ubus"); 
-
-local conn = ubus.connect(); 
 
 local function list_dir(dir) 
 	local files, ok = dirent.dir(dir); 

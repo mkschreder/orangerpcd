@@ -1,5 +1,7 @@
 #include "juci_luaobject.h"
 
+static int l_json_parse(lua_State *L);
+
 struct juci_luaobject* juci_luaobject_new(const char *name){
 	struct juci_luaobject *self = calloc(1, sizeof(struct juci_luaobject)); 
 	self->lua = luaL_newstate(); 
@@ -9,6 +11,7 @@ struct juci_luaobject* juci_luaobject_new(const char *name){
 	luaL_openlibs(self->lua); 
 	blob_init(&self->signature, 0, 0); 
 
+	// add proper lua paths
 	lua_getglobal(self->lua, "package"); 
 	lua_getfield(self->lua, -1, "path"); 
 	char newpath[255];
@@ -17,6 +20,14 @@ struct juci_luaobject* juci_luaobject_new(const char *name){
 	lua_pushstring(self->lua, newpath); 
 	lua_setfield(self->lua, -2, "path"); 
 	lua_pop(self->lua, 1); 
+	
+	// add fast json parsing
+	lua_newtable(self->lua); 
+	lua_pushstring(self->lua, "parse"); 
+	lua_pushcfunction(self->lua, l_json_parse); 
+	lua_settable(self->lua, -3); 
+	lua_setglobal(self->lua, "JSON"); 
+
 	return self; 
 }
 
@@ -50,11 +61,19 @@ int juci_luaobject_load(struct juci_luaobject *self, const char *file){
 	return 0; 
 }
 
-static void _lua_pushblob(lua_State *lua, struct blob_field *msg){
+static void _lua_pushblob(lua_State *lua, struct blob_field *msg, bool table){
 	lua_newtable(lua); 
-	struct blob_field *key, *child; 
-	blob_field_for_each_kv(msg, key, child){
-		lua_pushstring(lua, blob_field_get_string(key)); 
+	struct blob_field *child; 
+	int index = 1; 
+
+	blob_field_for_each_child(msg, child){
+		if(table) {
+			lua_pushstring(lua, blob_field_get_string(child)); 
+			child = blob_field_next_child(msg, child); 
+		} else {
+			lua_pushnumber(lua, index); 
+			index++; 
+		}
 		switch(blob_field_type(child)){
 			case BLOB_FIELD_INT8: 
 			case BLOB_FIELD_INT16: 
@@ -63,6 +82,12 @@ static void _lua_pushblob(lua_State *lua, struct blob_field *msg){
 				break; 
 			case BLOB_FIELD_STRING: 
 				lua_pushstring(lua, blob_field_get_string(child)); 
+				break; 
+			case BLOB_FIELD_ARRAY: 
+				_lua_pushblob(lua, child, false); 
+				break; 
+			case BLOB_FIELD_TABLE: 
+				_lua_pushblob(lua, child, true); 
 				break; 
 			default: 
 				lua_pushnil(lua); 	
@@ -105,7 +130,11 @@ static bool _lua_format_blob_is_array(lua_State *L){
 static int _lua_format_blob(lua_State *L, struct blob *b, bool table){
 	bool rv = true;
 
-	//luaL_checktype(self->lua, 2, LUA_TTABLE); 	
+	if(lua_type(L, -1) != LUA_TTABLE) {
+		printf("%s: can only format a table (or array)\n", __FUNCTION__); 
+		return rv; 
+	}
+
 	lua_pushnil(L); 
 	while(lua_next(L, -2)){
 		lua_pushvalue(L, -2); 
@@ -162,12 +191,14 @@ int juci_luaobject_call(struct juci_luaobject *self, const char *method, struct 
 		fprintf(stderr, "error calling %s on %s: field is not a function!\n", method, self->name); 
 		return -1; 
 	}
-	if(in) _lua_pushblob(self->lua, in); 
+	if(in) _lua_pushblob(self->lua, in, true); 
 	else lua_newtable(self->lua); 
+
 	if(lua_pcall(self->lua, 1, 1, 0) != 0){
 		fprintf(stderr, "error calling %s: %s\n", method, lua_tostring(self->lua, -1)); 
 		return -1; 
 	}
+
 	blob_offset_t t = blob_open_table(out); 
 	_lua_format_blob(self->lua, out, true); 
 	blob_close_table(out, t); 
@@ -175,3 +206,17 @@ int juci_luaobject_call(struct juci_luaobject *self, const char *method, struct 
 	lua_pop(self->lua, 1); 	
 	return 0; 
 }
+
+static int l_json_parse(lua_State *L){
+	const char *str = lua_tostring(L, 1); 
+	struct blob tmp; 
+	blob_init(&tmp, 0, 0); 
+	blob_put_json(&tmp, str); 	
+	printf("lua blob: "); 
+	blob_dump_json(&tmp); 
+	_lua_pushblob(L, blob_field_first_child(blob_head(&tmp)), true); 	
+	blob_free(&tmp); 
+	return 1; 
+}
+
+

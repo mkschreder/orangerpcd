@@ -2,4 +2,4 @@
 
 local ubus = require("juci/ubus"); 
 
-return ubus.bind("session", { "access" }); 
+return ubus.bind("session", { "access", "login"}); 

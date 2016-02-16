@@ -182,7 +182,7 @@ static int _ubus_socket_callback(struct lws *wsi, enum lws_callback_reasons reas
 				printf("got bad message\n"); 
 			}
 			//lws_rx_flow_control(wsi, 0); 
-			lws_callback_on_writable(wsi); 	
+			//lws_callback_on_writable(wsi); 	
 			break; 
 		}
 		
@@ -276,9 +276,8 @@ int _websocket_connect(juci_server_t socket, const char *path){
 static void *_websocket_server_thread(void *ptr){
 	struct ubus_srv_ws *self = (struct ubus_srv_ws*)ptr; 
 	while(!self->shutdown){
-		if(self->ctx) 
-			lws_service(self->ctx, 100);	
-		else sleep(1); 
+		if(!self->ctx) { sleep(1); continue;} 
+		lws_service(self->ctx, 1000);	
 	}
 	pthread_exit(0); 
 	return 0; 
@@ -308,30 +307,46 @@ static void *_websocket_userdata(juci_server_t socket, void *ptr){
 	return ptr; 
 }
 
-static int _websocket_recv(juci_server_t socket, struct ubus_message **msg, int timeout){
+static int _websocket_recv(juci_server_t socket, struct ubus_message **msg, unsigned long long timeout_us){
 	struct ubus_srv_ws *self = container_of(socket, struct ubus_srv_ws, api); 
 
 	struct timespec t; 
-	clock_gettime(CLOCK_REALTIME, &t); 
-	// timeout is in microseconds
-	t.tv_nsec+=timeout * 1000UL;
+	unsigned long long sec = (timeout_us >= 1000000UL)?(timeout_us / 1000000UL):0; 
+	unsigned long long nsec = (timeout_us - sec * 1000000UL) * 1000UL; 
 
+	// figure out the exact timeout we should wait for the conditional 
+	clock_gettime(CLOCK_REALTIME, &t); 
+	t.tv_nsec += nsec; 
+	t.tv_sec += sec; 
+	// nanoseconds can sometimes be more than 1sec but never more than 2.  
+	// TODO: is there no function somewhere for properly adding a timeout to timespec? 
+	if(t.tv_nsec >= 1000000000UL){
+		t.tv_nsec -= 1000000000UL; 
+		t.tv_sec++; 
+	}
+
+	// lock mutex to check for the queue
 	pthread_mutex_lock(&self->qlock); 
 	if(list_empty(&self->rx_queue)){
 		// unlock the mutex and wait for a new event. timeout if no event received for a timeout.  
+		// this will lock mutex after either timeout or if condition is signalled
 		if(pthread_cond_timedwait(&self->rx_ready, &self->qlock, &t) == ETIMEDOUT){
 			//printf("timeout\n"); 
+			// we still need to unlock the mutex before we exit
 			pthread_mutex_unlock(&self->qlock); 
 			return -EAGAIN; 
 		}
 	}
 	if(list_empty(&self->rx_queue)) {
+		// mutex is locked by our previous lock so unlock it here. 
 		pthread_mutex_unlock(&self->qlock); 
 		return -EAGAIN; 
 	}
 	struct ubus_message *m = list_first_entry(&self->rx_queue, struct ubus_message, list); 
 	list_del_init(&m->list); 
 	*msg = m; 
+
+	// unlock mutex and return with positive number to signal message received. 
 	pthread_mutex_unlock(&self->qlock); 
 	return 1; 
 }

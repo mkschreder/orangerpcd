@@ -1,7 +1,9 @@
 #define _XOPEN_SOURCE
 #define _XOPEN_SOURCE_EXTENDED
 #define _BSD_SOURCE
+#define _POSIX_C_SOURCE 199309L
 
+#include <time.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <dirent.h>
@@ -91,10 +93,15 @@ int main(int argc, char **argv){
 
     while(running){                     
         struct ubus_message *msg = NULL;         
-		// 100ms delay 
+		struct timespec tss, tse; 
+		clock_gettime(CLOCK_MONOTONIC, &tss); 
+		
+		// 10ms delay 
         if(ubus_server_recv(server, &msg, 10000UL) < 0){  
             continue;                   
         }
+		clock_gettime(CLOCK_MONOTONIC, &tse); 
+		printf("waited %lus %luns for message\n", tse.tv_sec - tss.tv_sec, tse.tv_nsec - tss.tv_nsec); 
         printf("got message from %08x: ", msg->peer); 
         blob_dump_json(&msg->buf);
 		struct blob_field *rpc_method = NULL, *params = NULL, *method = NULL, *object = NULL, *args = NULL; 

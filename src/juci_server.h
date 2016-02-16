@@ -26,7 +26,7 @@ struct ubus_server_api {
 	int 	(*listen)(juci_server_t ptr, const char *path); 
 	int 	(*connect)(juci_server_t ptr, const char *path);
 	int 	(*send)(juci_server_t ptr, struct ubus_message **msg); 
-	int 	(*recv)(juci_server_t ptr, struct ubus_message **msg, int timeout); 
+	int 	(*recv)(juci_server_t ptr, struct ubus_message **msg, unsigned long long timeout_us); 
 	void*	(*userdata)(juci_server_t ptr, void *data); 
 }; 
 

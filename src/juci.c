@@ -66,7 +66,6 @@ int juci_list(struct juci *self, const char *path, struct blob *out){
 	struct juci_luaobject *entry; 
 	blob_offset_t t = blob_open_table(out); 
 	avl_for_each_element(&self->objects, entry, avl){
-		printf("found %s\n", (char*)entry->avl.key); 
 		blob_put_string(out, (char*)entry->avl.key); 
 		blob_put_attr(out, blob_field_first_child(blob_head(&entry->signature))); 
 	}
