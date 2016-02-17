@@ -18,6 +18,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <dirent.h>
+#include <glob.h>
 
 #include <fcntl.h>
 
@@ -33,6 +34,8 @@
 #include "juci_user.h"
 
 #include "sha1.h"
+
+#define JUCI_ACL_DIR_PATH "/usr/lib/juci/acl/"
 
 int juci_debug_level = 0; 
 
@@ -87,15 +90,22 @@ void juci_init(struct juci *self){
 	avl_insert(&self->users, &admin->avl); 
 }
 
-int juci_load_passwords(struct juci *self, const char *pwfile){
-	DEBUG("loading passwords from %s\n", pwfile); 
-	int fd = open(pwfile, O_RDONLY); 
-	if(fd == -1) return -EACCES; 
+static char *_load_file(const char *path){
+	int fd = open(path, O_RDONLY); 
+	if(fd == -1) return NULL; 
 	int filesize = lseek(fd, 0, SEEK_END); 
 	lseek(fd, 0, SEEK_SET); 
-	char *passwords = alloca(filesize + 1); 
-	int ret = read(fd, passwords, filesize); 
-	if(ret != filesize) return -EINVAL; 
+	char *text = calloc(1, filesize + 1); 
+	int ret = read(fd, text, filesize); 
+	close(fd); 
+	if(ret != filesize) { free(text); return NULL; }
+	return text; 
+}
+
+int juci_load_passwords(struct juci *self, const char *pwfile){
+	DEBUG("loading passwords from %s\n", pwfile); 
+	char *passwords = _load_file(pwfile); 
+	if(!passwords) return -EACCES; 
 	char *cur = passwords; 
 	char user[32], hash[64]; 
 	while(sscanf(cur, "%s %s", user, hash) == 2){	
@@ -106,8 +116,9 @@ int juci_load_passwords(struct juci *self, const char *pwfile){
 				juci_user_set_pw_hash(user, hash); 
 			}
 		}
-		while(*cur != '\n' && (cur < (passwords + filesize))) cur++; 
+		while(*cur != '\n' && *cur) cur++; 
 	}
+	free(passwords); 
 	return 0; 
 }
 
@@ -135,13 +146,48 @@ static bool _try_auth(const char *sha1hash, const char *challenge, const char *r
 	return !strcmp((const char*)hash, response); 
 }
 
+int _load_session_acls(struct juci_session *ses, const char *pat){
+	glob_t glob_result;
+	char path[255]; 
+	char *dir = getenv("JUCI_ACL_DIR_PATH"); 
+	if(!dir) dir = JUCI_ACL_DIR_PATH; 
+	snprintf(path, sizeof(path), "%s/%s", dir, pat); 
+	glob(path,GLOB_TILDE,NULL,&glob_result);
+	for(unsigned int i=0;i<glob_result.gl_pathc;++i){
+		char *text = _load_file(glob_result.gl_pathv[i]); 
+		char *cur = text; 	
+		char scope[255], object[255], method[255], perm[32]; 
+		int line = 1; 
+		while(true){	
+			int ret = sscanf(cur, "%s %s %s %s", scope, object, method, perm); 
+			if(ret == 4){
+				DEBUG("granting session acl '%s %s %s %s'\n", scope, object, method, perm); 
+				juci_session_grant(ses, scope, object, method); 
+			} else {
+				ERROR("parse error on line %d of %s, scanned %d fields\n", line, glob_result.gl_pathv[i], ret); 	
+			} 
+			while(*cur != '\n' && *cur != 0) cur++; 
+			while(*cur == '\n') cur++; 
+			if(*cur == 0) break; 
+			line++; 
+		}
+	}
+	globfree(&glob_result);
+	return 0; 
+}
+
+bool juci_session_exists(struct juci *self, const char *sid){ 
+	return !!_find_session(self, sid); 
+}
+
 int juci_login(struct juci *self, const char *username, const char *challenge, const char *response, const char **new_sid){
 	struct avl_node *node = avl_find(&self->users, username); 
 	if(!node) return -EINVAL; 
 	struct juci_user *user = container_of(node, struct juci_user, avl); 
 
 	if(_try_auth(user->pwhash, challenge, response)){
-		struct juci_session *ses = juci_session_new(user); 
+		struct juci_session *ses = juci_session_new(user); 	
+		_load_session_acls(ses, "*.acl"); 
 		if(avl_insert(&self->sessions, &ses->avl) != 0){
 			juci_session_delete(&ses); 
 			return -EINVAL; 
@@ -168,7 +214,7 @@ int juci_call(struct juci *self, const char *sid, const char *object, const char
 		DEBUG("could not find session for request!\n"); 
 		return -EACCES; 
 	}
-	if(!juci_session_can_access(self->current_session, "ubus", object, method)){
+	if(!juci_session_access(self->current_session, "ubus", object, method)){
 		DEBUG("user does not have permission to execute rpc call: %s %s\n", object, method); 
 		return -EACCES; 
 	}

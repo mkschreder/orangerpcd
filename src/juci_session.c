@@ -103,15 +103,157 @@ struct juci_session *juci_session_new(struct juci_user *user){
 	return self; 
 }
 
-void juci_session_delete(struct juci_session **self){
-	assert(*self); 
-	free(*self); 
-	*self = NULL; 
+void juci_session_delete(struct juci_session **_self){
+	assert(*_self); 
+	struct juci_session *self = *_self; 
+	struct juci_session_acl *acl, *nacl;
+    struct juci_session_acl_scope *acl_scope, *nacl_scope;
+    struct juci_session_data *data, *ndata;
+
+    avl_for_each_element_safe(&self->acl_scopes, acl_scope, avl, nacl_scope) {
+        avl_remove_all_elements(&acl_scope->acls, acl, avl, nacl)
+            free(acl);
+
+        avl_delete(&self->acl_scopes, &acl_scope->avl);
+        free(acl_scope);
+    }
+
+    avl_remove_all_elements(&self->data, data, avl, ndata)
+        free(data);
+
+	free(self); 
+	*_self = NULL; 
 }
 
-bool juci_session_can_access(struct juci_session *self, const char *scope, const char *object, const char *method){
-	assert(self && scope && object && method); 
-	DEBUG("check session access to %s %s %s\n", scope, object, method); 
-	return true; 
+/*
+ * Keys in the AVL tree contain all pattern characters up to the first wildcard.
+ * To look up entries, start with the last entry that has a key less than or
+ * equal to the method name, then work backwards as long as the AVL key still
+ * matches its counterpart in the object name
+ */
+#define uh_foreach_matching_acl_prefix(_acl, _avl, _obj, _func)     \
+    for (_acl = avl_find_le_element(_avl, _obj, _acl, avl);         \
+         _acl;                                                      \
+         _acl = avl_is_first(_avl, &(_acl)->avl) ? NULL :           \
+            avl_prev_element((_acl), avl))
+
+#define uh_foreach_matching_acl(_acl, _avl, _obj, _func)            \
+    uh_foreach_matching_acl_prefix(_acl, _avl, _obj, _func)         \
+        if (!strncmp((_acl)->object, _obj, (_acl)->sort_len) &&     \
+            !fnmatch((_acl)->object, (_obj), FNM_NOESCAPE) &&       \
+            !fnmatch((_acl)->function, (_func), FNM_NOESCAPE))
+
+
+int juci_session_grant(struct juci_session *ses, const char *scope, const char *object, const char *function){
+    struct juci_session_acl *acl;
+    struct juci_session_acl_scope *acl_scope;
+    char *new_scope, *new_obj, *new_func, *new_id;
+    int id_len;
+
+    if (!object || !function)
+        return -EINVAL;
+
+    acl_scope = avl_find_element(&ses->acl_scopes, scope, acl_scope, avl);
+
+    if (acl_scope) {
+        uh_foreach_matching_acl_prefix(acl, &acl_scope->acls, object, function) {
+            if (!strcmp(acl->object, object) &&
+                !strcmp(acl->function, function))
+                return 0;
+        }
+    }
+
+    if (!acl_scope) {
+        acl_scope = calloc_a(sizeof(*acl_scope),
+                             &new_scope, strlen(scope) + 1);
+
+        if (!acl_scope)
+            return -1;
+
+        acl_scope->avl.key = strcpy(new_scope, scope);
+        avl_init(&acl_scope->acls, avl_strcmp, true, NULL);
+        avl_insert(&ses->acl_scopes, &acl_scope->avl);
+    }
+
+    id_len = strcspn(object, "*?[");
+    acl = calloc_a(sizeof(*acl),
+        &new_obj, strlen(object) + 1,
+        &new_func, strlen(function) + 1,
+        &new_id, id_len + 1);
+
+    if (!acl)
+        return -1;
+
+    acl->object = strcpy(new_obj, object);
+    acl->function = strcpy(new_func, function);
+    acl->avl.key = strncpy(new_id, object, id_len);
+    avl_insert(&acl_scope->acls, &acl->avl);
+
+    return 0;
+}
+
+int juci_session_revoke(struct juci_session *ses,
+                   const char *scope, const char *object, const char *function){
+    struct juci_session_acl *acl, *next;
+    struct juci_session_acl_scope *acl_scope;
+    int id_len;
+    char *id;
+
+    acl_scope = avl_find_element(&ses->acl_scopes, scope, acl_scope, avl);
+
+    if (!acl_scope)
+        return 0;
+
+    if (!object && !function) {
+        avl_remove_all_elements(&acl_scope->acls, acl, avl, next)
+            free(acl);
+        avl_delete(&ses->acl_scopes, &acl_scope->avl);
+        free(acl_scope);
+        return 0;
+    }
+
+    id_len = strcspn(object, "*?[");
+    id = alloca(id_len + 1);
+    strncpy(id, object, id_len);
+    id[id_len] = 0;
+
+    acl = avl_find_element(&acl_scope->acls, id, acl, avl);
+    while (acl) {
+        if (!avl_is_last(&acl_scope->acls, &acl->avl))
+            next = avl_next_element(acl, avl);
+        else
+            next = NULL;
+
+        if (strcmp(id, acl->avl.key) != 0)
+            break;
+
+        if (!strcmp(acl->object, object) &&
+            !strcmp(acl->function, function)) {
+            avl_delete(&acl_scope->acls, &acl->avl);
+            free(acl);
+        }
+        acl = next;
+    }
+
+    if (avl_is_empty(&acl_scope->acls)) {
+        avl_delete(&ses->acl_scopes, &acl_scope->avl);
+        free(acl_scope);
+    }
+
+    return 0;
+}
+
+bool juci_session_access(struct juci_session *ses, const char *scope, const char *obj, const char *fun){
+	struct juci_session_acl *acl;
+	struct juci_session_acl_scope *acl_scope;
+
+	acl_scope = avl_find_element(&ses->acl_scopes, scope, acl_scope, avl);
+
+	if (acl_scope) {
+		uh_foreach_matching_acl(acl, &acl_scope->acls, obj, fun)
+			return true;
+	}
+
+	return false;
 }
 

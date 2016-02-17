@@ -70,6 +70,16 @@ static bool rpcmsg_parse_call_params(struct blob_field *params, const char **sid
 	return !!(sid && object && method && args); 
 }
 
+static bool rpcmsg_parse_authenticate(struct blob_field *params, const char **sid){
+	if(!params) return false; 
+	struct blob_policy policy[] = {
+		{ .type = BLOB_FIELD_STRING }, // sid
+	}; 
+	if(!blob_field_parse_values(params, policy, 1)) return false;  
+	*sid = blob_field_get_string(policy[0].value); 
+	return !!(sid); 
+}
+
 static bool rpcmsg_parse_list_params(struct blob_field *params, const char **sid, const char **path){
 	if(!params) return false; 
 	struct blob_policy policy[] = {
@@ -172,21 +182,29 @@ int main(int argc, char **argv){
 		blob_offset_t t = blob_open_table(&result->buf); 
 		blob_put_string(&result->buf, "jsonrpc"); 
 		blob_put_string(&result->buf, "2.0"); 
-		blob_put_string(&result->buf, "id"); blob_put_int(&result->buf, rpc_id); 
-		blob_put_string(&result->buf, "result"); 
+		blob_put_string(&result->buf, "id"); 
+		blob_put_int(&result->buf, rpc_id); 
 
 		if(rpc_method && strcmp(rpc_method, "call") == 0){
 			if(rpcmsg_parse_call_params(params, &sid, &object, &method, &args)){
-				juci_call(&app, sid, object, method, args, &result->buf); 
+				int ret = juci_call(&app, sid, object, method, args, &result->buf); 
+				if(ret < 0) {
+					char *str = strerror(-ret); 
+					if(!str) str = "UNKNOWN"; 
+					blob_put_string(&result->buf, "error"); 
+					blob_put_string(&result->buf, str);  
+				}
 			} else {
 				DEBUG("Could not parse call params!\n"); 
 			}
 		} else if(rpc_method && strcmp(rpc_method, "list") == 0){
 			const char *path = "*"; 	
 			if(rpcmsg_parse_list_params(params, &sid, &path)){
+				blob_put_string(&result->buf, "result"); 
 				juci_list(&app, sid, path, &result->buf); 
 			}
 		} else if(rpc_method && strcmp(rpc_method, "challenge") == 0){
+			blob_put_string(&result->buf, "result"); 
 			blob_offset_t o = blob_open_table(&result->buf); 
 			blob_put_string(&result->buf, "token"); 
 			char token[32]; 
@@ -200,8 +218,9 @@ int main(int argc, char **argv){
 			char token[32]; 
 			snprintf(token, sizeof(token), "%08x", msg->peer); //TODO: make hash
 
-			blob_offset_t o = blob_open_table(&result->buf); 
 			if(rpcmsg_parse_login(params, &username, &response)){
+				blob_put_string(&result->buf, "result"); 
+				blob_offset_t o = blob_open_table(&result->buf); 
 				if(juci_login(&app, username, token, response, &sid) == 0){
 					blob_put_string(&result->buf, "success"); 
 					blob_put_string(&result->buf, sid); 
@@ -209,13 +228,28 @@ int main(int argc, char **argv){
 					blob_put_string(&result->buf, "error"); 
 					blob_put_string(&result->buf, "EACCESS"); 
 				}	
+				blob_close_table(&result->buf, o); 
 			} else {
 				blob_put_string(&result->buf, "error"); 
-				blob_put_string(&result->buf, "EINVAL"); 
+				blob_put_string(&result->buf, "Invalid Parameters"); 
 				DEBUG("Could not parse login parameters!\n"); 
 			}
-			blob_close_table(&result->buf, o); 
-		} 
+		} else if(rpc_method && strcmp(rpc_method, "authenticate") == 0){
+			const char *sid = NULL; 
+			if(rpcmsg_parse_authenticate(params, &sid) && juci_session_exists(&app, sid)){
+				blob_put_string(&result->buf, "result"); 
+				blob_offset_t o = blob_open_table(&result->buf); 
+					blob_put_string(&result->buf, "success"); 
+					blob_put_string(&result->buf, "VALID"); 
+				blob_close_table(&result->buf, o); 
+			} else {
+				blob_put_string(&result->buf, "error"); 
+				blob_put_string(&result->buf, "Access Denied"); 
+			}
+		} else {
+			blob_put_string(&result->buf, "error"); 
+			blob_put_string(&result->buf, "Invalid Method"); 
+		}	
 
 		blob_close_table(&result->buf, t); 
 		if(juci_debug_level >= JUCI_DBG_TRACE){

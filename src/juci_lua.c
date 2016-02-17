@@ -22,6 +22,7 @@
 
 void juci_lua_blob_to_table(lua_State *lua, struct blob_field *msg, bool table){
 	lua_newtable(lua); 
+
 	struct blob_field *child; 
 	int index = 1; 
 
@@ -152,7 +153,7 @@ static int l_json_parse(lua_State *L){
 		TRACE("lua blob: "); 
 		blob_dump_json(&tmp); 
 	}
-	juci_lua_blob_to_table(L, blob_field_first_child(blob_head(&tmp)), true); 	
+	juci_lua_blob_to_table(L, blob_field_first_child(blob_head(&tmp)), true);
 	blob_free(&tmp); 
 	return 1; 
 }

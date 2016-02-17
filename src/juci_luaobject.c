@@ -96,6 +96,7 @@ int juci_luaobject_call(struct juci_luaobject *self, const char *method, struct 
 		return -1; 
 	}
 
+	blob_put_string(out, "result"); 
 	blob_offset_t t = blob_open_table(out); 
 	juci_lua_table_to_blob(self->lua, out, true); 
 	blob_close_table(out, t); 

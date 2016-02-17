@@ -35,6 +35,7 @@ void juci_init(struct juci *self);
 int juci_load_plugins(struct juci *self, const char *path, const char *base_path); 
 int juci_load_passwords(struct juci *self, const char *pwfile); 
 int juci_login(struct juci *self, const char *username, const char *challenge, const char *response, const char **new_sid); 
+bool juci_session_exists(struct juci *self, const char *sid); 
 int juci_call(struct juci *self, const char *sid, const char *object, const char *method, struct blob_field *args, struct blob *out); 
 int juci_list(struct juci *self, const char *sid, const char *path, struct blob *out); 
    
