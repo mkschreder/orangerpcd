@@ -1,0 +1,10 @@
+node_modeules
+node_modules
+*.swp
+*.o
+Makefile
+.deps
+autom4te.cache
+src/jucid
+config.*
+aclocal.m4
