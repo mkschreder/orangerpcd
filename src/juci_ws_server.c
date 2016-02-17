@@ -1,15 +1,19 @@
 /*
- * Copyright (C) 2016 Martin K. Schröder <mkschreder.uk@gmail.com>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License version 2.1
- * as published by the Free Software Foundation
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- */
+	JUCI Backend Websocket API Server
+
+	Copyright (C) 2016 Martin K. Schröder <mkschreder.uk@gmail.com>
+
+	This program is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version. (Please read LICENSE file on special
+	permission to include this software in signed images). 
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+*/
 
 #include <blobpack/blobpack.h>
 
@@ -348,6 +352,7 @@ static void _timeout_us(struct timespec *t, unsigned long long timeout_us){
 
 static int _websocket_recv(juci_server_t socket, struct ubus_message **msg, unsigned long long timeout_us){
 	struct ubus_srv_ws *self = container_of(socket, struct ubus_srv_ws, api); 
+	if(self->shutdown) return -1; 
 
 	struct timespec t; 
 	_timeout_us(&t, timeout_us); 

@@ -1,30 +1,20 @@
 #pragma once
 
-typedef char juci_sid_t[32]; 
+// 1 extra byte for trailing zero
+typedef char juci_sid_t[32 + 1]; 
 
 #include <libutype/avl.h>
 struct juci_session {
-	struct avl_node avl; // for organizing sessions
+	struct avl_node avl; 
 	juci_sid_t sid; 
 	struct avl_tree data; 
-	struct avl_tree acls; 
+	struct avl_tree acl_scopes; 
+	
+	struct juci_user *user; 
 }; 
 
-struct juci_session_data {
-	struct avl_node avl;
-	struct blob_field *attr;
-};
-
-struct juci_session_acl_scope {
-	struct avl_node avl;
-	struct avl_tree acls;
-};
-
-struct juci_session_acl {
-	struct avl_node avl;
-	const char *object;
-	const char *function;
-	int sort_len;
-};
-
-struct juci_session *juci_session_new(); 
+struct juci_session *juci_session_new(struct juci_user *user); 
+void juci_session_delete(struct juci_session **self); 
+bool juci_session_grant(struct juci_session *self, const char *scope, const char *object, const char *method); 
+bool juci_session_revoke(struct juci_session *self, const char *scope, const char *object, const char *method); 
+bool juci_session_can_access(struct juci_session *self, const char *scope, const char *object, const char *method); 

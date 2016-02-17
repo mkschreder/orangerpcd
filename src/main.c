@@ -1,3 +1,20 @@
+/*
+	JUCI Backend Websocket API Server
+
+	Copyright (C) 2016 Martin K. Schröder <mkschreder.uk@gmail.com>
+
+	This program is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version. (Please read LICENSE file on special
+	permission to include this software in signed images). 
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+*/
+
 #define _XOPEN_SOURCE
 #define _XOPEN_SOURCE_EXTENDED
 #define _BSD_SOURCE
@@ -22,7 +39,7 @@ void handle_sigint(){
 	running = false; 
 }
 
-static bool rpcmsg_parse_call(struct blob *msg, uint32_t *id, struct blob_field **method, struct blob_field **params){
+static bool rpcmsg_parse_call(struct blob *msg, uint32_t *id, const char **method, struct blob_field **params){
 	if(!msg) return false; 
 	struct blob_policy policy[] = {
 		{ .name = "id", .type = BLOB_FIELD_ANY, .value = NULL },
@@ -32,33 +49,59 @@ static bool rpcmsg_parse_call(struct blob *msg, uint32_t *id, struct blob_field 
 	struct blob_field *b = blob_field_first_child(blob_head(msg));  
 	blob_field_parse_values(b, policy, 3); 
 	*id = blob_field_get_int(policy[0].value); 
-	*method = policy[1].value; 
+	*method = blob_field_get_string(policy[1].value); 
 	*params = policy[2].value; 
 	return !!(policy[0].value && method && params); 
 }
 
-static bool rpcmsg_parse_params(struct blob_field *params, struct blob_field **object, struct blob_field **method, struct blob_field **args){
+static bool rpcmsg_parse_call_params(struct blob_field *params, const char **sid, const char **object, const char **method, struct blob_field **args){
 	if(!params) return false; 
 	struct blob_policy policy[] = {
-		{ .type = BLOB_FIELD_STRING },
-		{ .type = BLOB_FIELD_STRING },
-		{ .type = BLOB_FIELD_TABLE }
+		{ .type = BLOB_FIELD_STRING }, // sid
+		{ .type = BLOB_FIELD_STRING }, // object 
+		{ .type = BLOB_FIELD_STRING }, // method
+		{ .type = BLOB_FIELD_TABLE } // args
 	}; 
-	blob_field_parse_values(params, policy, 3); 
-	*object = policy[0].value; 
-	*method = policy[1].value; 
-	*args = policy[2].value; 
-	return !!(object && method && args); 
+	if(!blob_field_parse_values(params, policy, 4)) return false;  
+	*sid = blob_field_get_string(policy[0].value); 
+	*object = blob_field_get_string(policy[1].value); 
+	*method = blob_field_get_string(policy[2].value); 
+	*args = policy[3].value; 
+	return !!(sid && object && method && args); 
+}
 
+static bool rpcmsg_parse_list_params(struct blob_field *params, const char **sid, const char **path){
+	if(!params) return false; 
+	struct blob_policy policy[] = {
+		{ .type = BLOB_FIELD_STRING }, // sid
+		{ .type = BLOB_FIELD_STRING } // path
+	}; 
+	if(!blob_field_parse_values(params, policy, 2)) return false;  
+	*sid = blob_field_get_string(policy[0].value); 
+	*path = blob_field_get_string(policy[1].value); 
+	return !!(sid && path); 
+}
+
+static bool rpcmsg_parse_login(struct blob_field *params, const char **username, const char **response){
+	if(!params) return false; 
+	struct blob_policy policy[] = {
+		{ .type = BLOB_FIELD_STRING }, // username
+		{ .type = BLOB_FIELD_STRING }  // challenge response
+	}; 
+	if(!blob_field_parse_values(params, policy, 2)) return false; 
+	*username = blob_field_get_string(policy[0].value); 
+	*response = blob_field_get_string(policy[1].value); 
+	return !!(username && response); 
 }
 
 int main(int argc, char **argv){
   	const char *www_root = "/www"; 
 	const char *listen_socket = "ws://localhost:1234"; 
 	const char *plugin_dir = "plugins"; 
+	const char *pw_file = "/etc/juci-shadow"; 
 
 	int c = 0; 	
-	while((c = getopt(argc, argv, "d:l:p:v")) != -1){
+	while((c = getopt(argc, argv, "d:l:p:vx:")) != -1){
 		switch(c){
 			case 'd': 
 				www_root = optarg; 
@@ -72,10 +115,13 @@ int main(int argc, char **argv){
 			case 'v': 
 				juci_debug_level++; 
 				break; 
+			case 'x': 
+				pw_file = optarg; 
+				break; 
 			default: break; 
 		}
 	}
-
+	
     juci_server_t server = juci_ws_server_new(www_root); 
 
     if(ubus_server_listen(server, listen_socket) < 0){
@@ -88,6 +134,9 @@ int main(int argc, char **argv){
 	struct juci app; 
 	juci_init(&app); 
 
+	if(juci_load_passwords(&app, pw_file) != 0){
+		ERROR("could not load password file from %s\n", pw_file); 
+	}
 	juci_load_plugins(&app, plugin_dir, NULL); 
 	
 	struct blob buf, out; 
@@ -109,9 +158,13 @@ int main(int argc, char **argv){
 			DEBUG("got message from %08x: ", msg->peer); 
         	blob_dump_json(&msg->buf);
 		}
-		struct blob_field *rpc_method = NULL, *params = NULL, *method = NULL, *object = NULL, *args = NULL; 
+		struct blob_field *params = NULL, *args = NULL; 
+		const char *sid = "", *rpc_method = "", *object = "", *method = ""; 
 		uint32_t rpc_id = 0; 
-		rpcmsg_parse_call(&msg->buf, &rpc_id, &rpc_method, &params); 
+		if(!rpcmsg_parse_call(&msg->buf, &rpc_id, &rpc_method, &params)){
+			DEBUG("could not parse call params\n"); 
+			continue; 
+		}
 
 		struct ubus_message *result = ubus_message_new(); 
 		result->peer = msg->peer; 
@@ -122,18 +175,50 @@ int main(int argc, char **argv){
 		blob_put_string(&result->buf, "id"); blob_put_int(&result->buf, rpc_id); 
 		blob_put_string(&result->buf, "result"); 
 
-		if(rpc_method && strcmp(blob_field_get_string(rpc_method), "call") == 0){
-			if(!rpcmsg_parse_params(params, &object, &method, &args)){
+		if(rpc_method && strcmp(rpc_method, "call") == 0){
+			if(rpcmsg_parse_call_params(params, &sid, &object, &method, &args)){
+				juci_call(&app, sid, object, method, args, &result->buf); 
+			} else {
 				DEBUG("Could not parse call params!\n"); 
 			}
-			juci_call(&app, blob_field_get_string(object), blob_field_get_string(method), args, &result->buf); 
-		} else if(rpc_method && strcmp(blob_field_get_string(rpc_method), "list") == 0){
-			rpcmsg_parse_params(params, &object, &method, &args); 
-			juci_list(&app, blob_field_get_string(object), &result->buf); 
-		}
+		} else if(rpc_method && strcmp(rpc_method, "list") == 0){
+			const char *path = "*"; 	
+			if(rpcmsg_parse_list_params(params, &sid, &path)){
+				juci_list(&app, sid, path, &result->buf); 
+			}
+		} else if(rpc_method && strcmp(rpc_method, "challenge") == 0){
+			blob_offset_t o = blob_open_table(&result->buf); 
+			blob_put_string(&result->buf, "token"); 
+			char token[32]; 
+			snprintf(token, sizeof(token), "%08x", msg->peer); //TODO: make hash
+			blob_put_string(&result->buf, token);  
+			blob_close_table(&result->buf, o); 
+		} else if(rpc_method && strcmp(rpc_method, "login") == 0){
+			// TODO: make challenge response work. Perhaps use custom pw database where only sha1 hasing is used. 
+			const char *username = NULL, *response = NULL, *sid = ""; 
+
+			char token[32]; 
+			snprintf(token, sizeof(token), "%08x", msg->peer); //TODO: make hash
+
+			blob_offset_t o = blob_open_table(&result->buf); 
+			if(rpcmsg_parse_login(params, &username, &response)){
+				if(juci_login(&app, username, token, response, &sid) == 0){
+					blob_put_string(&result->buf, "success"); 
+					blob_put_string(&result->buf, sid); 
+				} else {
+					blob_put_string(&result->buf, "error"); 
+					blob_put_string(&result->buf, "EACCESS"); 
+				}	
+			} else {
+				blob_put_string(&result->buf, "error"); 
+				blob_put_string(&result->buf, "EINVAL"); 
+				DEBUG("Could not parse login parameters!\n"); 
+			}
+			blob_close_table(&result->buf, o); 
+		} 
 
 		blob_close_table(&result->buf, t); 
-		if(juci_debug_level > 2){
+		if(juci_debug_level >= JUCI_DBG_TRACE){
 			DEBUG("sending back: "); 
 			blob_dump_json(&result->buf); 
 		}

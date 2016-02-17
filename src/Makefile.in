@@ -91,8 +91,10 @@ am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
 am_jucid_OBJECTS = jucid-juci_luaobject.$(OBJEXT) \
 	jucid-juci_session.$(OBJEXT) jucid-juci_message.$(OBJEXT) \
-	jucid-juci_id.$(OBJEXT) jucid-juci.$(OBJEXT) \
-	jucid-juci_ws_server.$(OBJEXT) jucid-main.$(OBJEXT)
+	jucid-juci_id.$(OBJEXT) jucid-juci_lua.$(OBJEXT) \
+	jucid-juci.$(OBJEXT) jucid-juci_ws_server.$(OBJEXT) \
+	jucid-juci_user.$(OBJEXT) jucid-juci_uci.$(OBJEXT) \
+	jucid-sha1.$(OBJEXT) jucid-main.$(OBJEXT)
 jucid_OBJECTS = $(am_jucid_OBJECTS)
 jucid_DEPENDENCIES =
 jucid_LINK = $(CCLD) $(jucid_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
@@ -244,9 +246,9 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-jucid_SOURCES = juci_luaobject.c juci_session.c juci_message.c juci_id.c juci.c juci_ws_server.c main.c
-jucid_CFLAGS = -std=gnu99 -Wall 
-jucid_LDADD = -lblobpack -lusys -lutype -lpthread -lwebsockets @LIBLUA_LINK@
+jucid_SOURCES = juci_luaobject.c juci_session.c juci_message.c juci_id.c juci_lua.c juci.c juci_ws_server.c juci_user.c juci_uci.c sha1.c main.c
+jucid_CFLAGS = -std=gnu99 -Wall -Werror
+jucid_LDADD = -lblobpack -lusys -lutype -lpthread -lwebsockets -lcrypt -luci @LIBLUA_LINK@
 all: all-am
 
 .SUFFIXES:
@@ -336,11 +338,15 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/jucid-juci.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/jucid-juci_id.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/jucid-juci_lua.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/jucid-juci_luaobject.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/jucid-juci_message.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/jucid-juci_session.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/jucid-juci_uci.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/jucid-juci_user.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/jucid-juci_ws_server.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/jucid-main.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/jucid-sha1.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -412,6 +418,20 @@ jucid-juci_id.obj: juci_id.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(jucid_CFLAGS) $(CFLAGS) -c -o jucid-juci_id.obj `if test -f 'juci_id.c'; then $(CYGPATH_W) 'juci_id.c'; else $(CYGPATH_W) '$(srcdir)/juci_id.c'; fi`
 
+jucid-juci_lua.o: juci_lua.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(jucid_CFLAGS) $(CFLAGS) -MT jucid-juci_lua.o -MD -MP -MF $(DEPDIR)/jucid-juci_lua.Tpo -c -o jucid-juci_lua.o `test -f 'juci_lua.c' || echo '$(srcdir)/'`juci_lua.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/jucid-juci_lua.Tpo $(DEPDIR)/jucid-juci_lua.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='juci_lua.c' object='jucid-juci_lua.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(jucid_CFLAGS) $(CFLAGS) -c -o jucid-juci_lua.o `test -f 'juci_lua.c' || echo '$(srcdir)/'`juci_lua.c
+
+jucid-juci_lua.obj: juci_lua.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(jucid_CFLAGS) $(CFLAGS) -MT jucid-juci_lua.obj -MD -MP -MF $(DEPDIR)/jucid-juci_lua.Tpo -c -o jucid-juci_lua.obj `if test -f 'juci_lua.c'; then $(CYGPATH_W) 'juci_lua.c'; else $(CYGPATH_W) '$(srcdir)/juci_lua.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/jucid-juci_lua.Tpo $(DEPDIR)/jucid-juci_lua.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='juci_lua.c' object='jucid-juci_lua.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(jucid_CFLAGS) $(CFLAGS) -c -o jucid-juci_lua.obj `if test -f 'juci_lua.c'; then $(CYGPATH_W) 'juci_lua.c'; else $(CYGPATH_W) '$(srcdir)/juci_lua.c'; fi`
+
 jucid-juci.o: juci.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(jucid_CFLAGS) $(CFLAGS) -MT jucid-juci.o -MD -MP -MF $(DEPDIR)/jucid-juci.Tpo -c -o jucid-juci.o `test -f 'juci.c' || echo '$(srcdir)/'`juci.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/jucid-juci.Tpo $(DEPDIR)/jucid-juci.Po
@@ -439,6 +459,48 @@ jucid-juci_ws_server.obj: juci_ws_server.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='juci_ws_server.c' object='jucid-juci_ws_server.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(jucid_CFLAGS) $(CFLAGS) -c -o jucid-juci_ws_server.obj `if test -f 'juci_ws_server.c'; then $(CYGPATH_W) 'juci_ws_server.c'; else $(CYGPATH_W) '$(srcdir)/juci_ws_server.c'; fi`
+
+jucid-juci_user.o: juci_user.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(jucid_CFLAGS) $(CFLAGS) -MT jucid-juci_user.o -MD -MP -MF $(DEPDIR)/jucid-juci_user.Tpo -c -o jucid-juci_user.o `test -f 'juci_user.c' || echo '$(srcdir)/'`juci_user.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/jucid-juci_user.Tpo $(DEPDIR)/jucid-juci_user.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='juci_user.c' object='jucid-juci_user.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(jucid_CFLAGS) $(CFLAGS) -c -o jucid-juci_user.o `test -f 'juci_user.c' || echo '$(srcdir)/'`juci_user.c
+
+jucid-juci_user.obj: juci_user.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(jucid_CFLAGS) $(CFLAGS) -MT jucid-juci_user.obj -MD -MP -MF $(DEPDIR)/jucid-juci_user.Tpo -c -o jucid-juci_user.obj `if test -f 'juci_user.c'; then $(CYGPATH_W) 'juci_user.c'; else $(CYGPATH_W) '$(srcdir)/juci_user.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/jucid-juci_user.Tpo $(DEPDIR)/jucid-juci_user.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='juci_user.c' object='jucid-juci_user.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(jucid_CFLAGS) $(CFLAGS) -c -o jucid-juci_user.obj `if test -f 'juci_user.c'; then $(CYGPATH_W) 'juci_user.c'; else $(CYGPATH_W) '$(srcdir)/juci_user.c'; fi`
+
+jucid-juci_uci.o: juci_uci.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(jucid_CFLAGS) $(CFLAGS) -MT jucid-juci_uci.o -MD -MP -MF $(DEPDIR)/jucid-juci_uci.Tpo -c -o jucid-juci_uci.o `test -f 'juci_uci.c' || echo '$(srcdir)/'`juci_uci.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/jucid-juci_uci.Tpo $(DEPDIR)/jucid-juci_uci.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='juci_uci.c' object='jucid-juci_uci.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(jucid_CFLAGS) $(CFLAGS) -c -o jucid-juci_uci.o `test -f 'juci_uci.c' || echo '$(srcdir)/'`juci_uci.c
+
+jucid-juci_uci.obj: juci_uci.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(jucid_CFLAGS) $(CFLAGS) -MT jucid-juci_uci.obj -MD -MP -MF $(DEPDIR)/jucid-juci_uci.Tpo -c -o jucid-juci_uci.obj `if test -f 'juci_uci.c'; then $(CYGPATH_W) 'juci_uci.c'; else $(CYGPATH_W) '$(srcdir)/juci_uci.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/jucid-juci_uci.Tpo $(DEPDIR)/jucid-juci_uci.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='juci_uci.c' object='jucid-juci_uci.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(jucid_CFLAGS) $(CFLAGS) -c -o jucid-juci_uci.obj `if test -f 'juci_uci.c'; then $(CYGPATH_W) 'juci_uci.c'; else $(CYGPATH_W) '$(srcdir)/juci_uci.c'; fi`
+
+jucid-sha1.o: sha1.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(jucid_CFLAGS) $(CFLAGS) -MT jucid-sha1.o -MD -MP -MF $(DEPDIR)/jucid-sha1.Tpo -c -o jucid-sha1.o `test -f 'sha1.c' || echo '$(srcdir)/'`sha1.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/jucid-sha1.Tpo $(DEPDIR)/jucid-sha1.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='sha1.c' object='jucid-sha1.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(jucid_CFLAGS) $(CFLAGS) -c -o jucid-sha1.o `test -f 'sha1.c' || echo '$(srcdir)/'`sha1.c
+
+jucid-sha1.obj: sha1.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(jucid_CFLAGS) $(CFLAGS) -MT jucid-sha1.obj -MD -MP -MF $(DEPDIR)/jucid-sha1.Tpo -c -o jucid-sha1.obj `if test -f 'sha1.c'; then $(CYGPATH_W) 'sha1.c'; else $(CYGPATH_W) '$(srcdir)/sha1.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/jucid-sha1.Tpo $(DEPDIR)/jucid-sha1.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='sha1.c' object='jucid-sha1.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(jucid_CFLAGS) $(CFLAGS) -c -o jucid-sha1.obj `if test -f 'sha1.c'; then $(CYGPATH_W) 'sha1.c'; else $(CYGPATH_W) '$(srcdir)/sha1.c'; fi`
 
 jucid-main.o: main.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(jucid_CFLAGS) $(CFLAGS) -MT jucid-main.o -MD -MP -MF $(DEPDIR)/jucid-main.Tpo -c -o jucid-main.o `test -f 'main.c' || echo '$(srcdir)/'`main.c
