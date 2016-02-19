@@ -1,4 +1,9 @@
+#ifdef HAVE_UCI_H
 #include <uci.h>
+#else
+#error "You need libuci installed to build this file!"
+#endif
+
 #include <blobpack/blobpack.h>
 
 static void _uci_option_to_blob(struct uci_option *o, struct blob *buf){

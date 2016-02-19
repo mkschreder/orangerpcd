@@ -109,6 +109,9 @@ int main(int argc, char **argv){
 	const char *listen_socket = "ws://localhost:1234"; 
 	const char *plugin_dir = "plugins"; 
 	const char *pw_file = "/etc/juci-shadow"; 
+	
+	printf("RevoRPCD v%s\n",VERSION); 
+	printf("Copyright (c) 2016 Martin Schröder\n"); 
 
 	int c = 0; 	
 	while((c = getopt(argc, argv, "d:l:p:vx:")) != -1){

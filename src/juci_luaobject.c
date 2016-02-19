@@ -15,6 +15,8 @@
 	GNU General Public License for more details.
 */
 
+#include <dirent.h>
+
 #include "internal.h"
 #include "juci_luaobject.h"
 #include "juci_lua.h"
@@ -34,10 +36,21 @@ struct juci_luaobject* juci_luaobject_new(const char *name){
 	lua_getglobal(self->lua, "package"); 
 	lua_getfield(self->lua, -1, "path"); 
 	char newpath[255];
-	char *lua_libs = getenv("JUCI_LUA_LIB_PATH"); 
-	if(!lua_libs) lua_libs = JUCI_LUA_LIB_PATH; 
+	const char *dirs[] = {
+		getenv("JUCI_LUA_LIB_PATH"),
+		"./lualib/",
+		JUCI_LUA_LIB_PATH,
+	}; 
+	const char *lua_libs = 0; 
+	for(int c = 0; c < 3; c++){
+		lua_libs = dirs[c]; 
+		if(!lua_libs) continue; 
+		DIR *dir = opendir(lua_libs); 
+		if(dir) { closedir(dir); break; }
+	}
+	if(!lua_libs) lua_libs = "./"; 
 	snprintf(newpath, 255, "%s/?.lua;%s/juci/?.lua;%s;?.lua", lua_libs, lua_libs, lua_tostring(self->lua, -1)); 
-	TRACE("LUA: using lua path: %s\n", newpath); 
+	//TRACE("LUA: using lua path: %s\n", newpath); 
 	lua_pop(self->lua, 1); 
 	lua_pushstring(self->lua, newpath); 
 	lua_setfield(self->lua, -2, "path"); 
