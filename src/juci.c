@@ -81,13 +81,35 @@ int juci_load_plugins(struct juci *self, const char *path, const char *base_path
     return rv; 
 }
 
-void juci_init(struct juci *self){
+struct juci* juci_new(){
+	struct juci *self = calloc(1, sizeof(struct juci)); 
 	avl_init(&self->objects, avl_strcmp, false, NULL); 
 	avl_init(&self->sessions, avl_strcmp, false, NULL); 
 	avl_init(&self->users, avl_strcmp, false, NULL); 
 
 	struct juci_user *admin = juci_user_new("admin"); 
 	avl_insert(&self->users, &admin->avl); 
+
+	return self; 
+}
+
+void juci_delete(struct juci **_self){
+	struct juci *self = *_self; 
+	struct juci_luaobject *obj, *nobj;
+    struct juci_session *ses, *nses;
+    struct juci_user *user, *nuser;
+
+	avl_remove_all_elements(&self->objects, obj, avl, nobj)
+		juci_luaobject_delete(&obj); 
+
+    avl_remove_all_elements(&self->sessions, ses, avl, nses)
+		juci_session_delete(&ses); 
+
+    avl_remove_all_elements(&self->users, user, avl, nuser)
+		juci_user_delete(&user); 
+
+	free(self); 
+	_self = NULL; 
 }
 
 static char *_load_file(const char *path){

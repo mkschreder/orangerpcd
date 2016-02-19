@@ -31,7 +31,9 @@ struct juci {
 	struct juci_session *current_session; 
 }; 
 
-void juci_init(struct juci *self); 
+struct juci* juci_new(); 
+void juci_delete(struct juci **_self); 
+
 int juci_load_plugins(struct juci *self, const char *path, const char *base_path); 
 int juci_load_passwords(struct juci *self, const char *pwfile); 
 int juci_login(struct juci *self, const char *username, const char *challenge, const char *response, const char **new_sid); 

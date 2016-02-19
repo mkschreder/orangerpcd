@@ -144,13 +144,12 @@ int main(int argc, char **argv){
 
 	signal(SIGINT, handle_sigint); 
 
-	struct juci app; 
-	juci_init(&app); 
+	struct juci *app = juci_new(); 
 
-	if(juci_load_passwords(&app, pw_file) != 0){
+	if(juci_load_passwords(app, pw_file) != 0){
 		ERROR("could not load password file from %s\n", pw_file); 
 	}
-	juci_load_plugins(&app, plugin_dir, NULL); 
+	juci_load_plugins(app, plugin_dir, NULL); 
 	
 	struct blob buf, out; 
 	blob_init(&buf, 0, 0); 
@@ -162,7 +161,7 @@ int main(int argc, char **argv){
 		clock_gettime(CLOCK_MONOTONIC, &tss); 
 		
 		// 10ms delay 
-        if(ubus_server_recv(server, &msg, 10000UL) < 0){  
+        if(ubus_server_recv(server, &msg, 10000UL) < 0 || !msg){  
             continue;                   
         }
 		clock_gettime(CLOCK_MONOTONIC, &tse); 
@@ -175,6 +174,7 @@ int main(int argc, char **argv){
 		const char *sid = "", *rpc_method = "", *object = "", *method = ""; 
 		uint32_t rpc_id = 0; 
 		if(!rpcmsg_parse_call(&msg->buf, &rpc_id, &rpc_method, &params)){
+			ubus_message_delete(&msg); 
 			DEBUG("could not parse call params\n"); 
 			continue; 
 		}
@@ -190,7 +190,7 @@ int main(int argc, char **argv){
 
 		if(rpc_method && strcmp(rpc_method, "call") == 0){
 			if(rpcmsg_parse_call_params(params, &sid, &object, &method, &args)){
-				int ret = juci_call(&app, sid, object, method, args, &result->buf); 
+				int ret = juci_call(app, sid, object, method, args, &result->buf); 
 				if(ret < 0) {
 					char *str = strerror(-ret); 
 					if(!str) str = "UNKNOWN"; 
@@ -204,7 +204,7 @@ int main(int argc, char **argv){
 			const char *path = "*"; 	
 			if(rpcmsg_parse_list_params(params, &sid, &path)){
 				blob_put_string(&result->buf, "result"); 
-				juci_list(&app, sid, path, &result->buf); 
+				juci_list(app, sid, path, &result->buf); 
 			}
 		} else if(rpc_method && strcmp(rpc_method, "challenge") == 0){
 			blob_put_string(&result->buf, "result"); 
@@ -224,7 +224,7 @@ int main(int argc, char **argv){
 			if(rpcmsg_parse_login(params, &username, &response)){
 				blob_put_string(&result->buf, "result"); 
 				blob_offset_t o = blob_open_table(&result->buf); 
-				if(juci_login(&app, username, token, response, &sid) == 0){
+				if(juci_login(app, username, token, response, &sid) == 0){
 					blob_put_string(&result->buf, "success"); 
 					blob_put_string(&result->buf, sid); 
 				} else {
@@ -239,7 +239,7 @@ int main(int argc, char **argv){
 			}
 		} else if(rpc_method && strcmp(rpc_method, "authenticate") == 0){
 			const char *sid = NULL; 
-			if(rpcmsg_parse_authenticate(params, &sid) && juci_session_exists(&app, sid)){
+			if(rpcmsg_parse_authenticate(params, &sid) && juci_session_exists(app, sid)){
 				blob_put_string(&result->buf, "result"); 
 				blob_offset_t o = blob_open_table(&result->buf); 
 					blob_put_string(&result->buf, "success"); 
@@ -260,10 +260,14 @@ int main(int argc, char **argv){
 			blob_dump_json(&result->buf); 
 		}
 		ubus_server_send(server, &result); 		
+		ubus_message_delete(&msg); 
     }
 
 	DEBUG("cleaning up\n"); 
 	ubus_server_delete(server); 
+	juci_delete(&app); 
+	blob_free(&buf); 
+	blob_free(&out); 
 
 	return 0; 
 }

@@ -98,7 +98,7 @@ static struct ubus_srv_ws_client *ubus_srv_ws_client_new(){
 	return self; 
 }
 
-static __attribute__((unused)) void ubus_srv_ws_client_delete(struct ubus_srv_ws_client **self){
+static void ubus_srv_ws_client_delete(struct ubus_srv_ws_client **self){
 	// TODO: free tx_queue
 	struct ubus_srv_ws_frame *pos, *tmp; 
 	list_for_each_entry_safe(pos, tmp, &(*self)->tx_queue, list){
@@ -123,8 +123,8 @@ static int _ubus_socket_callback(struct lws *wsi, enum lws_callback_reasons reas
 	switch(reason){
 		case LWS_CALLBACK_ESTABLISHED: {
 			struct ubus_srv_ws *self = (struct ubus_srv_ws*)proto->user; 
-			struct ubus_srv_ws_client *client = ubus_srv_ws_client_new(lws_get_socket_fd(wsi)); 
 			pthread_mutex_lock(&self->qlock); 
+			struct ubus_srv_ws_client *client = ubus_srv_ws_client_new(lws_get_socket_fd(wsi)); 
 			ubus_id_alloc(&self->clients, &client->id, 0); 
 			*user = client; 
 			char hostname[255], ipaddr[255]; 
@@ -256,14 +256,21 @@ void _websocket_destroy(juci_server_t socket){
 	pthread_join(self->thread, NULL); 
 	pthread_mutex_destroy(&self->qlock); 
 	pthread_cond_destroy(&self->rx_ready); 
+
+	if(self->ctx) lws_context_destroy(self->ctx); 
+
 	struct ubus_id *id, *tmp; 
 	avl_for_each_element_safe(&self->clients, id, avl, tmp){
 		struct ubus_srv_ws_client *client = container_of(id, struct ubus_srv_ws_client, id);  
 		ubus_id_free(&self->clients, &client->id); 
 		ubus_srv_ws_client_delete(&client); 
 	}
+	
+	struct ubus_message *msg, *nmsg; 
+	list_for_each_entry_safe(msg, nmsg, &self->rx_queue, list){
+		ubus_message_delete(&msg); 
+	}
 
-	if(self->ctx) lws_context_destroy(self->ctx); 
 	DEBUG("websocket: context destroyed\n"); 
 	free(self->protocols); 
 	free(self);  
@@ -294,7 +301,7 @@ int _websocket_listen(juci_server_t socket, const char *path){
 	return 0; 
 }
 
-int _websocket_connect(juci_server_t socket, const char *path){
+static int _websocket_connect(juci_server_t socket, const char *path){
 	//struct ubus_srv_ws *self = container_of(socket, struct ubus_srv_ws, api); 
 	return -1; 
 }
@@ -352,6 +359,8 @@ static void _timeout_us(struct timespec *t, unsigned long long timeout_us){
 
 static int _websocket_recv(juci_server_t socket, struct ubus_message **msg, unsigned long long timeout_us){
 	struct ubus_srv_ws *self = container_of(socket, struct ubus_srv_ws, api); 
+
+	*msg = NULL; 
 	if(self->shutdown) return -1; 
 
 	struct timespec t; 

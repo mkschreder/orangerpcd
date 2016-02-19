@@ -61,6 +61,8 @@ struct juci_luaobject* juci_luaobject_new(const char *name){
 
 void juci_luaobject_delete(struct juci_luaobject **self){
 	lua_close((*self)->lua); 
+	blob_free(&(*self)->signature); 
+	free((*self)->name); 
 	free(*self); 
 	*self = NULL; 
 }
