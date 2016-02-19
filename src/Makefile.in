@@ -76,7 +76,7 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-bin_PROGRAMS = jucid$(EXEEXT)
+bin_PROGRAMS = revorpcd$(EXEEXT)
 subdir = src
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(top_srcdir)/config/depcomp
@@ -89,15 +89,16 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
-am_jucid_OBJECTS = jucid-juci_luaobject.$(OBJEXT) \
-	jucid-juci_session.$(OBJEXT) jucid-juci_message.$(OBJEXT) \
-	jucid-juci_id.$(OBJEXT) jucid-juci_lua.$(OBJEXT) \
-	jucid-juci.$(OBJEXT) jucid-juci_ws_server.$(OBJEXT) \
-	jucid-juci_user.$(OBJEXT) jucid-juci_uci.$(OBJEXT) \
-	jucid-sha1.$(OBJEXT) jucid-main.$(OBJEXT)
-jucid_OBJECTS = $(am_jucid_OBJECTS)
-jucid_DEPENDENCIES =
-jucid_LINK = $(CCLD) $(jucid_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
+am_revorpcd_OBJECTS = revorpcd-juci_luaobject.$(OBJEXT) \
+	revorpcd-juci_session.$(OBJEXT) \
+	revorpcd-juci_message.$(OBJEXT) revorpcd-juci_id.$(OBJEXT) \
+	revorpcd-juci_lua.$(OBJEXT) revorpcd-juci.$(OBJEXT) \
+	revorpcd-juci_ws_server.$(OBJEXT) revorpcd-juci_user.$(OBJEXT) \
+	revorpcd-juci_uci.$(OBJEXT) revorpcd-sha1.$(OBJEXT) \
+	revorpcd-main.$(OBJEXT)
+revorpcd_OBJECTS = $(am_revorpcd_OBJECTS)
+revorpcd_DEPENDENCIES =
+revorpcd_LINK = $(CCLD) $(revorpcd_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
@@ -131,8 +132,8 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(jucid_SOURCES)
-DIST_SOURCES = $(jucid_SOURCES)
+SOURCES = $(revorpcd_SOURCES)
+DIST_SOURCES = $(revorpcd_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -246,9 +247,9 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-jucid_SOURCES = juci_luaobject.c juci_session.c juci_message.c juci_id.c juci_lua.c juci.c juci_ws_server.c juci_user.c juci_uci.c sha1.c main.c
-jucid_CFLAGS = -std=gnu99 -Wall -Werror
-jucid_LDADD = -lblobpack -lusys -lutype -lpthread -lwebsockets -lcrypt -luci @LIBLUA_LINK@
+revorpcd_SOURCES = juci_luaobject.c juci_session.c juci_message.c juci_id.c juci_lua.c juci.c juci_ws_server.c juci_user.c juci_uci.c sha1.c main.c
+revorpcd_CFLAGS = -std=gnu99 -Wall -Werror
+revorpcd_LDADD = -lblobpack -lusys -lutype -lpthread -lwebsockets -lcrypt -luci @LIBLUA_LINK@
 all: all-am
 
 .SUFFIXES:
@@ -326,9 +327,9 @@ uninstall-binPROGRAMS:
 clean-binPROGRAMS:
 	-test -z "$(bin_PROGRAMS)" || rm -f $(bin_PROGRAMS)
 
-jucid$(EXEEXT): $(jucid_OBJECTS) $(jucid_DEPENDENCIES) $(EXTRA_jucid_DEPENDENCIES) 
-	@rm -f jucid$(EXEEXT)
-	$(AM_V_CCLD)$(jucid_LINK) $(jucid_OBJECTS) $(jucid_LDADD) $(LIBS)
+revorpcd$(EXEEXT): $(revorpcd_OBJECTS) $(revorpcd_DEPENDENCIES) $(EXTRA_revorpcd_DEPENDENCIES) 
+	@rm -f revorpcd$(EXEEXT)
+	$(AM_V_CCLD)$(revorpcd_LINK) $(revorpcd_OBJECTS) $(revorpcd_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -336,17 +337,17 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/jucid-juci.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/jucid-juci_id.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/jucid-juci_lua.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/jucid-juci_luaobject.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/jucid-juci_message.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/jucid-juci_session.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/jucid-juci_uci.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/jucid-juci_user.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/jucid-juci_ws_server.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/jucid-main.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/jucid-sha1.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/revorpcd-juci.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/revorpcd-juci_id.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/revorpcd-juci_lua.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/revorpcd-juci_luaobject.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/revorpcd-juci_message.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/revorpcd-juci_session.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/revorpcd-juci_uci.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/revorpcd-juci_user.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/revorpcd-juci_ws_server.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/revorpcd-main.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/revorpcd-sha1.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -362,159 +363,159 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(COMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
 
-jucid-juci_luaobject.o: juci_luaobject.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(jucid_CFLAGS) $(CFLAGS) -MT jucid-juci_luaobject.o -MD -MP -MF $(DEPDIR)/jucid-juci_luaobject.Tpo -c -o jucid-juci_luaobject.o `test -f 'juci_luaobject.c' || echo '$(srcdir)/'`juci_luaobject.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/jucid-juci_luaobject.Tpo $(DEPDIR)/jucid-juci_luaobject.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='juci_luaobject.c' object='jucid-juci_luaobject.o' libtool=no @AMDEPBACKSLASH@
+revorpcd-juci_luaobject.o: juci_luaobject.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -MT revorpcd-juci_luaobject.o -MD -MP -MF $(DEPDIR)/revorpcd-juci_luaobject.Tpo -c -o revorpcd-juci_luaobject.o `test -f 'juci_luaobject.c' || echo '$(srcdir)/'`juci_luaobject.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/revorpcd-juci_luaobject.Tpo $(DEPDIR)/revorpcd-juci_luaobject.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='juci_luaobject.c' object='revorpcd-juci_luaobject.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(jucid_CFLAGS) $(CFLAGS) -c -o jucid-juci_luaobject.o `test -f 'juci_luaobject.c' || echo '$(srcdir)/'`juci_luaobject.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -c -o revorpcd-juci_luaobject.o `test -f 'juci_luaobject.c' || echo '$(srcdir)/'`juci_luaobject.c
 
-jucid-juci_luaobject.obj: juci_luaobject.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(jucid_CFLAGS) $(CFLAGS) -MT jucid-juci_luaobject.obj -MD -MP -MF $(DEPDIR)/jucid-juci_luaobject.Tpo -c -o jucid-juci_luaobject.obj `if test -f 'juci_luaobject.c'; then $(CYGPATH_W) 'juci_luaobject.c'; else $(CYGPATH_W) '$(srcdir)/juci_luaobject.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/jucid-juci_luaobject.Tpo $(DEPDIR)/jucid-juci_luaobject.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='juci_luaobject.c' object='jucid-juci_luaobject.obj' libtool=no @AMDEPBACKSLASH@
+revorpcd-juci_luaobject.obj: juci_luaobject.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -MT revorpcd-juci_luaobject.obj -MD -MP -MF $(DEPDIR)/revorpcd-juci_luaobject.Tpo -c -o revorpcd-juci_luaobject.obj `if test -f 'juci_luaobject.c'; then $(CYGPATH_W) 'juci_luaobject.c'; else $(CYGPATH_W) '$(srcdir)/juci_luaobject.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/revorpcd-juci_luaobject.Tpo $(DEPDIR)/revorpcd-juci_luaobject.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='juci_luaobject.c' object='revorpcd-juci_luaobject.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(jucid_CFLAGS) $(CFLAGS) -c -o jucid-juci_luaobject.obj `if test -f 'juci_luaobject.c'; then $(CYGPATH_W) 'juci_luaobject.c'; else $(CYGPATH_W) '$(srcdir)/juci_luaobject.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -c -o revorpcd-juci_luaobject.obj `if test -f 'juci_luaobject.c'; then $(CYGPATH_W) 'juci_luaobject.c'; else $(CYGPATH_W) '$(srcdir)/juci_luaobject.c'; fi`
 
-jucid-juci_session.o: juci_session.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(jucid_CFLAGS) $(CFLAGS) -MT jucid-juci_session.o -MD -MP -MF $(DEPDIR)/jucid-juci_session.Tpo -c -o jucid-juci_session.o `test -f 'juci_session.c' || echo '$(srcdir)/'`juci_session.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/jucid-juci_session.Tpo $(DEPDIR)/jucid-juci_session.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='juci_session.c' object='jucid-juci_session.o' libtool=no @AMDEPBACKSLASH@
+revorpcd-juci_session.o: juci_session.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -MT revorpcd-juci_session.o -MD -MP -MF $(DEPDIR)/revorpcd-juci_session.Tpo -c -o revorpcd-juci_session.o `test -f 'juci_session.c' || echo '$(srcdir)/'`juci_session.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/revorpcd-juci_session.Tpo $(DEPDIR)/revorpcd-juci_session.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='juci_session.c' object='revorpcd-juci_session.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(jucid_CFLAGS) $(CFLAGS) -c -o jucid-juci_session.o `test -f 'juci_session.c' || echo '$(srcdir)/'`juci_session.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -c -o revorpcd-juci_session.o `test -f 'juci_session.c' || echo '$(srcdir)/'`juci_session.c
 
-jucid-juci_session.obj: juci_session.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(jucid_CFLAGS) $(CFLAGS) -MT jucid-juci_session.obj -MD -MP -MF $(DEPDIR)/jucid-juci_session.Tpo -c -o jucid-juci_session.obj `if test -f 'juci_session.c'; then $(CYGPATH_W) 'juci_session.c'; else $(CYGPATH_W) '$(srcdir)/juci_session.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/jucid-juci_session.Tpo $(DEPDIR)/jucid-juci_session.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='juci_session.c' object='jucid-juci_session.obj' libtool=no @AMDEPBACKSLASH@
+revorpcd-juci_session.obj: juci_session.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -MT revorpcd-juci_session.obj -MD -MP -MF $(DEPDIR)/revorpcd-juci_session.Tpo -c -o revorpcd-juci_session.obj `if test -f 'juci_session.c'; then $(CYGPATH_W) 'juci_session.c'; else $(CYGPATH_W) '$(srcdir)/juci_session.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/revorpcd-juci_session.Tpo $(DEPDIR)/revorpcd-juci_session.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='juci_session.c' object='revorpcd-juci_session.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(jucid_CFLAGS) $(CFLAGS) -c -o jucid-juci_session.obj `if test -f 'juci_session.c'; then $(CYGPATH_W) 'juci_session.c'; else $(CYGPATH_W) '$(srcdir)/juci_session.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -c -o revorpcd-juci_session.obj `if test -f 'juci_session.c'; then $(CYGPATH_W) 'juci_session.c'; else $(CYGPATH_W) '$(srcdir)/juci_session.c'; fi`
 
-jucid-juci_message.o: juci_message.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(jucid_CFLAGS) $(CFLAGS) -MT jucid-juci_message.o -MD -MP -MF $(DEPDIR)/jucid-juci_message.Tpo -c -o jucid-juci_message.o `test -f 'juci_message.c' || echo '$(srcdir)/'`juci_message.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/jucid-juci_message.Tpo $(DEPDIR)/jucid-juci_message.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='juci_message.c' object='jucid-juci_message.o' libtool=no @AMDEPBACKSLASH@
+revorpcd-juci_message.o: juci_message.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -MT revorpcd-juci_message.o -MD -MP -MF $(DEPDIR)/revorpcd-juci_message.Tpo -c -o revorpcd-juci_message.o `test -f 'juci_message.c' || echo '$(srcdir)/'`juci_message.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/revorpcd-juci_message.Tpo $(DEPDIR)/revorpcd-juci_message.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='juci_message.c' object='revorpcd-juci_message.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(jucid_CFLAGS) $(CFLAGS) -c -o jucid-juci_message.o `test -f 'juci_message.c' || echo '$(srcdir)/'`juci_message.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -c -o revorpcd-juci_message.o `test -f 'juci_message.c' || echo '$(srcdir)/'`juci_message.c
 
-jucid-juci_message.obj: juci_message.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(jucid_CFLAGS) $(CFLAGS) -MT jucid-juci_message.obj -MD -MP -MF $(DEPDIR)/jucid-juci_message.Tpo -c -o jucid-juci_message.obj `if test -f 'juci_message.c'; then $(CYGPATH_W) 'juci_message.c'; else $(CYGPATH_W) '$(srcdir)/juci_message.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/jucid-juci_message.Tpo $(DEPDIR)/jucid-juci_message.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='juci_message.c' object='jucid-juci_message.obj' libtool=no @AMDEPBACKSLASH@
+revorpcd-juci_message.obj: juci_message.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -MT revorpcd-juci_message.obj -MD -MP -MF $(DEPDIR)/revorpcd-juci_message.Tpo -c -o revorpcd-juci_message.obj `if test -f 'juci_message.c'; then $(CYGPATH_W) 'juci_message.c'; else $(CYGPATH_W) '$(srcdir)/juci_message.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/revorpcd-juci_message.Tpo $(DEPDIR)/revorpcd-juci_message.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='juci_message.c' object='revorpcd-juci_message.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(jucid_CFLAGS) $(CFLAGS) -c -o jucid-juci_message.obj `if test -f 'juci_message.c'; then $(CYGPATH_W) 'juci_message.c'; else $(CYGPATH_W) '$(srcdir)/juci_message.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -c -o revorpcd-juci_message.obj `if test -f 'juci_message.c'; then $(CYGPATH_W) 'juci_message.c'; else $(CYGPATH_W) '$(srcdir)/juci_message.c'; fi`
 
-jucid-juci_id.o: juci_id.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(jucid_CFLAGS) $(CFLAGS) -MT jucid-juci_id.o -MD -MP -MF $(DEPDIR)/jucid-juci_id.Tpo -c -o jucid-juci_id.o `test -f 'juci_id.c' || echo '$(srcdir)/'`juci_id.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/jucid-juci_id.Tpo $(DEPDIR)/jucid-juci_id.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='juci_id.c' object='jucid-juci_id.o' libtool=no @AMDEPBACKSLASH@
+revorpcd-juci_id.o: juci_id.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -MT revorpcd-juci_id.o -MD -MP -MF $(DEPDIR)/revorpcd-juci_id.Tpo -c -o revorpcd-juci_id.o `test -f 'juci_id.c' || echo '$(srcdir)/'`juci_id.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/revorpcd-juci_id.Tpo $(DEPDIR)/revorpcd-juci_id.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='juci_id.c' object='revorpcd-juci_id.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(jucid_CFLAGS) $(CFLAGS) -c -o jucid-juci_id.o `test -f 'juci_id.c' || echo '$(srcdir)/'`juci_id.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -c -o revorpcd-juci_id.o `test -f 'juci_id.c' || echo '$(srcdir)/'`juci_id.c
 
-jucid-juci_id.obj: juci_id.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(jucid_CFLAGS) $(CFLAGS) -MT jucid-juci_id.obj -MD -MP -MF $(DEPDIR)/jucid-juci_id.Tpo -c -o jucid-juci_id.obj `if test -f 'juci_id.c'; then $(CYGPATH_W) 'juci_id.c'; else $(CYGPATH_W) '$(srcdir)/juci_id.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/jucid-juci_id.Tpo $(DEPDIR)/jucid-juci_id.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='juci_id.c' object='jucid-juci_id.obj' libtool=no @AMDEPBACKSLASH@
+revorpcd-juci_id.obj: juci_id.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -MT revorpcd-juci_id.obj -MD -MP -MF $(DEPDIR)/revorpcd-juci_id.Tpo -c -o revorpcd-juci_id.obj `if test -f 'juci_id.c'; then $(CYGPATH_W) 'juci_id.c'; else $(CYGPATH_W) '$(srcdir)/juci_id.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/revorpcd-juci_id.Tpo $(DEPDIR)/revorpcd-juci_id.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='juci_id.c' object='revorpcd-juci_id.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(jucid_CFLAGS) $(CFLAGS) -c -o jucid-juci_id.obj `if test -f 'juci_id.c'; then $(CYGPATH_W) 'juci_id.c'; else $(CYGPATH_W) '$(srcdir)/juci_id.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -c -o revorpcd-juci_id.obj `if test -f 'juci_id.c'; then $(CYGPATH_W) 'juci_id.c'; else $(CYGPATH_W) '$(srcdir)/juci_id.c'; fi`
 
-jucid-juci_lua.o: juci_lua.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(jucid_CFLAGS) $(CFLAGS) -MT jucid-juci_lua.o -MD -MP -MF $(DEPDIR)/jucid-juci_lua.Tpo -c -o jucid-juci_lua.o `test -f 'juci_lua.c' || echo '$(srcdir)/'`juci_lua.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/jucid-juci_lua.Tpo $(DEPDIR)/jucid-juci_lua.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='juci_lua.c' object='jucid-juci_lua.o' libtool=no @AMDEPBACKSLASH@
+revorpcd-juci_lua.o: juci_lua.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -MT revorpcd-juci_lua.o -MD -MP -MF $(DEPDIR)/revorpcd-juci_lua.Tpo -c -o revorpcd-juci_lua.o `test -f 'juci_lua.c' || echo '$(srcdir)/'`juci_lua.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/revorpcd-juci_lua.Tpo $(DEPDIR)/revorpcd-juci_lua.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='juci_lua.c' object='revorpcd-juci_lua.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(jucid_CFLAGS) $(CFLAGS) -c -o jucid-juci_lua.o `test -f 'juci_lua.c' || echo '$(srcdir)/'`juci_lua.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -c -o revorpcd-juci_lua.o `test -f 'juci_lua.c' || echo '$(srcdir)/'`juci_lua.c
 
-jucid-juci_lua.obj: juci_lua.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(jucid_CFLAGS) $(CFLAGS) -MT jucid-juci_lua.obj -MD -MP -MF $(DEPDIR)/jucid-juci_lua.Tpo -c -o jucid-juci_lua.obj `if test -f 'juci_lua.c'; then $(CYGPATH_W) 'juci_lua.c'; else $(CYGPATH_W) '$(srcdir)/juci_lua.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/jucid-juci_lua.Tpo $(DEPDIR)/jucid-juci_lua.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='juci_lua.c' object='jucid-juci_lua.obj' libtool=no @AMDEPBACKSLASH@
+revorpcd-juci_lua.obj: juci_lua.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -MT revorpcd-juci_lua.obj -MD -MP -MF $(DEPDIR)/revorpcd-juci_lua.Tpo -c -o revorpcd-juci_lua.obj `if test -f 'juci_lua.c'; then $(CYGPATH_W) 'juci_lua.c'; else $(CYGPATH_W) '$(srcdir)/juci_lua.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/revorpcd-juci_lua.Tpo $(DEPDIR)/revorpcd-juci_lua.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='juci_lua.c' object='revorpcd-juci_lua.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(jucid_CFLAGS) $(CFLAGS) -c -o jucid-juci_lua.obj `if test -f 'juci_lua.c'; then $(CYGPATH_W) 'juci_lua.c'; else $(CYGPATH_W) '$(srcdir)/juci_lua.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -c -o revorpcd-juci_lua.obj `if test -f 'juci_lua.c'; then $(CYGPATH_W) 'juci_lua.c'; else $(CYGPATH_W) '$(srcdir)/juci_lua.c'; fi`
 
-jucid-juci.o: juci.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(jucid_CFLAGS) $(CFLAGS) -MT jucid-juci.o -MD -MP -MF $(DEPDIR)/jucid-juci.Tpo -c -o jucid-juci.o `test -f 'juci.c' || echo '$(srcdir)/'`juci.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/jucid-juci.Tpo $(DEPDIR)/jucid-juci.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='juci.c' object='jucid-juci.o' libtool=no @AMDEPBACKSLASH@
+revorpcd-juci.o: juci.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -MT revorpcd-juci.o -MD -MP -MF $(DEPDIR)/revorpcd-juci.Tpo -c -o revorpcd-juci.o `test -f 'juci.c' || echo '$(srcdir)/'`juci.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/revorpcd-juci.Tpo $(DEPDIR)/revorpcd-juci.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='juci.c' object='revorpcd-juci.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(jucid_CFLAGS) $(CFLAGS) -c -o jucid-juci.o `test -f 'juci.c' || echo '$(srcdir)/'`juci.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -c -o revorpcd-juci.o `test -f 'juci.c' || echo '$(srcdir)/'`juci.c
 
-jucid-juci.obj: juci.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(jucid_CFLAGS) $(CFLAGS) -MT jucid-juci.obj -MD -MP -MF $(DEPDIR)/jucid-juci.Tpo -c -o jucid-juci.obj `if test -f 'juci.c'; then $(CYGPATH_W) 'juci.c'; else $(CYGPATH_W) '$(srcdir)/juci.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/jucid-juci.Tpo $(DEPDIR)/jucid-juci.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='juci.c' object='jucid-juci.obj' libtool=no @AMDEPBACKSLASH@
+revorpcd-juci.obj: juci.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -MT revorpcd-juci.obj -MD -MP -MF $(DEPDIR)/revorpcd-juci.Tpo -c -o revorpcd-juci.obj `if test -f 'juci.c'; then $(CYGPATH_W) 'juci.c'; else $(CYGPATH_W) '$(srcdir)/juci.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/revorpcd-juci.Tpo $(DEPDIR)/revorpcd-juci.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='juci.c' object='revorpcd-juci.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(jucid_CFLAGS) $(CFLAGS) -c -o jucid-juci.obj `if test -f 'juci.c'; then $(CYGPATH_W) 'juci.c'; else $(CYGPATH_W) '$(srcdir)/juci.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -c -o revorpcd-juci.obj `if test -f 'juci.c'; then $(CYGPATH_W) 'juci.c'; else $(CYGPATH_W) '$(srcdir)/juci.c'; fi`
 
-jucid-juci_ws_server.o: juci_ws_server.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(jucid_CFLAGS) $(CFLAGS) -MT jucid-juci_ws_server.o -MD -MP -MF $(DEPDIR)/jucid-juci_ws_server.Tpo -c -o jucid-juci_ws_server.o `test -f 'juci_ws_server.c' || echo '$(srcdir)/'`juci_ws_server.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/jucid-juci_ws_server.Tpo $(DEPDIR)/jucid-juci_ws_server.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='juci_ws_server.c' object='jucid-juci_ws_server.o' libtool=no @AMDEPBACKSLASH@
+revorpcd-juci_ws_server.o: juci_ws_server.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -MT revorpcd-juci_ws_server.o -MD -MP -MF $(DEPDIR)/revorpcd-juci_ws_server.Tpo -c -o revorpcd-juci_ws_server.o `test -f 'juci_ws_server.c' || echo '$(srcdir)/'`juci_ws_server.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/revorpcd-juci_ws_server.Tpo $(DEPDIR)/revorpcd-juci_ws_server.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='juci_ws_server.c' object='revorpcd-juci_ws_server.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(jucid_CFLAGS) $(CFLAGS) -c -o jucid-juci_ws_server.o `test -f 'juci_ws_server.c' || echo '$(srcdir)/'`juci_ws_server.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -c -o revorpcd-juci_ws_server.o `test -f 'juci_ws_server.c' || echo '$(srcdir)/'`juci_ws_server.c
 
-jucid-juci_ws_server.obj: juci_ws_server.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(jucid_CFLAGS) $(CFLAGS) -MT jucid-juci_ws_server.obj -MD -MP -MF $(DEPDIR)/jucid-juci_ws_server.Tpo -c -o jucid-juci_ws_server.obj `if test -f 'juci_ws_server.c'; then $(CYGPATH_W) 'juci_ws_server.c'; else $(CYGPATH_W) '$(srcdir)/juci_ws_server.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/jucid-juci_ws_server.Tpo $(DEPDIR)/jucid-juci_ws_server.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='juci_ws_server.c' object='jucid-juci_ws_server.obj' libtool=no @AMDEPBACKSLASH@
+revorpcd-juci_ws_server.obj: juci_ws_server.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -MT revorpcd-juci_ws_server.obj -MD -MP -MF $(DEPDIR)/revorpcd-juci_ws_server.Tpo -c -o revorpcd-juci_ws_server.obj `if test -f 'juci_ws_server.c'; then $(CYGPATH_W) 'juci_ws_server.c'; else $(CYGPATH_W) '$(srcdir)/juci_ws_server.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/revorpcd-juci_ws_server.Tpo $(DEPDIR)/revorpcd-juci_ws_server.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='juci_ws_server.c' object='revorpcd-juci_ws_server.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(jucid_CFLAGS) $(CFLAGS) -c -o jucid-juci_ws_server.obj `if test -f 'juci_ws_server.c'; then $(CYGPATH_W) 'juci_ws_server.c'; else $(CYGPATH_W) '$(srcdir)/juci_ws_server.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -c -o revorpcd-juci_ws_server.obj `if test -f 'juci_ws_server.c'; then $(CYGPATH_W) 'juci_ws_server.c'; else $(CYGPATH_W) '$(srcdir)/juci_ws_server.c'; fi`
 
-jucid-juci_user.o: juci_user.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(jucid_CFLAGS) $(CFLAGS) -MT jucid-juci_user.o -MD -MP -MF $(DEPDIR)/jucid-juci_user.Tpo -c -o jucid-juci_user.o `test -f 'juci_user.c' || echo '$(srcdir)/'`juci_user.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/jucid-juci_user.Tpo $(DEPDIR)/jucid-juci_user.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='juci_user.c' object='jucid-juci_user.o' libtool=no @AMDEPBACKSLASH@
+revorpcd-juci_user.o: juci_user.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -MT revorpcd-juci_user.o -MD -MP -MF $(DEPDIR)/revorpcd-juci_user.Tpo -c -o revorpcd-juci_user.o `test -f 'juci_user.c' || echo '$(srcdir)/'`juci_user.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/revorpcd-juci_user.Tpo $(DEPDIR)/revorpcd-juci_user.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='juci_user.c' object='revorpcd-juci_user.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(jucid_CFLAGS) $(CFLAGS) -c -o jucid-juci_user.o `test -f 'juci_user.c' || echo '$(srcdir)/'`juci_user.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -c -o revorpcd-juci_user.o `test -f 'juci_user.c' || echo '$(srcdir)/'`juci_user.c
 
-jucid-juci_user.obj: juci_user.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(jucid_CFLAGS) $(CFLAGS) -MT jucid-juci_user.obj -MD -MP -MF $(DEPDIR)/jucid-juci_user.Tpo -c -o jucid-juci_user.obj `if test -f 'juci_user.c'; then $(CYGPATH_W) 'juci_user.c'; else $(CYGPATH_W) '$(srcdir)/juci_user.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/jucid-juci_user.Tpo $(DEPDIR)/jucid-juci_user.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='juci_user.c' object='jucid-juci_user.obj' libtool=no @AMDEPBACKSLASH@
+revorpcd-juci_user.obj: juci_user.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -MT revorpcd-juci_user.obj -MD -MP -MF $(DEPDIR)/revorpcd-juci_user.Tpo -c -o revorpcd-juci_user.obj `if test -f 'juci_user.c'; then $(CYGPATH_W) 'juci_user.c'; else $(CYGPATH_W) '$(srcdir)/juci_user.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/revorpcd-juci_user.Tpo $(DEPDIR)/revorpcd-juci_user.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='juci_user.c' object='revorpcd-juci_user.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(jucid_CFLAGS) $(CFLAGS) -c -o jucid-juci_user.obj `if test -f 'juci_user.c'; then $(CYGPATH_W) 'juci_user.c'; else $(CYGPATH_W) '$(srcdir)/juci_user.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -c -o revorpcd-juci_user.obj `if test -f 'juci_user.c'; then $(CYGPATH_W) 'juci_user.c'; else $(CYGPATH_W) '$(srcdir)/juci_user.c'; fi`
 
-jucid-juci_uci.o: juci_uci.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(jucid_CFLAGS) $(CFLAGS) -MT jucid-juci_uci.o -MD -MP -MF $(DEPDIR)/jucid-juci_uci.Tpo -c -o jucid-juci_uci.o `test -f 'juci_uci.c' || echo '$(srcdir)/'`juci_uci.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/jucid-juci_uci.Tpo $(DEPDIR)/jucid-juci_uci.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='juci_uci.c' object='jucid-juci_uci.o' libtool=no @AMDEPBACKSLASH@
+revorpcd-juci_uci.o: juci_uci.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -MT revorpcd-juci_uci.o -MD -MP -MF $(DEPDIR)/revorpcd-juci_uci.Tpo -c -o revorpcd-juci_uci.o `test -f 'juci_uci.c' || echo '$(srcdir)/'`juci_uci.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/revorpcd-juci_uci.Tpo $(DEPDIR)/revorpcd-juci_uci.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='juci_uci.c' object='revorpcd-juci_uci.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(jucid_CFLAGS) $(CFLAGS) -c -o jucid-juci_uci.o `test -f 'juci_uci.c' || echo '$(srcdir)/'`juci_uci.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -c -o revorpcd-juci_uci.o `test -f 'juci_uci.c' || echo '$(srcdir)/'`juci_uci.c
 
-jucid-juci_uci.obj: juci_uci.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(jucid_CFLAGS) $(CFLAGS) -MT jucid-juci_uci.obj -MD -MP -MF $(DEPDIR)/jucid-juci_uci.Tpo -c -o jucid-juci_uci.obj `if test -f 'juci_uci.c'; then $(CYGPATH_W) 'juci_uci.c'; else $(CYGPATH_W) '$(srcdir)/juci_uci.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/jucid-juci_uci.Tpo $(DEPDIR)/jucid-juci_uci.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='juci_uci.c' object='jucid-juci_uci.obj' libtool=no @AMDEPBACKSLASH@
+revorpcd-juci_uci.obj: juci_uci.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -MT revorpcd-juci_uci.obj -MD -MP -MF $(DEPDIR)/revorpcd-juci_uci.Tpo -c -o revorpcd-juci_uci.obj `if test -f 'juci_uci.c'; then $(CYGPATH_W) 'juci_uci.c'; else $(CYGPATH_W) '$(srcdir)/juci_uci.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/revorpcd-juci_uci.Tpo $(DEPDIR)/revorpcd-juci_uci.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='juci_uci.c' object='revorpcd-juci_uci.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(jucid_CFLAGS) $(CFLAGS) -c -o jucid-juci_uci.obj `if test -f 'juci_uci.c'; then $(CYGPATH_W) 'juci_uci.c'; else $(CYGPATH_W) '$(srcdir)/juci_uci.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -c -o revorpcd-juci_uci.obj `if test -f 'juci_uci.c'; then $(CYGPATH_W) 'juci_uci.c'; else $(CYGPATH_W) '$(srcdir)/juci_uci.c'; fi`
 
-jucid-sha1.o: sha1.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(jucid_CFLAGS) $(CFLAGS) -MT jucid-sha1.o -MD -MP -MF $(DEPDIR)/jucid-sha1.Tpo -c -o jucid-sha1.o `test -f 'sha1.c' || echo '$(srcdir)/'`sha1.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/jucid-sha1.Tpo $(DEPDIR)/jucid-sha1.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='sha1.c' object='jucid-sha1.o' libtool=no @AMDEPBACKSLASH@
+revorpcd-sha1.o: sha1.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -MT revorpcd-sha1.o -MD -MP -MF $(DEPDIR)/revorpcd-sha1.Tpo -c -o revorpcd-sha1.o `test -f 'sha1.c' || echo '$(srcdir)/'`sha1.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/revorpcd-sha1.Tpo $(DEPDIR)/revorpcd-sha1.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='sha1.c' object='revorpcd-sha1.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(jucid_CFLAGS) $(CFLAGS) -c -o jucid-sha1.o `test -f 'sha1.c' || echo '$(srcdir)/'`sha1.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -c -o revorpcd-sha1.o `test -f 'sha1.c' || echo '$(srcdir)/'`sha1.c
 
-jucid-sha1.obj: sha1.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(jucid_CFLAGS) $(CFLAGS) -MT jucid-sha1.obj -MD -MP -MF $(DEPDIR)/jucid-sha1.Tpo -c -o jucid-sha1.obj `if test -f 'sha1.c'; then $(CYGPATH_W) 'sha1.c'; else $(CYGPATH_W) '$(srcdir)/sha1.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/jucid-sha1.Tpo $(DEPDIR)/jucid-sha1.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='sha1.c' object='jucid-sha1.obj' libtool=no @AMDEPBACKSLASH@
+revorpcd-sha1.obj: sha1.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -MT revorpcd-sha1.obj -MD -MP -MF $(DEPDIR)/revorpcd-sha1.Tpo -c -o revorpcd-sha1.obj `if test -f 'sha1.c'; then $(CYGPATH_W) 'sha1.c'; else $(CYGPATH_W) '$(srcdir)/sha1.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/revorpcd-sha1.Tpo $(DEPDIR)/revorpcd-sha1.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='sha1.c' object='revorpcd-sha1.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(jucid_CFLAGS) $(CFLAGS) -c -o jucid-sha1.obj `if test -f 'sha1.c'; then $(CYGPATH_W) 'sha1.c'; else $(CYGPATH_W) '$(srcdir)/sha1.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -c -o revorpcd-sha1.obj `if test -f 'sha1.c'; then $(CYGPATH_W) 'sha1.c'; else $(CYGPATH_W) '$(srcdir)/sha1.c'; fi`
 
-jucid-main.o: main.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(jucid_CFLAGS) $(CFLAGS) -MT jucid-main.o -MD -MP -MF $(DEPDIR)/jucid-main.Tpo -c -o jucid-main.o `test -f 'main.c' || echo '$(srcdir)/'`main.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/jucid-main.Tpo $(DEPDIR)/jucid-main.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='main.c' object='jucid-main.o' libtool=no @AMDEPBACKSLASH@
+revorpcd-main.o: main.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -MT revorpcd-main.o -MD -MP -MF $(DEPDIR)/revorpcd-main.Tpo -c -o revorpcd-main.o `test -f 'main.c' || echo '$(srcdir)/'`main.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/revorpcd-main.Tpo $(DEPDIR)/revorpcd-main.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='main.c' object='revorpcd-main.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(jucid_CFLAGS) $(CFLAGS) -c -o jucid-main.o `test -f 'main.c' || echo '$(srcdir)/'`main.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -c -o revorpcd-main.o `test -f 'main.c' || echo '$(srcdir)/'`main.c
 
-jucid-main.obj: main.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(jucid_CFLAGS) $(CFLAGS) -MT jucid-main.obj -MD -MP -MF $(DEPDIR)/jucid-main.Tpo -c -o jucid-main.obj `if test -f 'main.c'; then $(CYGPATH_W) 'main.c'; else $(CYGPATH_W) '$(srcdir)/main.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/jucid-main.Tpo $(DEPDIR)/jucid-main.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='main.c' object='jucid-main.obj' libtool=no @AMDEPBACKSLASH@
+revorpcd-main.obj: main.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -MT revorpcd-main.obj -MD -MP -MF $(DEPDIR)/revorpcd-main.Tpo -c -o revorpcd-main.obj `if test -f 'main.c'; then $(CYGPATH_W) 'main.c'; else $(CYGPATH_W) '$(srcdir)/main.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/revorpcd-main.Tpo $(DEPDIR)/revorpcd-main.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='main.c' object='revorpcd-main.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(jucid_CFLAGS) $(CFLAGS) -c -o jucid-main.obj `if test -f 'main.c'; then $(CYGPATH_W) 'main.c'; else $(CYGPATH_W) '$(srcdir)/main.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -c -o revorpcd-main.obj `if test -f 'main.c'; then $(CYGPATH_W) 'main.c'; else $(CYGPATH_W) '$(srcdir)/main.c'; fi`
 
 ID: $(am__tagged_files)
 	$(am__define_uniq_tagged_files); mkid -fID $$unique
