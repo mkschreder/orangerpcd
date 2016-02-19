@@ -1,4 +1,43 @@
-                    GNU GENERAL PUBLIC LICENSE
+                        JUCI GENERAL PUBLIC LICENSE
+
+This software is distributed under JUCI General Public License, which
+supplements the terms set forth by the GNU GPLv3 with additional permissions as
+defined by section 7 of the GPLv3 and which allow you to do things that are
+common practice among distributors of this software while still disallowing you
+the right to punish users for circumventing your anti-circumvention measures as
+defined by section 3 of GNU GPLv3.  
+
+With additional permissions added in accordance with terms and conditions set
+forth by GPLv3, this license becomes very similar in spirit to GPLv2 - except
+more protective to the users of this software.
+
+If you have any concerns about using this software as GPLv3 software together
+with additional permissions specified below, you are welcome to email
+corresponding Copyright holders of this software as specified in the AUTHORS
+file, or in individual source files of this software which are distributed
+under this license.  
+
+                         ADDITIONAL PERMISSIONS
+
+You are hereby permitted to distribute this software in non-source form in a
+"User Product" (as defined by section 6 of this license) without being required
+to provide "Installation Instructions" to your users for installing modified
+versions of this software. 
+
+                       END OF ADDITIONAL PERMISSIONS
+
+If you have received this software with additional permissions specified above
+then you are entitled to these permissions. However, as a user you may choose
+to add other additional permissions, change current permissions or completely
+remove additional permissions from this license, effectively reverting it to
+GPLv3. If you do such changes your changes only take effect for future versions
+of the software. You are still granted permissions you had for versions of the
+software prior to the change being made. 
+
+The text below is verbatim copy of GNU GPLv3 as published by Free Software
+Foundation. It is copyrighted by FSF, and can not be changed.  
+
+					GNU GENERAL PUBLIC LICENSE
                        Version 3, 29 June 2007
 
  Copyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/>
