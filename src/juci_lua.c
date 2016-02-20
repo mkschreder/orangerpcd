@@ -148,7 +148,11 @@ static int l_json_parse(lua_State *L){
 	const char *str = lua_tostring(L, 1); 
 	struct blob tmp; 
 	blob_init(&tmp, 0, 0); 
-	blob_put_json(&tmp, str); 	
+	if(!blob_put_json(&tmp, str)){
+		// put emtpy object if json was invalid!
+		blob_offset_t b = blob_open_table(&tmp); 
+		blob_close_table(&tmp, b); 
+	}
 	if(juci_debug_level >= JUCI_DBG_TRACE){
 		TRACE("lua blob: "); 
 		blob_dump_json(&tmp); 

@@ -183,7 +183,6 @@ static int _ubus_socket_callback(struct lws *wsi, enum lws_callback_reasons reas
 					ubus_srv_ws_frame_delete(&frame); 
 				} else {
 					pthread_mutex_unlock(&self->qlock); 
-					printf("not final fragment!\n"); 
 					lws_callback_on_writable(wsi); 
 					return 0; 
 				}

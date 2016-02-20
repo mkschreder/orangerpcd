@@ -94,6 +94,11 @@ int juci_luaobject_load(struct juci_luaobject *self, const char *file){
 int juci_luaobject_call(struct juci_luaobject *self, const char *method, struct blob_field *in, struct blob *out){
 	if(!self) return -1; 
 
+	if(lua_type(self->lua, -1) != LUA_TTABLE) {
+		ERROR("lua state is broken. No table on stack!\n"); 
+		return -1; 
+	}
+
 	lua_getfield(self->lua, -1, method); 
 	if(!lua_isfunction(self->lua, -1)){
 		ERROR("can not call %s on %s: field is not a function!\n", method, self->name); 
@@ -113,7 +118,9 @@ int juci_luaobject_call(struct juci_luaobject *self, const char *method, struct 
 
 	blob_put_string(out, "result"); 
 	blob_offset_t t = blob_open_table(out); 
-	juci_lua_table_to_blob(self->lua, out, true); 
+	if(lua_type(self->lua, -1) == LUA_TTABLE) {
+		juci_lua_table_to_blob(self->lua, out, true); 
+	}
 	blob_close_table(out, t); 
 	
 	lua_pop(self->lua, 1); 	
