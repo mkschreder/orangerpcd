@@ -5,7 +5,6 @@
 -- This module is distributed under GNU GPLv3 with additional permission for signed images.
 -- See LICENSE file for more details. 
 
-
 local ubus = require("juci/ubus"); 
 
 return ubus.bind("system", { "board", "info" });  

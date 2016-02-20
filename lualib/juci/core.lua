@@ -1,3 +1,8 @@
+-- JUCI Lua Backend Server API
+-- Copyright (c) 2016 Martin Schröder <mkschreder.uk@gmail.com>. All rights reserved. 
+-- This module is distributed under JUCI Genereal Public License as published
+-- at https://github.com/mkschreder/jucid/COPYING. See COPYING file for details. 
+
 local table = require("table"); 
 local string = require("string"); 
 local io = require("io"); 

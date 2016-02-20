@@ -2,8 +2,8 @@
 
 -- JUCI Lua Backend Server API
 -- Copyright (c) 2016 Martin Schröder <mkschreder.uk@gmail.com>. All rights reserved. 
--- This module is distributed under GNU GPLv3 with additional permission for signed images.
--- See LICENSE file for more details. 
+-- This module is distributed under JUCI Genereal Public License as published
+-- at https://github.com/mkschreder/jucid/COPYING. See COPYING file for details. 
 
 local juci = require("juci.core"); 
 local json = require("juci.json"); 
