@@ -193,6 +193,7 @@ int _load_session_acls(struct juci_session *ses, const char *pat){
 			if(*cur == 0) break; 
 			line++; 
 		}
+		free(text); 
 	}
 	globfree(&glob_result);
 	return 0; 
@@ -220,6 +221,15 @@ int juci_login(struct juci *self, const char *username, const char *challenge, c
 		DEBUG("login failed for %s!\n", username); 
 	}
 	return -EACCES; 
+}
+
+int juci_logout(struct juci *self, const char *sid){
+	struct avl_node *node = avl_find(&self->sessions, sid); 
+	if(!node) return -EINVAL; 
+	struct juci_session *ses = container_of(node, struct juci_session, avl); 
+	avl_delete(&self->sessions, node); 
+	juci_session_delete(&ses); 
+	return 0; 
 }
 
 int juci_call(struct juci *self, const char *sid, const char *object, const char *method, struct blob_field *args, struct blob *out){
