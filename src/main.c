@@ -237,6 +237,18 @@ int main(int argc, char **argv){
 				blob_put_string(&result->buf, "Invalid Parameters"); 
 				DEBUG("Could not parse login parameters!\n"); 
 			}
+		} else if(rpc_method && strcmp(rpc_method, "logout") == 0){
+			const char *sid = NULL; 
+			if(rpcmsg_parse_authenticate(params, &sid) && juci_logout(app, sid) == 0){
+				blob_put_string(&result->buf, "result"); 
+				blob_offset_t o = blob_open_table(&result->buf); 
+					blob_put_string(&result->buf, "success"); 
+					blob_put_string(&result->buf, "VALID"); 
+				blob_close_table(&result->buf, o); 
+			} else {
+				blob_put_string(&result->buf, "error"); 
+				blob_put_string(&result->buf, "Could not logout!"); 
+			}
 		} else if(rpc_method && strcmp(rpc_method, "authenticate") == 0){
 			const char *sid = NULL; 
 			if(rpcmsg_parse_authenticate(params, &sid) && juci_session_exists(app, sid)){
