@@ -19,6 +19,7 @@
 
 struct ubus_message *ubus_message_new(){
 	struct ubus_message *self = calloc(1, sizeof(struct ubus_message)); 
+	assert(self); 
 	blob_init(&self->buf, 0, 0); 
 	INIT_LIST_HEAD(&self->list); 
 	return self; 

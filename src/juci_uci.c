@@ -71,6 +71,7 @@ int juci_uci_load_config(const char *config, struct blob *buf){
 	struct uci_package *p = NULL; 
 	struct uci_ptr ptr = { .package = config }; 
 	struct uci_context *uci = uci_alloc_context(); 
+	assert(uci); 
 	
 	uci_load(uci, ptr.package, &p); 
 	

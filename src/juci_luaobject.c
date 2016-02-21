@@ -25,6 +25,7 @@
 
 struct juci_luaobject* juci_luaobject_new(const char *name){
 	struct juci_luaobject *self = calloc(1, sizeof(struct juci_luaobject)); 
+	assert(self); 
 	self->lua = luaL_newstate(); 
 	self->name = malloc(strlen(name) + 1); 
 	strcpy(self->name, name); 

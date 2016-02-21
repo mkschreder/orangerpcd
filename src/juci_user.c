@@ -16,6 +16,7 @@ struct juci_user_app {
 
 struct juci_user *juci_user_new(const char *username){
 	struct juci_user *self = calloc(1, sizeof(struct juci_user)); 
+	assert(self); 
 	self->username = strdup(username); 
 	self->avl.key = self->username; 
 	return self; 

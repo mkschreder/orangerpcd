@@ -166,7 +166,7 @@ int juci_session_grant(struct juci_session *ses, const char *scope, const char *
     if (!acl_scope) {
         acl_scope = calloc_a(sizeof(*acl_scope),
                              &new_scope, strlen(scope) + 1);
-
+		
         if (!acl_scope)
             return -1;
 
@@ -214,6 +214,7 @@ int juci_session_revoke(struct juci_session *ses,
 
     id_len = strcspn(object, "*?[");
     id = alloca(id_len + 1);
+	assert(id); 
     strncpy(id, object, id_len);
     id[id_len] = 0;
 
