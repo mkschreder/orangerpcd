@@ -61,6 +61,10 @@ struct ubus_srv_ws_client {
 	struct list_head tx_queue; 
 	struct ubus_message *msg; // incoming message
 	struct lws *wsi; 
+
+	char buffer[32768]; 
+	int buffer_start; 
+
 	bool disconnect;
 }; 
 
@@ -74,10 +78,12 @@ struct ubus_srv_ws_frame {
 struct ubus_srv_ws_frame *ubus_srv_ws_frame_new(struct blob_field *msg){
 	assert(msg); 
 	struct ubus_srv_ws_frame *self = calloc(1, sizeof(struct ubus_srv_ws_frame)); 
+	assert(self); 
 	INIT_LIST_HEAD(&self->list); 
 	char *json = blob_field_to_json(msg); 
 	self->len = strlen(json); 
 	self->buf = calloc(1, LWS_SEND_BUFFER_PRE_PADDING + self->len + LWS_SEND_BUFFER_POST_PADDING); 
+	assert(self->buf); 
 	memcpy(self->buf + LWS_SEND_BUFFER_PRE_PADDING, json, self->len); 
 	free(json); 
 	return self; 
@@ -93,6 +99,7 @@ void ubus_srv_ws_frame_delete(struct ubus_srv_ws_frame **self){
 
 static struct ubus_srv_ws_client *ubus_srv_ws_client_new(){
 	struct ubus_srv_ws_client *self = calloc(1, sizeof(struct ubus_srv_ws_client)); 
+	assert(self); 
 	INIT_LIST_HEAD(&self->tx_queue); 
 	self->msg = ubus_message_new(); 
 	return self; 
@@ -196,22 +203,42 @@ static int _ubus_socket_callback(struct lws *wsi, enum lws_callback_reasons reas
 			assert(user); 
 			if(!user) break; 
 			struct ubus_srv_ws *self = (struct ubus_srv_ws*)proto->user; 
-			pthread_mutex_lock(&self->qlock); 
-			blob_reset(&(*user)->msg->buf); 
-			if(blob_put_json(&(*user)->msg->buf, in)){
-				//struct blob_field *rpcobj = blob_field_first_child(blob_head(&self->buf)); 
-				//TODO: add message to queue
-				//blob_dump_json(&(*user)->msg->buf); 
+			if((*user)->buffer_start + len > sizeof((*user)->buffer)){
+				// messages larger than maximum size are discarded
+				(*user)->buffer_start = 0; 
+				ERROR("message too large! Discarded!\n"); 
+				break; 
+			}
+			printf("received fragment of %d bytes\n", (int)len); 
+			if((!(*user)->buffer_start && lws_is_final_fragment(wsi)) || lws_is_final_fragment(wsi)){
+				// write final fragment
+				char *ptr = (*user)->buffer + (*user)->buffer_start; 
+				memcpy(ptr, in, len); 
+				ptr[len] = 0; 
 
+				blob_reset(&(*user)->msg->buf); 
+				// if message is small and we have received all of it then skip the scratch buffer and process it directly 
+				if((!(*user)->buffer_start && !blob_put_json(&(*user)->msg->buf, in)) || 
+					((*user)->buffer_start && !blob_put_json(&(*user)->msg->buf, (*user)->buffer))){
+					ERROR("got bad message!\n"); 
+					break; 
+				}
 				// place the message on the queue
 				(*user)->msg->peer = (*user)->id.id; 
+				pthread_mutex_lock(&self->qlock); 
 				list_add_tail(&(*user)->msg->list, &self->rx_queue); 
 				(*user)->msg = ubus_message_new(); 
+				blob_reset(&(*user)->msg->buf); 
 				pthread_cond_signal(&self->rx_ready); 
-			} else {
-				ERROR("got bad message\n"); 
+				pthread_mutex_unlock(&self->qlock); 
+				(*user)->buffer_start = 0; 
+			} else if(!lws_is_final_fragment(wsi)){
+				// write to scratch buffer
+				char *ptr = (*user)->buffer + (*user)->buffer_start; 
+				memcpy(ptr, in, len); 
+				ptr[len] = 0; 
+				(*user)->buffer_start += len; 
 			}
-			pthread_mutex_unlock(&self->qlock); 
 			lws_rx_flow_control(wsi, 0); 
 			lws_callback_on_writable(wsi); 	
 			break; 
@@ -389,8 +416,10 @@ static int _websocket_recv(juci_server_t socket, struct ubus_message **msg, unsi
 
 juci_server_t juci_ws_server_new(const char *www_root){
 	struct ubus_srv_ws *self = calloc(1, sizeof(struct ubus_srv_ws)); 
+	assert(self); 
 	self->www_root = (www_root)?www_root:"/www/"; 
 	self->protocols = calloc(2, sizeof(struct lws_protocols)); 
+	assert(self->protocols); 
 	self->protocols[0] = (struct lws_protocols){
 		.name = "",
 		.callback = _ubus_socket_callback,
