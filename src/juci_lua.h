@@ -18,5 +18,7 @@
 #pragma once
 
 void juci_lua_publish_json_api(lua_State *L); 
+void juci_lua_publish_file_api(lua_State *L); 
+
 int juci_lua_table_to_blob(lua_State *L, struct blob *b, bool table); 
 void juci_lua_blob_to_table(lua_State *lua, struct blob_field *msg, bool table); 

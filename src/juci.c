@@ -63,6 +63,7 @@ int juci_load_plugins(struct juci *self, const char *path, const char *base_path
 			char *name = fname + strlen(base_path); 
 			int len = strlen(name); 
 			char *objname = alloca( len + 1 ); 
+			assert(objname); 
 			strncpy(objname, name, len - strlen(ext)); 
 
 			if(strcmp(ext, ".lua") != 0) continue; 
@@ -75,6 +76,7 @@ int juci_load_plugins(struct juci *self, const char *path, const char *base_path
 				continue; 
 			}
 			juci_lua_publish_json_api(obj->lua); 
+			juci_lua_publish_file_api(obj->lua); 
 		}
     }
     closedir(dir); 
@@ -83,6 +85,7 @@ int juci_load_plugins(struct juci *self, const char *path, const char *base_path
 
 struct juci* juci_new(){
 	struct juci *self = calloc(1, sizeof(struct juci)); 
+	assert(self); 
 	avl_init(&self->objects, avl_strcmp, false, NULL); 
 	avl_init(&self->sessions, avl_strcmp, false, NULL); 
 	avl_init(&self->users, avl_strcmp, false, NULL); 
@@ -118,6 +121,7 @@ static char *_load_file(const char *path){
 	int filesize = lseek(fd, 0, SEEK_END); 
 	lseek(fd, 0, SEEK_SET); 
 	char *text = calloc(1, filesize + 1); 
+	assert(text); 
 	int ret = read(fd, text, filesize); 
 	close(fd); 
 	if(ret != filesize) { free(text); return NULL; }

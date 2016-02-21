@@ -15,6 +15,10 @@
 	GNU General Public License for more details.
 */
 
+#include <stdlib.h>
+#include <unistd.h>
+#include <fcntl.h>
+
 #include <blobpack/blobpack.h>
 
 #include "internal.h"
@@ -169,5 +173,53 @@ void juci_lua_publish_json_api(lua_State *L){
 	lua_pushcfunction(L, l_json_parse); 
 	lua_settable(L, -3); 
 	lua_setglobal(L, "JSON"); 
+}
+
+#include "base64.h"
+
+int l_file_write_fragment(lua_State *L){
+	int n = lua_gettop(L); 
+	if(n != 4 || !lua_isstring(L, 1) || !lua_isnumber(L, 2) || !lua_isnumber(L, 3) || !lua_isstring(L, 4)){
+		ERROR("invalid arguments to %s\n", __FUNCTION__); 
+		return -1; 
+	}
+	const char *file = lua_tostring(L, 1); 
+	long unsigned int offset = lua_tointeger(L, 2); 
+	//long unsigned int len = lua_tointeger(L, 3); 
+	const char *data = lua_tostring(L, 4); 
+	
+	// write to the file (note: this is very innefficient but it is mostly just a proof of concept. 
+	int flags = O_WRONLY | O_CREAT; 
+	if(offset == 0) flags |= O_TRUNC; 
+	int fd = open(file, flags, 755); 
+	if(fd <= 0) {
+		ERROR("could not open file '%s' for writing!\n", file); 
+		lua_pop(L, n); 
+		return -1; 
+	}
+	lseek(fd, offset, SEEK_SET); 
+	int in_size = strlen(data); 
+	char *bin = alloca(in_size); 
+	assert(bin); 
+	int size = base64_decode(data, in_size, bin) - 2;   
+	//printf("writing %d bytes at offset %d to file\n", (int)size, (int)offset); 
+	if(size != write(fd, bin, size)){
+		ERROR("could not write data to file!\n"); 
+		lua_pop(L, n); 
+		close(fd); 
+		return -1; 
+	}
+	close(fd); 
+	lua_pop(L, n); 
+	return 0; 
+}
+
+void juci_lua_publish_file_api(lua_State *L){
+	// add fast json parsing
+	lua_newtable(L); 
+	lua_pushstring(L, "writeFragment"); 
+	lua_pushcfunction(L, l_file_write_fragment); 
+	lua_settable(L, -3); 
+	lua_setglobal(L, "fs"); 
 }
 
