@@ -7,9 +7,10 @@ local table = require("table");
 local string = require("string"); 
 local io = require("io"); 
 local json = require("juci/json"); 
---local posix = require("posix.unistd"); 
---local sys = require("posix.sys.wait");
---local stdio = require("posix.stdio");
+
+local posix = require("posix.unistd"); 
+local sys = require("posix.sys.wait");
+local stdio = require("posix.stdio");
 
 local base = _G
 
@@ -29,7 +30,7 @@ local function log(source, msg)
 	fd:write((source or "juci")..": "..(msg or "").."\n"); 
 	fd:close();
 end
---[[
+
 local function exec(cmd, args)
 	-- ask the shell which command we should run
 	local pt = io.popen("which "..cmd); 
@@ -61,7 +62,7 @@ local function exec(cmd, args)
 	local _,_,ret = sys.wait(child)
 	return ret, str, strerr; 
 end
-]]---
+
 local QUERY_STRING = nil; 
 local function query(name)
 	if(QUERY_STRING == nil) then
