@@ -89,7 +89,8 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
-am_revorpcd_OBJECTS = revorpcd-juci_luaobject.$(OBJEXT) \
+am_revorpcd_OBJECTS = revorpcd-base64.$(OBJEXT) \
+	revorpcd-juci_luaobject.$(OBJEXT) \
 	revorpcd-juci_session.$(OBJEXT) \
 	revorpcd-juci_message.$(OBJEXT) revorpcd-juci_id.$(OBJEXT) \
 	revorpcd-juci_lua.$(OBJEXT) revorpcd-juci.$(OBJEXT) \
@@ -247,7 +248,7 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-revorpcd_SOURCES = juci_luaobject.c juci_session.c juci_message.c juci_id.c juci_lua.c juci.c juci_ws_server.c juci_user.c juci_uci.c sha1.c main.c
+revorpcd_SOURCES = base64.c juci_luaobject.c juci_session.c juci_message.c juci_id.c juci_lua.c juci.c juci_ws_server.c juci_user.c juci_uci.c sha1.c main.c
 revorpcd_CFLAGS = -std=gnu99 -Wall -Werror
 revorpcd_LDADD = -lblobpack -lusys -lutype -lpthread -lwebsockets -lcrypt -luci @LIBLUA_LINK@
 all: all-am
@@ -337,6 +338,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/revorpcd-base64.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/revorpcd-juci.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/revorpcd-juci_id.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/revorpcd-juci_lua.Po@am__quote@
@@ -362,6 +364,20 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(COMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
+
+revorpcd-base64.o: base64.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -MT revorpcd-base64.o -MD -MP -MF $(DEPDIR)/revorpcd-base64.Tpo -c -o revorpcd-base64.o `test -f 'base64.c' || echo '$(srcdir)/'`base64.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/revorpcd-base64.Tpo $(DEPDIR)/revorpcd-base64.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='base64.c' object='revorpcd-base64.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -c -o revorpcd-base64.o `test -f 'base64.c' || echo '$(srcdir)/'`base64.c
+
+revorpcd-base64.obj: base64.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -MT revorpcd-base64.obj -MD -MP -MF $(DEPDIR)/revorpcd-base64.Tpo -c -o revorpcd-base64.obj `if test -f 'base64.c'; then $(CYGPATH_W) 'base64.c'; else $(CYGPATH_W) '$(srcdir)/base64.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/revorpcd-base64.Tpo $(DEPDIR)/revorpcd-base64.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='base64.c' object='revorpcd-base64.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -c -o revorpcd-base64.obj `if test -f 'base64.c'; then $(CYGPATH_W) 'base64.c'; else $(CYGPATH_W) '$(srcdir)/base64.c'; fi`
 
 revorpcd-juci_luaobject.o: juci_luaobject.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -MT revorpcd-juci_luaobject.o -MD -MP -MF $(DEPDIR)/revorpcd-juci_luaobject.Tpo -c -o revorpcd-juci_luaobject.o `test -f 'juci_luaobject.c' || echo '$(srcdir)/'`juci_luaobject.c
