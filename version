@@ -1,6 +1,0 @@
-#!/bin/sh
-
-NCOMMITS=$(git rev-list  `git rev-list --tags --no-walk --max-count=1`..HEAD --count)
-VERSION=$(git describe)
-
-printf "$VERSION-$NCOMMITS"
