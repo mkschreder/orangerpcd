@@ -4,13 +4,12 @@
 -- at https://github.com/mkschreder/jucid/COPYING. See COPYING file for details. 
 
 local juci = require("juci/core"); 
---local uci = 
-require("uci");
+local ubus = require("juci/ubus"); 
 
 -- parse out dhcp information 
 local function read_dhcp_info()
-	local cur = uci.cursor();
-	local leasefile_path = cur:get("dhcp", "dnsmasq", "leasefile");
+	local conf = ubus.call("uci", "get", {config = "dhcp"}); 
+	local leasefile_path = (conf["dnsmasq"] or {})["leasefile"];
 	local dhcp = {}; 
 	if(not leasefile_path) then leasefile_path = "/var/dhcp.leases"; end
 	local dhcp_leases = io.open(leasefile_path, "r");
