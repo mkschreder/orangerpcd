@@ -43,7 +43,11 @@ local function sysupgrade_start(params)
 	local keep = ""; 
 	if params["keep"] ~= 1 then keep = "-n" end
 	if params["path"] then path = params["path"] end
-	res["stdout"],res["error"] = juci.shell("sysupgrade "..keep.." %s", path); 
+	print("starting upgrade: sysupgrade "..keep.." "..path); 
+	--res["stdout"] = juci.shell("sysupgrade "..keep.." %s&", path); 
+	-- for some reason using juci.shell for this does not work anymore after merging latest openwrt changes
+	-- os.execute still works though
+	os.execute("sysupgrade "..keep.." /tmp/firmware.bin&"); 
 	return res; 
 end
 
