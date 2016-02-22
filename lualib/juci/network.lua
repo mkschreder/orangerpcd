@@ -4,10 +4,10 @@
 -- at https://github.com/mkschreder/jucid/COPYING. See COPYING file for details. 
 
 local juci = require("juci/core"); 
---local uci = require("uci");
+--local uci = 
+require("uci");
 
 -- parse out dhcp information 
---[[
 local function read_dhcp_info()
 	local cur = uci.cursor();
 	local leasefile_path = cur:get("dhcp", "dnsmasq", "leasefile");
@@ -34,7 +34,7 @@ local function read_dhcp_info()
 	dhcp_leases:close(); 
 	return dhcp; 
 end
-]]--	
+
 -- parse arp information (this can be out of date sometimes though! you must ping a client to know that it actually is alive!)
 local function read_arp_info()
 	local arp = {}; 

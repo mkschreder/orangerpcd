@@ -184,7 +184,7 @@ local function wireless_clients()
 	local result = { clients = {} }; 
 	for _,wldev in ipairs(devices) do
 		local cl = ubus.call("hostapd."..wldev, "get_clients", {}); 
-		if(cl) then 
+		if(cl and cl.clients) then 
 			for macaddr,client in pairs(cl.clients) do 
 				local extinfo = wireless_get_extended_stainfo(wldev, macaddr); 
 				

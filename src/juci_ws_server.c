@@ -209,7 +209,7 @@ static int _ubus_socket_callback(struct lws *wsi, enum lws_callback_reasons reas
 				ERROR("message too large! Discarded!\n"); 
 				break; 
 			}
-			printf("received fragment of %d bytes\n", (int)len); 
+			TRACE("received fragment of %d bytes\n", (int)len); 
 			if((!(*user)->buffer_start && lws_is_final_fragment(wsi)) || lws_is_final_fragment(wsi)){
 				// write final fragment
 				char *ptr = (*user)->buffer + (*user)->buffer_start; 
