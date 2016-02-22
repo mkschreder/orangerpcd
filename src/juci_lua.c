@@ -201,7 +201,7 @@ int l_file_write_fragment(lua_State *L){
 	int in_size = strlen(data); 
 	char *bin = alloca(in_size); 
 	assert(bin); 
-	int size = base64_decode(data, in_size, bin) - 2;   
+	int size = base64_decode(data, in_size, bin) - 1;   
 	//printf("writing %d bytes at offset %d to file\n", (int)size, (int)offset); 
 	if(size != write(fd, bin, size)){
 		ERROR("could not write data to file!\n"); 
