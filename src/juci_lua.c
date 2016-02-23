@@ -224,9 +224,7 @@ void juci_lua_publish_file_api(lua_State *L){
 	lua_setglobal(L, "fs"); 
 }
 
-// SESSION.access(scope, object, method, permission)
-
-static int l_session_access(lua_State *L){
+static struct juci_session *l_get_session_ptr(lua_State *L){
 	lua_getglobal(L, "SESSION"); 
 	luaL_checktype(L, -1, LUA_TTABLE); 
 	lua_getfield(L, -1, "_self"); 
@@ -234,6 +232,15 @@ static int l_session_access(lua_State *L){
 	lua_pop(L, 2); // pop JUCI and _self
 	if(!self){
 		ERROR("Invalid SESSION._self pointer!\n"); 
+		return NULL; 
+	}
+	return self; 
+}
+
+// SESSION.access(scope, object, method, permission)
+static int l_session_access(lua_State *L){
+	struct juci_session *self = l_get_session_ptr(L); 
+	if(!self){
 		lua_pushboolean(L, false); 
 		return 1; 
 	}
@@ -250,20 +257,25 @@ static int l_session_access(lua_State *L){
 	return 1; 
 }
 
+static int l_session_get(lua_State *L){
+	struct juci_session *self = l_get_session_ptr(L); 
+	lua_newtable(L); 
+	if(!self) return 1; 
+	lua_pushstring(L, "username"); lua_pushstring(L, self->user->username); lua_settable(L, -3); 
+	return 1; 
+}
+
 void juci_lua_publish_session_api(lua_State *L){
 	lua_newtable(L); 
-	lua_pushstring(L, "access"); 
-	lua_pushcfunction(L, l_session_access); 
-	lua_settable(L, -3); 
+	lua_pushstring(L, "access"); lua_pushcfunction(L, l_session_access); lua_settable(L, -3); 
+	lua_pushstring(L, "get"); lua_pushcfunction(L, l_session_get); lua_settable(L, -3); 
 	lua_setglobal(L, "SESSION"); 
 }
 
 void juci_lua_set_session(lua_State *L, struct juci_session *self){
 	lua_getglobal(L, "SESSION"); 
 	luaL_checktype(L, -1, LUA_TTABLE); 
-	lua_pushstring(L, "_self"); 
-	lua_pushlightuserdata(L, self); 
-	lua_settable(L, -3); 
+	lua_pushstring(L, "_self"); lua_pushlightuserdata(L, self); lua_settable(L, -3); 
 	lua_pop(L, 1); 
 }
 

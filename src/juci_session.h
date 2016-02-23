@@ -4,6 +4,8 @@
 typedef char juci_sid_t[32 + 1]; 
 
 #include <libutype/avl.h>
+#include "juci_user.h"
+
 struct juci_session {
 	struct avl_node avl; 
 	juci_sid_t sid; 

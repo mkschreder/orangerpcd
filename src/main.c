@@ -144,13 +144,8 @@ int main(int argc, char **argv){
 
 	signal(SIGINT, handle_sigint); 
 
-	struct juci *app = juci_new(); 
+	struct juci *app = juci_new(plugin_dir, pw_file); 
 
-	if(juci_load_passwords(app, pw_file) != 0){
-		ERROR("could not load password file from %s\n", pw_file); 
-	}
-	juci_load_plugins(app, plugin_dir, NULL); 
-	
 	struct blob buf, out; 
 	blob_init(&buf, 0, 0); 
 	blob_init(&out, 0, 0); 
@@ -251,11 +246,14 @@ int main(int argc, char **argv){
 			}
 		} else if(rpc_method && strcmp(rpc_method, "authenticate") == 0){
 			const char *sid = NULL; 
-			if(rpcmsg_parse_authenticate(params, &sid) && juci_session_exists(app, sid)){
+			struct juci_session *session = NULL; 
+			if(rpcmsg_parse_authenticate(params, &sid) && (session = juci_find_session(app, sid))){
 				blob_put_string(&result->buf, "result"); 
 				blob_offset_t o = blob_open_table(&result->buf); 
-					blob_put_string(&result->buf, "success"); 
-					blob_put_string(&result->buf, "VALID"); 
+					blob_put_string(&result->buf, "sid"); 
+					blob_put_string(&result->buf, sid);
+					blob_put_string(&result->buf, "username"); 
+					blob_put_string(&result->buf, session->user->username);  
 				blob_close_table(&result->buf, o); 
 			} else {
 				blob_put_string(&result->buf, "error"); 

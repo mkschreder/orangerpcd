@@ -39,6 +39,7 @@
 
 int juci_debug_level = 0; 
 
+int juci_load_passwords(struct juci *self, const char *pwfile); 
 int juci_load_plugins(struct juci *self, const char *path, const char *base_path){
     int rv = 0; 
     if(!base_path) base_path = path; 
@@ -84,7 +85,7 @@ int juci_load_plugins(struct juci *self, const char *path, const char *base_path
     return rv; 
 }
 
-struct juci* juci_new(){
+struct juci* juci_new(const char *plugin_path, const char *pwfile){
 	struct juci *self = calloc(1, sizeof(struct juci)); 
 	assert(self); 
 	avl_init(&self->objects, avl_strcmp, false, NULL); 
@@ -93,6 +94,15 @@ struct juci* juci_new(){
 
 	struct juci_user *admin = juci_user_new("admin"); 
 	avl_insert(&self->users, &admin->avl); 
+	
+	self->plugin_path = strdup(plugin_path); 
+	self->pwfile = strdup(pwfile); 
+
+	if(juci_load_passwords(self, self->pwfile) != 0){
+		ERROR("could not load password file from %s\n", pwfile); 
+	}
+	juci_load_plugins(self, self->plugin_path, NULL); 
+	
 
 	return self; 
 }
@@ -111,6 +121,9 @@ void juci_delete(struct juci **_self){
 
     avl_remove_all_elements(&self->users, user, avl, nuser)
 		juci_user_delete(&user); 
+	
+	free(self->pwfile); 
+	free(self->plugin_path); 
 
 	free(self); 
 	_self = NULL; 
@@ -205,14 +218,16 @@ int _load_session_acls(struct juci_session *ses, const char *pat){
 	return 0; 
 }
 
-bool juci_session_exists(struct juci *self, const char *sid){ 
-	return !!_find_session(self, sid); 
+struct juci_session *juci_find_session(struct juci *self, const char *sid){ 
+	return _find_session(self, sid); 
 }
 
 int juci_login(struct juci *self, const char *username, const char *challenge, const char *response, const char **new_sid){
 	struct avl_node *node = avl_find(&self->users, username); 
 	if(!node) return -EINVAL; 
 	struct juci_user *user = container_of(node, struct juci_user, avl); 
+	// update user hashes (TODO: perhaps this should be loaded into secure memory somehow and discarded after login?)
+	juci_load_passwords(self, self->pwfile); 
 
 	if(_try_auth(user->pwhash, challenge, response)){
 		struct juci_session *ses = juci_session_new(user); 	
