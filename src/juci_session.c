@@ -62,6 +62,7 @@ struct juci_session_acl {
 	struct avl_node avl;
 	const char *object;
 	const char *function;
+	const char *perms; 
 	int sort_len;
 };
 
@@ -144,10 +145,10 @@ void juci_session_delete(struct juci_session **_self){
             !fnmatch((_acl)->function, (_func), FNM_NOESCAPE))
 
 
-int juci_session_grant(struct juci_session *ses, const char *scope, const char *object, const char *function){
+int juci_session_grant(struct juci_session *ses, const char *scope, const char *object, const char *function, const char *perm){
     struct juci_session_acl *acl;
     struct juci_session_acl_scope *acl_scope;
-    char *new_scope, *new_obj, *new_func, *new_id;
+    char *new_scope, *new_obj, *new_func, *new_id, *new_perms;
     int id_len;
 
     if (!object || !function)
@@ -179,13 +180,15 @@ int juci_session_grant(struct juci_session *ses, const char *scope, const char *
     acl = calloc_a(sizeof(*acl),
         &new_obj, strlen(object) + 1,
         &new_func, strlen(function) + 1,
-        &new_id, id_len + 1);
+        &new_id, id_len + 1, 
+		&new_perms, strlen(perm) + 1);
 
     if (!acl)
         return -1;
 
     acl->object = strcpy(new_obj, object);
     acl->function = strcpy(new_func, function);
+	acl->perms = strcpy(new_perms, perm);  
     acl->avl.key = strncpy(new_id, object, id_len);
     avl_insert(&acl_scope->acls, &acl->avl);
 
@@ -193,7 +196,7 @@ int juci_session_grant(struct juci_session *ses, const char *scope, const char *
 }
 
 int juci_session_revoke(struct juci_session *ses,
-                   const char *scope, const char *object, const char *function){
+                   const char *scope, const char *object, const char *function, const char *perm){
     struct juci_session_acl *acl, *next;
     struct juci_session_acl_scope *acl_scope;
     int id_len;
@@ -244,15 +247,28 @@ int juci_session_revoke(struct juci_session *ses,
     return 0;
 }
 
-bool juci_session_access(struct juci_session *ses, const char *scope, const char *obj, const char *fun){
+bool juci_session_access(struct juci_session *ses, const char *scope, const char *obj, const char *fun, const char *perm){
 	struct juci_session_acl *acl;
 	struct juci_session_acl_scope *acl_scope;
 
 	acl_scope = avl_find_element(&ses->acl_scopes, scope, acl_scope, avl);
 
 	if (acl_scope) {
-		uh_foreach_matching_acl(acl, &acl_scope->acls, obj, fun)
+		uh_foreach_matching_acl(acl, &acl_scope->acls, obj, fun){
+			// check each character in perms and see if it is allowed
+			// if no perms are specified then this will always return true
+			for(int c = 0; c < strlen(perm); c++){
+				bool found = false; 
+				for(int j = 0; j < strlen(acl->perms); j++) {
+					if(perm[c] == acl->perms[j]) { 
+						found = true; 
+						break; 
+					}
+				}
+				if(!found) return false; 
+			}
 			return true;
+		}
 	}
 
 	return false;

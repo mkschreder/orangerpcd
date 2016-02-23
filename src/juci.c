@@ -77,6 +77,7 @@ int juci_load_plugins(struct juci *self, const char *path, const char *base_path
 			}
 			juci_lua_publish_json_api(obj->lua); 
 			juci_lua_publish_file_api(obj->lua); 
+			juci_lua_publish_session_api(obj->lua); 
 		}
     }
     closedir(dir); 
@@ -177,8 +178,9 @@ int _load_session_acls(struct juci_session *ses, const char *pat){
 	char path[255]; 
 	char *dir = getenv("JUCI_ACL_DIR_PATH"); 
 	if(!dir) dir = JUCI_ACL_DIR_PATH; 
+	DEBUG("loading acls from %s\n", dir); 
 	snprintf(path, sizeof(path), "%s/%s", dir, pat); 
-	glob(path,GLOB_TILDE,NULL,&glob_result);
+	glob(path, GLOB_TILDE, NULL, &glob_result);
 	for(unsigned int i=0;i<glob_result.gl_pathc;++i){
 		char *text = _load_file(glob_result.gl_pathv[i]); 
 		char *cur = text; 	
@@ -188,7 +190,7 @@ int _load_session_acls(struct juci_session *ses, const char *pat){
 			int ret = sscanf(cur, "%s %s %s %s", scope, object, method, perm); 
 			if(ret == 4){
 				DEBUG("granting session acl '%s %s %s %s'\n", scope, object, method, perm); 
-				juci_session_grant(ses, scope, object, method); 
+				juci_session_grant(ses, scope, object, method, perm); 
 			} else {
 				ERROR("parse error on line %d of %s, scanned %d fields\n", line, glob_result.gl_pathv[i], ret); 	
 			} 
@@ -250,11 +252,11 @@ int juci_call(struct juci *self, const char *sid, const char *object, const char
 		DEBUG("could not find session for request!\n"); 
 		return -EACCES; 
 	}
-	if(!juci_session_access(self->current_session, "ubus", object, method)){
+	if(!juci_session_access(self->current_session, "ubus", object, method, "x")){
 		DEBUG("user does not have permission to execute rpc call: %s %s\n", object, method); 
 		return -EACCES; 
 	}
-	return juci_luaobject_call(obj, method, args, out); 
+	return juci_luaobject_call(obj, self->current_session, method, args, out); 
 }
 
 int juci_list(struct juci *self, const char *sid, const char *path, struct blob *out){

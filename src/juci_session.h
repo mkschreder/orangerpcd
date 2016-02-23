@@ -15,6 +15,6 @@ struct juci_session {
 
 struct juci_session *juci_session_new(struct juci_user *user); 
 void juci_session_delete(struct juci_session **self); 
-int juci_session_grant(struct juci_session *self, const char *scope, const char *object, const char *method); 
-int juci_session_revoke(struct juci_session *self, const char *scope, const char *object, const char *method); 
-bool juci_session_access(struct juci_session *ses, const char *scope, const char *obj, const char *fun); 
+int juci_session_grant(struct juci_session *self, const char *scope, const char *object, const char *method, const char *perm); 
+int juci_session_revoke(struct juci_session *self, const char *scope, const char *object, const char *method, const char *perm); 
+bool juci_session_access(struct juci_session *ses, const char *scope, const char *obj, const char *fun, const char *perm); 

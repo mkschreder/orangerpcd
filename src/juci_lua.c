@@ -23,6 +23,7 @@
 
 #include "internal.h"
 #include "juci_lua.h"
+#include "juci_session.h"
 
 void juci_lua_blob_to_table(lua_State *lua, struct blob_field *msg, bool table){
 	lua_newtable(lua); 
@@ -183,10 +184,10 @@ int l_file_write_fragment(lua_State *L){
 		ERROR("invalid arguments to %s\n", __FUNCTION__); 
 		return -1; 
 	}
-	const char *file = lua_tostring(L, 1); 
-	long unsigned int offset = lua_tointeger(L, 2); 
+	const char *file = luaL_checkstring(L, 1); 
+	long unsigned int offset = luaL_checkinteger(L, 2); 
 	//long unsigned int len = lua_tointeger(L, 3); 
-	const char *data = lua_tostring(L, 4); 
+	const char *data = luaL_checkstring(L, 4); 
 	
 	// write to the file (note: this is very innefficient but it is mostly just a proof of concept. 
 	int flags = O_WRONLY | O_CREAT; 
@@ -199,7 +200,7 @@ int l_file_write_fragment(lua_State *L){
 	}
 	lseek(fd, offset, SEEK_SET); 
 	int in_size = strlen(data); 
-	char *bin = alloca(in_size); 
+	char *bin = alloca(in_size); // TODO: potential problem 
 	assert(bin); 
 	int size = base64_decode(data, in_size, bin) - 1;   
 	//printf("writing %d bytes at offset %d to file\n", (int)size, (int)offset); 
@@ -221,5 +222,48 @@ void juci_lua_publish_file_api(lua_State *L){
 	lua_pushcfunction(L, l_file_write_fragment); 
 	lua_settable(L, -3); 
 	lua_setglobal(L, "fs"); 
+}
+
+// SESSION.access(scope, object, method, permission)
+
+static int l_session_access(lua_State *L){
+	lua_getglobal(L, "SESSION"); 
+	luaL_checktype(L, -1, LUA_TTABLE); 
+	lua_getfield(L, -1, "_self"); 
+	struct juci_session *self = (struct juci_session *)lua_touserdata(L, -1); 
+	lua_pop(L, 2); // pop JUCI and _self
+	if(!self){
+		ERROR("Invalid SESSION._self pointer!\n"); 
+		lua_pushboolean(L, false); 
+		return 1; 
+	}
+	const char *scope = luaL_checkstring(L, 1);  
+	const char *obj = luaL_checkstring(L, 2);  
+	const char *method = luaL_checkstring(L, 3);  
+	const char *perm = luaL_checkstring(L, 4);  
+	TRACE("checking access to %s %s %s\n", scope, obj, method); 
+	if(scope && obj && method && juci_session_access(self, scope, obj, method, perm)){
+		lua_pushboolean(L, true); 
+		return 1; 
+	} 
+	lua_pushboolean(L, false); 
+	return 1; 
+}
+
+void juci_lua_publish_session_api(lua_State *L){
+	lua_newtable(L); 
+	lua_pushstring(L, "access"); 
+	lua_pushcfunction(L, l_session_access); 
+	lua_settable(L, -3); 
+	lua_setglobal(L, "SESSION"); 
+}
+
+void juci_lua_set_session(lua_State *L, struct juci_session *self){
+	lua_getglobal(L, "SESSION"); 
+	luaL_checktype(L, -1, LUA_TTABLE); 
+	lua_pushstring(L, "_self"); 
+	lua_pushlightuserdata(L, self); 
+	lua_settable(L, -3); 
+	lua_pop(L, 1); 
 }
 

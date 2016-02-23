@@ -22,6 +22,8 @@
 #include <blobpack/blobpack.h>
 #include <libutype/avl.h>
 
+struct juci_session; 
+
 struct juci_luaobject {
 	struct avl_node avl; 
 	char *name; 
@@ -32,4 +34,4 @@ struct juci_luaobject {
 struct juci_luaobject* juci_luaobject_new(const char *name); 
 void juci_luaobject_delete(struct juci_luaobject **self); 
 int juci_luaobject_load(struct juci_luaobject *self, const char *file); 
-int juci_luaobject_call(struct juci_luaobject *self, const char *method, struct blob_field *in, struct blob *out); 
+int juci_luaobject_call(struct juci_luaobject *self, struct juci_session *ses, const char *method, struct blob_field *in, struct blob *out); 

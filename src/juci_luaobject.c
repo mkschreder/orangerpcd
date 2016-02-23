@@ -92,8 +92,11 @@ int juci_luaobject_load(struct juci_luaobject *self, const char *file){
 	return 0; 
 }
 
-int juci_luaobject_call(struct juci_luaobject *self, const char *method, struct blob_field *in, struct blob *out){
+int juci_luaobject_call(struct juci_luaobject *self, struct juci_session *session, const char *method, struct blob_field *in, struct blob *out){
 	if(!self) return -1; 
+
+	// set self pointer of the global session object to point to current session
+	juci_lua_set_session(self->lua, session); 
 
 	if(lua_type(self->lua, -1) != LUA_TTABLE) {
 		ERROR("lua state is broken. No table on stack!\n"); 
