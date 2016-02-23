@@ -8,11 +8,13 @@
 
 local juci = require("juci/core"); 
 local json = require("juci/json"); 
+local ubus = require("juci/ubus"); 
 
 local function list_dir(dir) 
-	local files, ok = dirent.dir(dir); 
-	if not ok then
-		return {}; 
+	local lines = juci.shell("ls %s",dir); 
+	local files = {}; 
+	for file in lines:gmatch("[^\r\n]+") do
+		table.insert(files, file); 
 	end
 	return files; 
 end
@@ -30,7 +32,7 @@ end
 local function service_list()
 	local files = list_dir("/etc/init.d/");
 	local rcdfiles = list_dir("/etc/rc.d/"); 
-	local svcs = conn:call("service", "list", {});
+	local svcs = ubus.call("service", "list", {});
 	local services = {}; 
 	local enabled = {}; 
 
@@ -98,7 +100,7 @@ local function service_reload(service)
 end
 
 local function service_status(service)
-	local svcs = conn:call("service", "list", {});	
+	local svcs = ubus.call("service", "list", {});	
 	return { running = (svcs[service.name] ~= nil) };
 end
 
