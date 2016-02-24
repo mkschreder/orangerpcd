@@ -30,10 +30,13 @@ local function sysupgrade_test(params)
 	local res = {}; 
 	local path = "/tmp/firmware.bin"; 
 	if params["path"] then path = params["path"] end
+	local f = io.open(path, "r"); 
+	if f == nil then return { exists = false }; else io.close(f); end
 	local ret,stdout,stderr = juci.exec("sysupgrade", { "--test", path }); 
 	res["stdout"] = stdout;
 	res["stderr"] = stderr; 
 	res["error"] = ret; 
+	res["exists"] = true; 
 	return res; 
 end
 
