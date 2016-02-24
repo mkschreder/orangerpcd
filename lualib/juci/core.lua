@@ -98,6 +98,20 @@ local function shell(fmt, ...)
 	if r == true then r = 1 elseif r == false then r = 0 end
 	return s,r; 
 end
+
+local function createDownload(name, disposition)
+	math.randomseed(os.time()); 
+	local sha = shell("printf %s | sha1sum | awk '{printf $1}'", tostring(math.random()));
+	local path = "/tmp/"..sha; 
+	local f = io.open(path, "w"); 
+	if(not f) then return nil, nil; end 
+	f:write("Content-Type: "..disposition.."\r\n"); 
+	f:write("Content-Disposition: attachment; filename="..name.."\r\n"); 
+	f:write("\r\n"); 
+	f:close(); 
+	return sha,path; 
+end
+
 --[[
 local function jubus(_calls, arg) 
 	local call_list = ""; 
@@ -185,6 +199,7 @@ return {
 	query = query, 
 	exec = exec, 
 	ubus = jubus,
-	file = file
+	file = file,
+	createDownload = createDownload
 }; 
 

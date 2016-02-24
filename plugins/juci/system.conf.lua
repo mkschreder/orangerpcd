@@ -11,16 +11,15 @@ local juci = require("juci.core");
 local json = require("juci.json");      
 
 local function backup_create(opts)
-	math.randomseed(os.time()); 
-	local filename = "backup-"..tostring(math.random()).."-"..os.date("%Y-%m-%d")..".tar.gz"; 
-	local outfile = "/www/"..filename;  
+	local filename = "backup-"..os.date("%Y-%m-%d")..".tar.gz"; 
+	local did, outfile = juci.createDownload(filename, "application/x-targz"); 
 	if(opts.password and opts.password ~= "" and string.len(opts.password)) then 
-		juci.shell(string.format("sysupgrade --create-backup - | openssl des3 -pass pass:\"%s\" > %s", opts.password, outfile)); 
+		juci.shell(string.format("sysupgrade --create-backup - | openssl des3 -pass pass:\"%s\" >> %s", opts.password, outfile)); 
 	else
-		juci.shell("sysupgrade --create-backup - > %s", outfile); 
+		juci.shell("sysupgrade --create-backup - >> %s", outfile); 
 	end 
 	return {
-		filename = filename
+		id = did
 	}; 
 end 
 
