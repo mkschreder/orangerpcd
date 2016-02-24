@@ -5,6 +5,13 @@
 -- This module is distributed under GNU GPLv3 with additional permission for signed images.
 -- See LICENSE file for more details. 
 
-local ubus = require("juci/ubus"); 
+local json = require("juci/json"); 
 
-return ubus.bind("session", { "access", "login"}); 
+local function session_access(opts)
+	print(json.encode(opts)); 
+	return { access = SESSION.access(opts.scope, opts.object, opts.method, opts.perms) }  
+end
+
+return {
+	access = session_access
+}
