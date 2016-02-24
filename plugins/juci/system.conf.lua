@@ -7,6 +7,22 @@
 
 
 local juci = require("juci/core"); 
+local juci = require("juci.core");      
+local json = require("juci.json");      
+
+local function backup_create(opts)
+	math.randomseed(os.time()); 
+	local filename = "backup-"..tostring(math.random()).."-"..os.date("%Y-%m-%d")..".tar.gz"; 
+	local outfile = "/www/"..filename;  
+	if(opts.password and opts.password ~= "" and string.len(opts.password)) then 
+		juci.shell(string.format("sysupgrade --create-backup - | openssl des3 -pass pass:\"%s\" > %s", opts.password, outfile)); 
+	else
+		juci.shell("sysupgrade --create-backup - > %s", outfile); 
+	end 
+	return {
+		filename = filename
+	}; 
+end 
 
 local function backup_restore(opts)
 	local res = {}; 
@@ -38,6 +54,7 @@ local function backup_get_features()
 end
 
 return {
+	["backup"] = backup_create,
 	["restore"] = backup_restore, 
 	["features"] = backup_get_features, 
 	["clean"] = backup_clean
