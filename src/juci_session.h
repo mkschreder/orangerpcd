@@ -20,3 +20,5 @@ void juci_session_delete(struct juci_session **self);
 int juci_session_grant(struct juci_session *self, const char *scope, const char *object, const char *method, const char *perm); 
 int juci_session_revoke(struct juci_session *self, const char *scope, const char *object, const char *method, const char *perm); 
 bool juci_session_access(struct juci_session *ses, const char *scope, const char *obj, const char *fun, const char *perm); 
+
+void juci_session_to_blob(struct juci_session *self, struct blob *buf); 

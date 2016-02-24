@@ -274,3 +274,28 @@ bool juci_session_access(struct juci_session *ses, const char *scope, const char
 	return false;
 }
 
+void juci_session_to_blob(struct juci_session *self, struct blob *buf){
+	struct juci_session_acl *acl;
+    struct juci_session_acl_scope *acl_scope;
+	
+	blob_reset(buf); 
+	blob_offset_t r = blob_open_table(buf); 
+    avl_for_each_element(&self->acl_scopes, acl_scope, avl) {
+		blob_put_string(buf, acl_scope->avl.key); 
+		blob_offset_t s = blob_open_table(buf); 
+        avl_for_each_element(&acl_scope->acls, acl, avl){
+			blob_put_string(buf, acl->avl.key); 
+			blob_offset_t a = blob_open_table(buf); 
+			blob_put_string(buf, "object"); 
+			blob_put_string(buf, acl->object); 	
+			blob_put_string(buf, "method"); 
+			blob_put_string(buf, acl->function); 	
+			blob_put_string(buf, "perms"); 
+			blob_put_string(buf, acl->perms); 	
+			blob_close_table(buf, a); 
+		}
+		blob_close_table(buf, s); 
+    }
+	blob_close_table(buf, r); 
+}
+

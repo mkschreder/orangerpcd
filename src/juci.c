@@ -93,6 +93,8 @@ struct juci* juci_new(const char *plugin_path, const char *pwfile){
 	avl_init(&self->users, avl_strcmp, false, NULL); 
 
 	struct juci_user *admin = juci_user_new("admin"); 
+	juci_user_add_acl(admin, "juci*"); 
+	juci_user_add_acl(admin, "user-admin"); 
 	avl_insert(&self->users, &admin->avl); 
 	
 	self->plugin_path = strdup(plugin_path); 
@@ -192,7 +194,7 @@ int _load_session_acls(struct juci_session *ses, const char *pat){
 	char *dir = getenv("JUCI_ACL_DIR_PATH"); 
 	if(!dir) dir = JUCI_ACL_DIR_PATH; 
 	DEBUG("loading acls from %s\n", dir); 
-	snprintf(path, sizeof(path), "%s/%s", dir, pat); 
+	snprintf(path, sizeof(path), "%s/%s.acl", dir, pat); 
 	glob(path, GLOB_TILDE, NULL, &glob_result);
 	for(unsigned int i=0;i<glob_result.gl_pathc;++i){
 		char *text = _load_file(glob_result.gl_pathv[i]); 
@@ -201,7 +203,10 @@ int _load_session_acls(struct juci_session *ses, const char *pat){
 		int line = 1; 
 		while(true){	
 			int ret = sscanf(cur, "%s %s %s %s", scope, object, method, perm); 
-			if(ret == 4){
+			if(ret == 4 && scope[0] == '!'){
+				DEBUG("revoking session acl '%s %s %s %s'\n", scope + 1, object, method, perm); 
+				juci_session_revoke(ses, scope + 1, object, method, perm); 
+			} else if(ret == 4){
 				DEBUG("granting session acl '%s %s %s %s'\n", scope, object, method, perm); 
 				juci_session_grant(ses, scope, object, method, perm); 
 			} else {
@@ -231,7 +236,15 @@ int juci_login(struct juci *self, const char *username, const char *challenge, c
 
 	if(_try_auth(user->pwhash, challenge, response)){
 		struct juci_session *ses = juci_session_new(user); 	
-		_load_session_acls(ses, "*.acl"); 
+		struct juci_user_acl *acl; 
+		juci_user_for_each_acl(user, acl){
+			_load_session_acls(ses, acl->avl.key); 
+		}
+		struct blob buf; 
+		blob_init(&buf, 0, 0); 
+		juci_session_to_blob(ses, &buf); 
+		blob_dump_json(&buf); 
+		blob_free(&buf); 
 		if(avl_insert(&self->sessions, &ses->avl) != 0){
 			juci_session_delete(&ses); 
 			return -EINVAL; 
