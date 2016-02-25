@@ -92,10 +92,16 @@ struct juci* juci_new(const char *plugin_path, const char *pwfile){
 	avl_init(&self->sessions, avl_strcmp, false, NULL); 
 	avl_init(&self->users, avl_strcmp, false, NULL); 
 
+	// TODO: load users from config file
 	struct juci_user *admin = juci_user_new("admin"); 
 	juci_user_add_acl(admin, "juci*"); 
 	juci_user_add_acl(admin, "user-admin"); 
 	avl_insert(&self->users, &admin->avl); 
+
+	struct juci_user *support = juci_user_new("support"); 
+	juci_user_add_acl(support, "juci*"); 
+	juci_user_add_acl(support, "user-support"); 
+	avl_insert(&self->users, &support->avl); 
 	
 	self->plugin_path = strdup(plugin_path); 
 	self->pwfile = strdup(pwfile); 
@@ -159,6 +165,8 @@ int juci_load_passwords(struct juci *self, const char *pwfile){
 			}
 		}
 		while(*cur != '\n' && *cur) cur++; 
+		while(*cur == '\n') cur++; 
+		if(*cur == 0) break; 
 	}
 	free(passwords); 
 	return 0; 
