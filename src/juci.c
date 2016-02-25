@@ -281,7 +281,7 @@ int juci_call(struct juci *self, const char *sid, const char *object, const char
 		return -EACCES; 
 	}
 	if(!juci_session_access(self->current_session, "ubus", object, method, "x")){
-		DEBUG("user does not have permission to execute rpc call: %s %s\n", object, method); 
+		ERROR("user %s does not have permission to execute rpc call: %s %s\n", self->current_session->user->username, object, method); 
 		return -EACCES; 
 	}
 	return juci_luaobject_call(obj, self->current_session, method, args, out); 

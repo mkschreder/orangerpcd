@@ -34,7 +34,8 @@ local function backup_restore(opts)
 			res["error"] = "Invalid Password!"; 
 		end
 	else
-		res["stdout"] = juci.shell("sysupgrade --restore-backup /tmp/backup.tar.gz"); 
+		res["stdout"] = juci.shell("sysupgrade --restore-backup /tmp/backup.tar.gz 2>&1"); 
+		if(res.stdout and (res.stdout:match("invalid") or res.stdout:match("Error"))) then res.error = res.stdout; end
 	end
 	return res; 
 end
