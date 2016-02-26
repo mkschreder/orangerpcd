@@ -80,7 +80,7 @@ Response:
 ```javascript
 {
 	"leases": [{
-		device: "device name (such as , 
+		device: "device name", 
 		duid = "ipv6 duid", 
 		iaid = "ipv6 interface id", 
 		hostname = "client hostname", 
