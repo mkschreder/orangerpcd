@@ -201,7 +201,7 @@ int _load_session_acls(struct juci_session *ses, const char *pat){
 	char path[255]; 
 	char *dir = getenv("JUCI_ACL_DIR_PATH"); 
 	if(!dir) dir = JUCI_ACL_DIR_PATH; 
-	DEBUG("loading acls from %s\n", dir); 
+	DEBUG("loading acls from %s/%s.acl\n", dir, pat); 
 	snprintf(path, sizeof(path), "%s/%s.acl", dir, pat); 
 	glob(path, GLOB_TILDE, NULL, &glob_result);
 	for(unsigned int i=0;i<glob_result.gl_pathc;++i){

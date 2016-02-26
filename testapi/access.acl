@@ -1,1 +1,4 @@
 ubus /session test x
+ubus /session access x
+page juci-test * w
+page juci-test bar r

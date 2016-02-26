@@ -7,12 +7,26 @@ RPC.$connect("ws://localhost:1234").done(function(){
 	RPC.$login("admin","admin").done(function(result){
 		console.log("login: "+JSON.stringify(result)); 
 		RPC.$list("*").done(function(result){
-			console.log("List: "+result); 
+			console.log("List: "+JSON.stringify(result)); 
 		});
 		RPC.$call("/simple", "largejson", {}).done(function(result){
 			console.log("received json "+String(JSON.stringify(result)).length); 
 		}); 
-
+		RPC.$call("/session", "test", {}).done(function(result){
+			RPC.$call("/session", "test", {}).done(function(result){
+				console.log("Done!"); 
+			}); 
+		}); 
+		RPC.$call("/session", "access", {
+			scope: "page", 
+			object: "juci-test",
+			method: "car",
+			perms: "w"
+		}).done(function(result){
+			console.log("Session.access: "+JSON.stringify(result)); 
+		}); 
+	}).fail(function(){
+		console.log("Login failed!"); 
 	}); 
 	/*RPC.$call("/session", "access", {}).done(function(result){
 		console.log("session.access: "+result); 
