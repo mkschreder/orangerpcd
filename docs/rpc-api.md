@@ -12,34 +12,28 @@ interface is for now kept compatible with the old RPC interface for JUCI.
 However it would be very benefitial for this interface to be refactored with
 time into a more generic and powerful rpc interface for OpenWRT.  
 
-File Uploads
-------------
+UCI 
+---
 
-JUCI file uploader is currently very simple and supports writing blocks to
-files that user is allowed to write to over RPC. The benefit of using RPC file
-upload is that it works very well without any extra protocol support regardless
-of where the client is running (it can even be behind a websocket proxy and
-uploading will work anyway). The biggest disadvantage is that this simple
-approach is currently a lot slower than uploading a file directly over HTTP. 
+This is central interface to all configuration options on the system. Current
+implementation forwards these calls directly to corresponding ubus calls. 
 
-User permissions can be set as `juci file <filename> w`. If this permission is
-granted for currently logged in user then file uploads for this user will be
-allowed. 
 
-```javascript
+```javascript 
 {
-	"file": {
-		"write" [ filename:STRING, seek:INT, length:INT, data64:STRING ]
+	"uci": {
+		"add": [],
+		"revert": [],
+		"commit": [],
+		"rollback": [],
+		"set": [],
+		"apply": [],
+		"configs": [],
+		"delete": [],
+		"get": []
 	}
 }
 ```
-
-`write` - writes a file fragment to specified file. 
-
-A base64 encoded binary fragment of length `length` is written at position
-`seek` inside file specified by `filename`. If file does not exist then it is
-created. If seek position is past the end of the file then file size is
-extended automatically to fit that position and extra bytes are filled with 0s. 
 
 DDNS
 ----
@@ -70,16 +64,20 @@ DHCP Server Interface
 
 Access DHCP lease information. 
 
+```javascript
 {
 	"juci.dhcp": {
 		"ipv6leases": [],
 		"ipv4leases": []
 	}
 }
+```
 
 `ipv6leases`: return ipv4 dhcp leases
 
 Response: 
+
+```javascript
 {
 	"leases": [{
 		device: "device name (such as , 
@@ -92,6 +90,7 @@ Response:
 		ip6addr = "ipv6 address assigned to client"
 	}]
 }
+```
 
 `ipv4leases`: return list of ipv4 leases
 
@@ -438,22 +437,31 @@ Session And Access
 }
 ```
 
-UCI 
----
+File Uploads
+------------
 
-```javascript 
+JUCI file uploader is currently very simple and supports writing blocks to
+files that user is allowed to write to over RPC. The benefit of using RPC file
+upload is that it works very well without any extra protocol support regardless
+of where the client is running (it can even be behind a websocket proxy and
+uploading will work anyway). The biggest disadvantage is that this simple
+approach is currently a lot slower than uploading a file directly over HTTP. 
+
+User permissions can be set as `juci file <filename> w`. If this permission is
+granted for currently logged in user then file uploads for this user will be
+allowed. 
+
+```javascript
 {
-	"uci": {
-		"add": [],
-		"revert": [],
-		"commit": [],
-		"rollback": [],
-		"set": [],
-		"apply": [],
-		"configs": [],
-		"delete": [],
-		"get": []
+	"file": {
+		"write" [ filename:STRING, seek:INT, length:INT, data64:STRING ]
 	}
 }
 ```
 
+`write` - writes a file fragment to specified file. 
+
+A base64 encoded binary fragment of length `length` is written at position
+`seek` inside file specified by `filename`. If file does not exist then it is
+created. If seek position is past the end of the file then file size is
+extended automatically to fit that position and extra bytes are filled with 0s. 
