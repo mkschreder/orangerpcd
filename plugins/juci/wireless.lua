@@ -188,10 +188,8 @@ local function wireless_clients()
 			for macaddr,client in pairs(cl.clients) do 
 				local extinfo = wireless_get_extended_stainfo(wldev, macaddr); 
 				
-				local client = {
-					device = wldev, 
-					macaddr = macaddr
-				}; 
+				client.device = wldev; 
+				client.macaddr = macaddr; 
 
 				for k,v in pairs(extinfo) do client[k] = v; end
 
