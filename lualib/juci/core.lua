@@ -91,7 +91,9 @@ local function shell(fmt, ...)
 			arg[k] = v:gsub("[;*|><\\]", "\\%1");
 		end
 	end
-	local p = base.assert(io.popen(string.format(fmt, base.unpack(arg)))); 
+	local cmd = string.format(fmt, base.unpack(arg)); 
+	print(cmd); -- debug, cost is negligible if not running in terminal..
+	local p = base.assert(io.popen(cmd)); 
 	local s = p:read("*a"); 
 	local r = p:close();
 	-- there is no 'true' or 'false' in process return status world, yet for some reason lua returns true when return status is 1

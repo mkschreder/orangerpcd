@@ -6,7 +6,9 @@
 local juci = require("juci/core"); 
 
 local function ubus_call(o, m, opts)
-	local result = juci.shell("ubus call "..o.." "..m.." '"..json.encode(opts).."'"); 
+	local params = json.encode(opts); 
+	if params == "[]" then params = '{}'; end; 
+	local result = juci.shell("ubus call "..o.." "..m.." '"..params.."'"); 
 	return JSON.parse(result); 
 end
 
