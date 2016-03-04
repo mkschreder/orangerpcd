@@ -104,7 +104,7 @@ static void _juci_user_load_acls(struct juci_user *self, struct uci_section *s){
 			continue;
 		
 		uci_foreach_element(&o->v.list, l) {
-			juci_user_add_acl(self, "juci*"); 
+			juci_user_add_acl(self, l->name); 
 		}
 	}
 }
