@@ -92,7 +92,7 @@ local function shell(fmt, ...)
 		end
 	end
 	local cmd = string.format(fmt, base.unpack(arg)); 
-	print(cmd); -- debug, cost is negligible if not running in terminal..
+	--print(cmd); -- debug
 	local p = base.assert(io.popen(cmd)); 
 	local s = p:read("*a"); 
 	local r = p:close();
