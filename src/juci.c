@@ -28,6 +28,9 @@
 #include <crypt.h>
 
 #include <blobpack/blobpack.h>
+
+#include <uci.h>
+
 #include "juci.h"
 #include "juci_luaobject.h"
 #include "juci_lua.h"
@@ -85,6 +88,60 @@ int juci_load_plugins(struct juci *self, const char *path, const char *base_path
     return rv; 
 }
 
+// taken from rpcd source code (session.c)
+
+static void _juci_user_load_acls(struct juci_user *self, struct uci_section *s){
+	struct uci_option *o;
+	struct uci_element *e, *l;
+
+	uci_foreach_element(&s->options, e){
+		o = uci_to_option(e);
+
+		if (o->type != UCI_TYPE_LIST)
+			continue;
+
+		if (strcmp(o->e.name, "acls"))
+			continue;
+		
+		uci_foreach_element(&o->v.list, l) {
+			juci_user_add_acl(self, "juci*"); 
+		}
+	}
+}
+
+static bool _juci_load_users(struct juci *self){
+	struct uci_package *p = NULL;
+	struct uci_section *s;
+	struct uci_element *e;
+	struct uci_ptr ptr = { .package = "jucid" };
+	struct uci_context *uci = uci_alloc_context(); 
+
+	uci_load(uci, ptr.package, &p);
+
+	if (!p)
+		return false;
+
+	uci_foreach_element(&p->sections, e)
+	{
+		s = uci_to_section(e);
+
+		if (strcmp(s->type, "login"))
+			continue;
+		
+		struct juci_user *user = juci_user_new(s->e.name); 
+
+		_juci_user_load_acls(user, s); 
+		
+		TRACE("JUCI: loaded user config for user '%s'\n", s->e.name); 
+
+		avl_insert(&self->users, &user->avl); 
+	}
+
+	uci_free_context(uci); 
+
+	return true; 
+}
+
 struct juci* juci_new(const char *plugin_path, const char *pwfile){
 	struct juci *self = calloc(1, sizeof(struct juci)); 
 	assert(self); 
@@ -93,6 +150,8 @@ struct juci* juci_new(const char *plugin_path, const char *pwfile){
 	avl_init(&self->users, avl_strcmp, false, NULL); 
 
 	// TODO: load users from config file
+	_juci_load_users(self); 
+	/*
 	struct juci_user *admin = juci_user_new("admin"); 
 	juci_user_add_acl(admin, "juci*"); 
 	juci_user_add_acl(admin, "user-admin"); 
@@ -102,7 +161,7 @@ struct juci* juci_new(const char *plugin_path, const char *pwfile){
 	juci_user_add_acl(support, "juci*"); 
 	juci_user_add_acl(support, "user-support"); 
 	avl_insert(&self->users, &support->avl); 
-	
+*/	
 	self->plugin_path = strdup(plugin_path); 
 	self->pwfile = strdup(pwfile); 
 
