@@ -94,6 +94,14 @@ local function wireless_get_80211_freqlist(wldev)
 	return {}; 
 end
 
+local function wireless_get_80211_txpowerlist(wldev)
+	local iw = iwinfo[iwinfo.type(wldev)];
+	if(iw) then 
+		return iw.txpwrlist(wldev); 
+	end
+	return {}; 
+end
+
 local function wireless_get_80211_caps()
 	local devices = wireless_get_80211_device_names(); 
 	local result = { devices = {} }; 
@@ -143,7 +151,7 @@ end
 
 local function wireless_get_caps()
 	local result = {}; 
-	result.devices = wireless_get_80211_caps();
+	result.caps = wireless_get_80211_caps();
 	return result; 
 end
 
@@ -179,10 +187,25 @@ local function wireless_freqlist(msg)
 	return result; 
 end
 
+local function wireless_txpowerlist(msg)
+	local result = {}
+	if(not msg.device) then
+		return { error = "no device specified!" }; 
+	end
+	result.txpowerlist = wireless_get_80211_txpowerlist(msg.device); 
+	return result; 
+end
+
+
 local function wireless_clients()
 	local devices = wireless_get_80211_device_names(); 
 	local result = { clients = {} }; 
 	for _,wldev in ipairs(devices) do
+		local t = iwinfo.type(wldev); 
+		if t and iwinfo[t] then 
+			result.clients[wldev] = iwinfo[t].assoclist(wldev); 
+		end
+		--[[
 		local cl = ubus.call("hostapd."..wldev, "get_clients", {}); 
 		if(cl and cl.clients) then 
 			for macaddr,client in pairs(cl.clients) do 
@@ -197,6 +220,7 @@ local function wireless_clients()
 				table.insert(result.clients, client); 
 			end
 		end
+		]]--
 	end
 	return result; 
 end 
@@ -208,5 +232,6 @@ return {
 	clients = wireless_clients,
 	countrylist = wireless_countrylist,
 	htmodelist = wireless_htmodelist,
-	freqlist = wireless_freqlist
+	freqlist = wireless_freqlist,
+	txpowerlist = wireless_txpowerlist
 }; 
