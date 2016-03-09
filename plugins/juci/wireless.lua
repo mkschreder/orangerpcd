@@ -205,22 +205,6 @@ local function wireless_clients()
 		if t and iwinfo[t] then 
 			result.clients[wldev] = iwinfo[t].assoclist(wldev); 
 		end
-		--[[
-		local cl = ubus.call("hostapd."..wldev, "get_clients", {}); 
-		if(cl and cl.clients) then 
-			for macaddr,client in pairs(cl.clients) do 
-				local extinfo = wireless_get_extended_stainfo(wldev, macaddr); 
-				
-				client.frequency = cl.freq; 
-				client.device = wldev; 
-				client.macaddr = macaddr; 
-
-				for k,v in pairs(extinfo) do client[k] = v; end
-
-				table.insert(result.clients, client); 
-			end
-		end
-		]]--
 	end
 	return result; 
 end 
