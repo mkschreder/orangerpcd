@@ -1,23 +1,9 @@
-Revolution RPC Server (RevoRPCD)
---------------------------------
+Juci RPC Server (JuciRPCD)
+--------------------------
 
-RevoRPCD provides a router RPC API for embedded routers running OpenWRT. It is
-a small application server with integrated lua scripting, access control and
-easy interface to ubus IPC on OpenWRT. It is designed as a backend server for
-JUCI webgui (https://github.com/mkschreder/juci) but can be used as backend
-server for any application where remote JSON RPC functionality is needed.  
-
-Why choose RevoRPC? 
-
-- It's fast. All lua scripts are precompiled into bytecode and your rpc calls
-  are delivered directly to the precompiled backend. 
-- It's small. Even if scripts are preloaded, it still has a very small memory
-  footprint. 
-- It supports "realtime" events. Since it's websocket based, you have a direct
-  two way communication channels to clients through which you can send RPC
-  events using JSON-RPC spec format.  
-- It never sends passwords in clear text as OpenWRT default rpc solution does.
-  Instead it uses challenge/response sequence using sha1 digests. 
+JuciRPCD is the new backend server with support for websockets developed for
+latest version of JUCI webgui. It is a small application server with integrated
+lua scripting, access control and easy interface to ubus IPC on OpenWRT. 
 
 Building
 --------
@@ -29,7 +15,7 @@ Building
 Core RPC API
 ------------
 
-RevoRPC implements JSON RPC protocol as it is commonly defined. The protocol
+JuciRPCD implements JSON RPC protocol as it is commonly defined. The protocol
 thus supports four types of messages: 
 
 	CALL:   {"jsonrpc":"2.0","id":1,"method":"...","params":[...]}
