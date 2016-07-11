@@ -352,7 +352,7 @@ static int _websocket_send(juci_server_t socket, struct ubus_message **msg){
 	}
 	
 	struct ubus_srv_ws_client *client = (struct ubus_srv_ws_client*)container_of(id, struct ubus_srv_ws_client, id);  
-	struct ubus_srv_ws_frame *frame = ubus_srv_ws_frame_new(blob_head(&(*msg)->buf)); 
+	struct ubus_srv_ws_frame *frame = ubus_srv_ws_frame_new(blob_field_first_child(blob_head(&(*msg)->buf))); 
 	list_add_tail(&frame->list, &client->tx_queue); 	
 	pthread_mutex_unlock(&self->qlock); 
 	lws_callback_on_writable(client->wsi); 	
@@ -421,7 +421,7 @@ juci_server_t juci_ws_server_new(const char *www_root){
 	self->protocols = calloc(2, sizeof(struct lws_protocols)); 
 	assert(self->protocols); 
 	self->protocols[0] = (struct lws_protocols){
-		.name = "",
+		.name = "rpc",
 		.callback = _ubus_socket_callback,
 		.per_session_data_size = sizeof(struct ubus_srv_ws_client*),
 		.user = self

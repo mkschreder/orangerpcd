@@ -168,14 +168,16 @@ int main(int argc, char **argv){
 		struct blob_field *params = NULL, *args = NULL; 
 		const char *sid = "", *rpc_method = "", *object = "", *method = ""; 
 		uint32_t rpc_id = 0; 
-		if(!rpcmsg_parse_call(&msg->buf, &rpc_id, &rpc_method, &params)){
-			ubus_message_delete(&msg); 
-			DEBUG("could not parse call params\n"); 
-			continue; 
-		}
-
+		
 		struct ubus_message *result = ubus_message_new(); 
 		result->peer = msg->peer; 
+
+		if(!rpcmsg_parse_call(&msg->buf, &rpc_id, &rpc_method, &params)){
+			DEBUG("could not parse incoming message\n"); 
+			// we silently discard invalid messages!
+			ubus_message_delete(&msg); 
+			continue; 
+		}
 
 		blob_offset_t t = blob_open_table(&result->buf); 
 		blob_put_string(&result->buf, "jsonrpc"); 
@@ -190,10 +192,24 @@ int main(int argc, char **argv){
 					char *str = strerror(-ret); 
 					if(!str) str = "UNKNOWN"; 
 					blob_put_string(&result->buf, "error"); 
+					blob_offset_t o = blob_open_table(&result->buf); 
+					blob_put_string(&result->buf, "code"); 
+					blob_put_int(&result->buf, ret); 
+					blob_put_string(&result->buf, "str"); 
 					blob_put_string(&result->buf, str);  
+					blob_close_table(&result->buf, o); 
 				}
 			} else {
-				DEBUG("Could not parse call params!\n"); 
+				DEBUG("Could not parse call message!\n"); 
+				blob_put_string(&result->buf, "error"); 
+				blob_offset_t o = blob_open_table(&result->buf); 
+				blob_put_string(&result->buf, "code"); 
+				blob_put_int(&result->buf, -EINVAL); 
+				blob_put_string(&result->buf, "str"); 
+				blob_put_string(&result->buf, "Invalid call message format!"); 
+				blob_close_table(&result->buf, o); 
+				ubus_server_send(server, &result); 	
+				ubus_message_delete(&msg); 
 			}
 		} else if(rpc_method && strcmp(rpc_method, "list") == 0){
 			const char *path = "*"; 	
@@ -217,19 +233,25 @@ int main(int argc, char **argv){
 			snprintf(token, sizeof(token), "%08x", msg->peer); //TODO: make hash
 
 			if(rpcmsg_parse_login(params, &username, &response)){
-				blob_put_string(&result->buf, "result"); 
-				blob_offset_t o = blob_open_table(&result->buf); 
 				if(juci_login(app, username, token, response, &sid) == 0){
+					blob_put_string(&result->buf, "result"); 
+					blob_offset_t o = blob_open_table(&result->buf); 
 					blob_put_string(&result->buf, "success"); 
 					blob_put_string(&result->buf, sid); 
+					blob_close_table(&result->buf, o); 
 				} else {
 					blob_put_string(&result->buf, "error"); 
+					blob_offset_t o = blob_open_table(&result->buf); 
+					blob_put_string(&result->buf, "code"); 
 					blob_put_string(&result->buf, "EACCESS"); 
+					blob_close_table(&result->buf, o); 
 				}	
-				blob_close_table(&result->buf, o); 
 			} else {
 				blob_put_string(&result->buf, "error"); 
-				blob_put_string(&result->buf, "Invalid Parameters"); 
+				blob_offset_t o = blob_open_table(&result->buf); 
+				blob_put_string(&result->buf, "code"); 
+				blob_put_string(&result->buf, "EINVAL"); 
+				blob_close_table(&result->buf, o); 
 				DEBUG("Could not parse login parameters!\n"); 
 			}
 		} else if(rpc_method && strcmp(rpc_method, "logout") == 0){
@@ -267,7 +289,7 @@ int main(int argc, char **argv){
 		blob_close_table(&result->buf, t); 
 		if(juci_debug_level >= JUCI_DBG_TRACE){
 			DEBUG("sending back: "); 
-			blob_dump_json(&result->buf); 
+			blob_field_dump_json(blob_field_first_child(blob_head(&result->buf))); 
 		}
 		ubus_server_send(server, &result); 		
 		ubus_message_delete(&msg); 

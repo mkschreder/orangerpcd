@@ -218,11 +218,18 @@ int juci_load_passwords(struct juci *self, const char *pwfile){
 	while(sscanf(cur, "%s %s", user, hash) == 2){	
 		struct avl_node *node = avl_find(&self->users, user); 
 		if(node){
-			struct juci_user *user = container_of(node, struct juci_user, avl); 
-			if(user){
-				juci_user_set_pw_hash(user, hash); 
+			struct juci_user *u = container_of(node, struct juci_user, avl); 
+			if(u){
+				juci_user_set_pw_hash(u, hash); 
+				DEBUG("updated existing user %s\n", user); 
 			}
+		} else {
+			// create new user
+			struct juci_user *u = juci_user_new(user); 
+			avl_insert(&self->users, &u->avl); 
+			DEBUG("loaded new user %s\n", user); 
 		}
+
 		while(*cur != '\n' && *cur) cur++; 
 		while(*cur == '\n') cur++; 
 		if(*cur == 0) break; 
@@ -296,7 +303,10 @@ struct juci_session *juci_find_session(struct juci *self, const char *sid){
 
 int juci_login(struct juci *self, const char *username, const char *challenge, const char *response, const char **new_sid){
 	struct avl_node *node = avl_find(&self->users, username); 
-	if(!node) return -EINVAL; 
+	if(!node){
+		DEBUG("user %s not found!\n", username);
+		return -EINVAL; 
+	}
 	struct juci_user *user = container_of(node, struct juci_user, avl); 
 	// update user hashes (TODO: perhaps this should be loaded into secure memory somehow and discarded after login?)
 	juci_load_passwords(self, self->pwfile); 
@@ -310,9 +320,10 @@ int juci_login(struct juci *self, const char *username, const char *challenge, c
 		struct blob buf; 
 		blob_init(&buf, 0, 0); 
 		juci_session_to_blob(ses, &buf); 
-		blob_dump_json(&buf); 
+		//blob_dump_json(&buf); 
 		blob_free(&buf); 
 		if(avl_insert(&self->sessions, &ses->avl) != 0){
+			DEBUG("could not insert session!\n");
 			juci_session_delete(&ses); 
 			return -EINVAL; 
 		}
