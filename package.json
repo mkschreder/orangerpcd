@@ -1,0 +1,17 @@
+{
+  "name": "revorpc",
+  "version": "0.0.1",
+  "dependencies": {
+    "JSON": "*",
+    "request": "*",
+    "async": "*",
+    "jquery-deferred": "*",
+	"sha1": "*"
+  },
+  "engines": {
+    "node": "0.10.x",
+    "npm": "1.2.x"
+  },
+  "devDependencies": {
+  }
+}

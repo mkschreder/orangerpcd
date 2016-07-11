@@ -1,0 +1,174 @@
+#!/usr/bin/env node
+
+var JSON = require("JSON"); 
+var fs = require("fs"); 
+var exec = require("child_process").exec; 
+var spawn = require('child_process').spawn;
+var WebSocket = require("ws"); 
+var $ = require("jquery-deferred"); 
+var sha1 = require("sha1"); 
+
+var config = { 
+	host: "192.168.1.1", 
+	port: 80, 
+	path: "/websocket/",
+	username: "admin", 
+	password: "admin",
+	verbose: 0
+};
+
+console.debug = function(msg){
+	if(config.verbose > 0) console.log(msg); 
+}
+
+for(var i = 0; i < process.argv.length; i++){
+	switch(process.argv[i]){
+		case "--host": config.host = process.argv[++i]; break; 
+		case "--port": config.port = parseInt(process.argv[++i]); break; 
+		case "--path": config.path = process.argv[++i]; break; 
+		case "--username": config.username = process.argv[++i]; break; 
+		case "--password": config.password = process.argv[++i]; break; 
+		case "--object": config.object = process.argv[++i]; break; 
+		case "--method": config.method = process.argv[++i]; break; 
+		case "--params": config.params = JSON.parse(process.argv[++i]); break; 
+		case "--verbose": config.verbose = parseInt(process.argv[++i]); break; 
+	}; 
+} 
+
+if(!config.host || !config.port){
+	console.log("revorpc: ");
+	console.log("	--host <host>"); 
+	console.log("		specify host to connect to (default: "+config.host+")"); 
+	console.log("	--path <websocket path>"); 
+	console.log("		if you are using http then specify http websocket path on which to start websocket (default: "+config.path+")"); 
+	console.log("	--port <port>"); 
+	console.log("		specify port to connect on (default: "+config.port+")"); 
+	console.log("	--username <username>"); 
+	console.log("		specify username to login as (default: "+config.username+")"); 
+	console.log("	--password <password>"); 
+	console.log("		user password (default: "+config.password+")"); 
+	process.exit(); 
+}
+
+function RPC(){
+	this.requests = {}; 
+	this.id = 1; 
+}
+
+RPC.prototype.connect = function(){
+	var self = this; 
+	self.socket = new WebSocket("ws://"+config.host+":"+config.port+config.path);  
+	self.connect = $.Deferred(); 
+	self.socket.onopen = function(){     
+		console.debug("Websocket RPC connected!"); 
+
+		self.socket.onmessage = function(e){ 
+			console.debug("RESPONSE: "+e.data+"\n"); 
+			try {
+				var json = JSON.parse(e.data); 
+				var req = self.requests[json.id]; 
+				if(req && json.result){
+					req.resolve(json.result); 
+				} else if(req && json.error){
+					req.reject(json.error); 
+				}
+				self.requests[json.id] = undefined; 
+			} catch(e){
+
+			}
+		} 
+
+		self.connect.resolve();  
+	}                               
+	self.socket.onerror = function(){    
+		console.debug("Websocket error!");         
+		self.connect.reject(); 
+	}
+	self.socket.onclose = function(){    
+		console.debug("websocket closed!"); 
+	}
+	return self.connect.promise(); 
+}
+
+RPC.prototype.request = function(params){
+	var def = $.Deferred(); 
+	var self = this; 
+	var msg = {
+		jsonrpc: "2.0", 
+		id: self.id++, 
+		method: params.method, 
+		params: params.params || []
+	}; 
+	self.requests[msg.id] = def; 
+	console.debug("REQUEST: "+JSON.stringify(msg));
+	self.socket.send(JSON.stringify(msg)+"\n"); 
+	return def.promise(); 
+}
+
+RPC.prototype.login = function(params){
+	var self = this; 
+	var def = $.Deferred(); 
+	self.request({
+		method: "challenge",
+		params: []
+	}).done(function(ch){
+		console.debug("Got challenge: "+ch.token); 
+		self.request({
+			method: "login", 
+			params: [params.username, sha1(ch.token+sha1(params.password))]
+		}).done(function(s){
+			console.debug("Got response: "+s.success); 
+			self.sid = s.success; 
+			def.resolve(); 
+		}).fail(function(){
+			console.debug("Login failed!"); 
+			def.reject(); 
+		});
+	}); 
+	return def.promise(); 
+}
+
+RPC.prototype.call = function(params){
+	var self = this; 
+	var def = $.Deferred(); 
+	self.request({
+		method: "call", 
+		params: [self.sid, params.object, params.method, params.params]
+	}).done(function(e){
+		def.resolve(e); 
+	}).fail(function(e){
+		def.reject(e); 
+	}); 
+	return def.promise(); 
+}
+
+var client = new RPC(); 
+client.connect({
+	host: config.host, 
+	port: config.port, 
+	path: config.path
+}).then(function(){
+	return client.login({
+		username: config.username, 
+		password: config.password
+	}).fail(function(){
+		console.error("Could not login!"); 
+		process.exit(); 
+	}); 
+}).then(function(){; 
+	return client.call({
+		object: config.object, 
+		method: config.method, 
+		params: config.params
+	}).done(function(r){
+		console.debug("Response: "+JSON.stringify(r)); 
+		console.log(JSON.stringify({result: r})); 
+		process.exit(); 
+	}).fail(function(r){
+		console.error(JSON.stringify({error: r})); 
+		process.exit(); 
+	}); 
+}).then(function(e){
+	console.debug("Done!"); 
+}); 
+
