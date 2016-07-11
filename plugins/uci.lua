@@ -7,4 +7,5 @@
 
 local ubus = require("juci/ubus"); 
 
+-- TODO: add access control for uci calls!
 return ubus.bind("uci", {"get","set","add","configs","commit","revert","apply","rollback","delete"}); 
