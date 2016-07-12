@@ -36,7 +36,7 @@ for(var i = 0; i < process.argv.length; i++){
 } 
 
 function usage(){
-	console.log("revorpc: ");
+	console.log("revorpc <options> [call|list] [object] [method] [{..params..}]");
 	console.log("	--host <host>"); 
 	console.log("		specify host to connect to (default: "+config.host+")"); 
 	console.log("	--path <websocket path>"); 
@@ -86,8 +86,8 @@ RPC.prototype.connect = function(){
 
 		self.connect.resolve();  
 	}                               
-	self.socket.onerror = function(){    
-		console.debug("Websocket error!");         
+	self.socket.onerror = function(e){    
+		console.debug("Websocket error: "+e);         
 		self.connect.reject(); 
 	}
 	self.socket.onclose = function(){    
