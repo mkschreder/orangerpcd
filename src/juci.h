@@ -30,11 +30,12 @@ struct juci {
 	
 	char *plugin_path; 	
 	char *pwfile; 
+	char *acl_path; 
 
 	struct juci_session *current_session; 
 }; 
 
-struct juci* juci_new(const char *plugin_path, const char *pwfile); 
+struct juci* juci_new(const char *plugin_path, const char *pwfile, const char *acl_dir); 
 void juci_delete(struct juci **_self); 
 
 int juci_login(struct juci *self, const char *username, const char *challenge, const char *response, const char **new_sid); 

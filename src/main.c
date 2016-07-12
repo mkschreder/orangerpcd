@@ -109,15 +109,19 @@ int main(int argc, char **argv){
 	const char *listen_socket = "ws://localhost:1234"; 
 	const char *plugin_dir = "plugins"; 
 	const char *pw_file = "/etc/juci-shadow"; 
-	
+	const char *acl_dir = "";
+
 	printf("RevoRPCD v%s\n",VERSION); 
 	printf("Copyright (c) 2016 Martin Schröder\n"); 
 
 	int c = 0; 	
-	while((c = getopt(argc, argv, "d:l:p:vx:")) != -1){
+	while((c = getopt(argc, argv, "d:l:p:vx:a:")) != -1){
 		switch(c){
 			case 'd': 
 				www_root = optarg; 
+				break; 
+			case 'a': 
+				acl_dir = optarg; 
 				break; 
 			case 'l':
 				listen_socket = optarg; 
@@ -144,7 +148,7 @@ int main(int argc, char **argv){
 
 	signal(SIGINT, handle_sigint); 
 
-	struct juci *app = juci_new(plugin_dir, pw_file); 
+	struct juci *app = juci_new(plugin_dir, pw_file, acl_dir); 
 
 	struct blob buf, out; 
 	blob_init(&buf, 0, 0); 
@@ -208,8 +212,11 @@ int main(int argc, char **argv){
 				blob_put_string(&result->buf, "str"); 
 				blob_put_string(&result->buf, "Invalid call message format!"); 
 				blob_close_table(&result->buf, o); 
+
+				blob_close_table(&result->buf, t); 
 				ubus_server_send(server, &result); 	
 				ubus_message_delete(&msg); 
+				continue; 
 			}
 		} else if(rpc_method && strcmp(rpc_method, "list") == 0){
 			const char *path = "*"; 	
@@ -283,7 +290,12 @@ int main(int argc, char **argv){
 			}
 		} else {
 			blob_put_string(&result->buf, "error"); 
-			blob_put_string(&result->buf, "Invalid Method"); 
+			blob_offset_t o = blob_open_table(&result->buf); 
+				blob_put_string(&result->buf, "code"); 
+				blob_put_int(&result->buf, -EINVAL); 
+				blob_put_string(&result->buf, "str"); 
+				blob_put_string(&result->buf, "Invalid Method"); 
+			blob_close_table(&result->buf, o); 
 		}	
 
 		blob_close_table(&result->buf, t); 

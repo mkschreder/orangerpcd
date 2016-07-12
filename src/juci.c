@@ -142,13 +142,13 @@ static bool _juci_load_users(struct juci *self){
 	return true; 
 }
 
-struct juci* juci_new(const char *plugin_path, const char *pwfile){
+struct juci* juci_new(const char *plugin_path, const char *pwfile, const char *acl_path ){
 	struct juci *self = calloc(1, sizeof(struct juci)); 
 	assert(self); 
 	avl_init(&self->objects, avl_strcmp, false, NULL); 
 	avl_init(&self->sessions, avl_strcmp, false, NULL); 
 	avl_init(&self->users, avl_strcmp, false, NULL); 
-
+	
 	// TODO: load users from config file
 	_juci_load_users(self); 
 	/*
@@ -164,6 +164,7 @@ struct juci* juci_new(const char *plugin_path, const char *pwfile){
 */	
 	self->plugin_path = strdup(plugin_path); 
 	self->pwfile = strdup(pwfile); 
+	self->acl_path = strdup(acl_path); 
 
 	if(juci_load_passwords(self, self->pwfile) != 0){
 		ERROR("could not load password file from %s\n", pwfile); 
@@ -191,6 +192,7 @@ void juci_delete(struct juci **_self){
 	
 	free(self->pwfile); 
 	free(self->plugin_path); 
+	free(self->acl_path); 
 
 	free(self); 
 	_self = NULL; 
@@ -226,6 +228,8 @@ int juci_load_passwords(struct juci *self, const char *pwfile){
 		} else {
 			// create new user
 			struct juci_user *u = juci_user_new(user); 
+			// TODO: load acls from config as well!
+			juci_user_add_acl(u, "*"); 
 			avl_insert(&self->users, &u->avl); 
 			DEBUG("loaded new user %s\n", user); 
 		}
@@ -262,14 +266,14 @@ static bool _try_auth(const char *sha1hash, const char *challenge, const char *r
 	return !strcmp((const char*)hash, response); 
 }
 
-int _load_session_acls(struct juci_session *ses, const char *pat){
+static int _load_session_acls(struct juci_session *ses, const char *dir, const char *pat){
 	glob_t glob_result;
 	char path[255]; 
-	char *dir = getenv("JUCI_ACL_DIR_PATH"); 
+	if(!strlen(dir)) dir = getenv("JUCI_ACL_DIR_PATH"); 
 	if(!dir) dir = JUCI_ACL_DIR_PATH; 
 	DEBUG("loading acls from %s/%s.acl\n", dir, pat); 
 	snprintf(path, sizeof(path), "%s/%s.acl", dir, pat); 
-	glob(path, GLOB_TILDE, NULL, &glob_result);
+	glob(path, 0, NULL, &glob_result);
 	for(unsigned int i=0;i<glob_result.gl_pathc;++i){
 		char *text = _load_file(glob_result.gl_pathv[i]); 
 		char *cur = text; 	
@@ -315,7 +319,7 @@ int juci_login(struct juci *self, const char *username, const char *challenge, c
 		struct juci_session *ses = juci_session_new(user); 	
 		struct juci_user_acl *acl; 
 		juci_user_for_each_acl(user, acl){
-			_load_session_acls(ses, acl->avl.key); 
+			_load_session_acls(ses, self->acl_path, acl->avl.key); 
 		}
 		struct blob buf; 
 		blob_init(&buf, 0, 0); 
