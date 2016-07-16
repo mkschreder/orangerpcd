@@ -106,7 +106,7 @@ static bool rpcmsg_parse_login(struct blob_field *params, const char **username,
 
 int main(int argc, char **argv){
   	const char *www_root = "/www"; 
-	const char *listen_socket = "ws://localhost:1234"; 
+	const char *listen_socket = "ws://localhost:5303"; 
 	const char *plugin_dir = "plugins"; 
 	const char *pw_file = "/etc/juci-shadow"; 
 	const char *acl_dir = "";
