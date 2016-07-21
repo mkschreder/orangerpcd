@@ -4,7 +4,7 @@
 -- See LICENSE file for more details. 
 
 
-local ubus = require("juci/ubus"); 
+local ubus = require("orange/ubus"); 
 
 return ubus.bind("network.interface", { "dump" }); 
 

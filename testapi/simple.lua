@@ -5,7 +5,7 @@
 -- This module is distributed under GNU GPLv3 with additional permission for signed images.
 -- See LICENSE file for more details. 
 
-local juci = require("juci/core"); 
+local orange = require("orange/core"); 
 
 local function print_hello(opts)
 	print("Hello World!"); 
@@ -14,7 +14,7 @@ local function print_hello(opts)
 end
 
 local function largejson(opts)
-	return JSON.parse(juci.shell("cat example/large.json")); 
+	return JSON.parse(orange.shell("cat example/large.json")); 
 end
 
 local function noreturn(opts)

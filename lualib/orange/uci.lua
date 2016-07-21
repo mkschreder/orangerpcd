@@ -1,13 +1,13 @@
 -- JUCI Lua Backend Server API
 -- Copyright (c) 2016 Martin Schröder <mkschreder.uk@gmail.com>. All rights reserved. 
 -- This module is distributed under JUCI Genereal Public License as published
--- at https://github.com/mkschreder/jucid/COPYING. See COPYING file for details. 
+-- at https://github.com/mkschreder/oranged/COPYING. See COPYING file for details. 
 
-local juci = require("juci/core"); 
+local orange = require("orange/core"); 
 
 local function uci_load(config)
 	print("dump: "..config); 
-	local lines = juci:shell("uci show %s", config); 
+	local lines = orange:shell("uci show %s", config); 
 	local result = {}; 
 	for line in lines:gmatch("[^\r\n]+") do 
 		--local config,section,option,value = line:match("([^\\.]+)\\.([^\\.]+)\\.([^=]+)=(.*)"); 

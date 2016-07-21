@@ -18,7 +18,7 @@
 #include <blobpack/blobpack.h>
 
 #define _GNU_SOURCE
-#include "juci_ws_server.h"
+#include "orange_ws_server.h"
 
 #include "mimetypes.h"
 #include <libutype/list.h>
@@ -36,8 +36,8 @@
 #include <fcntl.h>
 #include <poll.h>
 
-#include "juci.h"
-#include "juci_id.h"
+#include "orange.h"
+#include "orange_id.h"
 #include "internal.h"
 
 struct lws_context; 
@@ -275,7 +275,7 @@ static int _ubus_socket_callback(struct lws *wsi, enum lws_callback_reasons reas
 	return 0; 
 }
 
-void _websocket_destroy(juci_server_t socket){
+void _websocket_destroy(orange_server_t socket){
 	struct ubus_srv_ws *self = container_of(socket, struct ubus_srv_ws, api); 
 	self->shutdown = true; 
 	DEBUG("websocket: joining worker thread..\n"); 
@@ -302,7 +302,7 @@ void _websocket_destroy(juci_server_t socket){
 	free(self);  
 }
 
-int _websocket_listen(juci_server_t socket, const char *path){
+int _websocket_listen(orange_server_t socket, const char *path){
 	struct ubus_srv_ws *self = container_of(socket, struct ubus_srv_ws, api); 
 	struct lws_context_creation_info info; 
 	memset(&info, 0, sizeof(info)); 
@@ -327,7 +327,7 @@ int _websocket_listen(juci_server_t socket, const char *path){
 	return 0; 
 }
 
-static int _websocket_connect(juci_server_t socket, const char *path){
+static int _websocket_connect(orange_server_t socket, const char *path){
 	//struct ubus_srv_ws *self = container_of(socket, struct ubus_srv_ws, api); 
 	return -1; 
 }
@@ -342,7 +342,7 @@ static void *_websocket_server_thread(void *ptr){
 	return 0; 
 }
 
-static int _websocket_send(juci_server_t socket, struct ubus_message **msg){
+static int _websocket_send(orange_server_t socket, struct ubus_message **msg){
 	struct ubus_srv_ws *self = container_of(socket, struct ubus_srv_ws, api); 
 	pthread_mutex_lock(&self->qlock); 
 	struct ubus_id *id = ubus_id_find(&self->clients, (*msg)->peer); 
@@ -360,7 +360,7 @@ static int _websocket_send(juci_server_t socket, struct ubus_message **msg){
 	return 0; 
 }
 
-static void *_websocket_userdata(juci_server_t socket, void *ptr){
+static void *_websocket_userdata(orange_server_t socket, void *ptr){
 	struct ubus_srv_ws *self = container_of(socket, struct ubus_srv_ws, api); 
 	if(!ptr) return self->user_data; 
 	self->user_data = ptr; 
@@ -383,7 +383,7 @@ static void _timeout_us(struct timespec *t, unsigned long long timeout_us){
 	}
 }
 
-static int _websocket_recv(juci_server_t socket, struct ubus_message **msg, unsigned long long timeout_us){
+static int _websocket_recv(orange_server_t socket, struct ubus_message **msg, unsigned long long timeout_us){
 	struct ubus_srv_ws *self = container_of(socket, struct ubus_srv_ws, api); 
 
 	*msg = NULL; 
@@ -414,7 +414,7 @@ static int _websocket_recv(juci_server_t socket, struct ubus_message **msg, unsi
 	return 1; 
 }
 
-juci_server_t juci_ws_server_new(const char *www_root){
+orange_server_t orange_ws_server_new(const char *www_root){
 	struct ubus_srv_ws *self = calloc(1, sizeof(struct ubus_srv_ws)); 
 
 	pthread_attr_t attr;

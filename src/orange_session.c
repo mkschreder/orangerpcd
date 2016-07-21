@@ -46,19 +46,19 @@
 
 #include "internal.h"
 
-#include "juci_session.h"
+#include "orange_session.h"
 
-struct juci_session_data {
+struct orange_session_data {
 	struct avl_node avl;
 	struct blob_field *attr;
 };
 
-struct juci_session_acl_scope {
+struct orange_session_acl_scope {
 	struct avl_node avl;
 	struct avl_tree acls;
 };
 
-struct juci_session_acl {
+struct orange_session_acl {
 	struct avl_node avl;
 	const char *object;
 	const char *function;
@@ -66,7 +66,7 @@ struct juci_session_acl {
 	int sort_len;
 };
 
-static int _generate_sid(juci_sid_t dest){
+static int _generate_sid(orange_sid_t dest){
 	unsigned char buf[16] = { 0 };
 	FILE *f;
 	int i;
@@ -88,8 +88,8 @@ static int _generate_sid(juci_sid_t dest){
 	return 0;
 }
 
-struct juci_session *juci_session_new(struct juci_user *user){
-	struct juci_session *self = calloc(1, sizeof(struct juci_session)); 
+struct orange_session *orange_session_new(struct orange_user *user){
+	struct orange_session *self = calloc(1, sizeof(struct orange_session)); 
 	assert(self); 
 	
 	_generate_sid(self->sid); 
@@ -104,12 +104,12 @@ struct juci_session *juci_session_new(struct juci_user *user){
 	return self; 
 }
 
-void juci_session_delete(struct juci_session **_self){
+void orange_session_delete(struct orange_session **_self){
 	assert(*_self); 
-	struct juci_session *self = *_self; 
-	struct juci_session_acl *acl, *nacl;
-    struct juci_session_acl_scope *acl_scope, *nacl_scope;
-    struct juci_session_data *data, *ndata;
+	struct orange_session *self = *_self; 
+	struct orange_session_acl *acl, *nacl;
+    struct orange_session_acl_scope *acl_scope, *nacl_scope;
+    struct orange_session_data *data, *ndata;
 
     avl_for_each_element_safe(&self->acl_scopes, acl_scope, avl, nacl_scope) {
         avl_remove_all_elements(&acl_scope->acls, acl, avl, nacl)
@@ -145,9 +145,9 @@ void juci_session_delete(struct juci_session **_self){
             !fnmatch((_acl)->function, (_func), FNM_NOESCAPE))
 
 
-int juci_session_grant(struct juci_session *ses, const char *scope, const char *object, const char *function, const char *perm){
-    struct juci_session_acl *acl;
-    struct juci_session_acl_scope *acl_scope;
+int orange_session_grant(struct orange_session *ses, const char *scope, const char *object, const char *function, const char *perm){
+    struct orange_session_acl *acl;
+    struct orange_session_acl_scope *acl_scope;
     char *new_scope, *new_obj, *new_func, *new_id, *new_perms;
     int id_len;
 
@@ -195,10 +195,10 @@ int juci_session_grant(struct juci_session *ses, const char *scope, const char *
     return 0;
 }
 
-int juci_session_revoke(struct juci_session *ses,
+int orange_session_revoke(struct orange_session *ses,
                    const char *scope, const char *object, const char *function, const char *perm){
-    struct juci_session_acl *acl, *next;
-    struct juci_session_acl_scope *acl_scope;
+    struct orange_session_acl *acl, *next;
+    struct orange_session_acl_scope *acl_scope;
     int id_len;
     char *id;
 
@@ -247,9 +247,9 @@ int juci_session_revoke(struct juci_session *ses,
     return 0;
 }
 
-bool juci_session_access(struct juci_session *ses, const char *scope, const char *obj, const char *fun, const char *perm){
-	struct juci_session_acl *acl;
-	struct juci_session_acl_scope *acl_scope;
+bool orange_session_access(struct orange_session *ses, const char *scope, const char *obj, const char *fun, const char *perm){
+	struct orange_session_acl *acl;
+	struct orange_session_acl_scope *acl_scope;
 
 	acl_scope = avl_find_element(&ses->acl_scopes, scope, acl_scope, avl);
 
@@ -274,9 +274,9 @@ bool juci_session_access(struct juci_session *ses, const char *scope, const char
 	return false;
 }
 
-void juci_session_to_blob(struct juci_session *self, struct blob *buf){
-	struct juci_session_acl *acl;
-    struct juci_session_acl_scope *acl_scope;
+void orange_session_to_blob(struct orange_session *self, struct blob *buf){
+	struct orange_session_acl *acl;
+    struct orange_session_acl_scope *acl_scope;
 	
 	blob_reset(buf); 
 	blob_offset_t r = blob_open_table(buf); 

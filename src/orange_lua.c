@@ -22,10 +22,10 @@
 #include <blobpack/blobpack.h>
 
 #include "internal.h"
-#include "juci_lua.h"
-#include "juci_session.h"
+#include "orange_lua.h"
+#include "orange_session.h"
 
-void juci_lua_blob_to_table(lua_State *lua, struct blob_field *msg, bool table){
+void orange_lua_blob_to_table(lua_State *lua, struct blob_field *msg, bool table){
 	lua_newtable(lua); 
 
 	struct blob_field *child; 
@@ -49,10 +49,10 @@ void juci_lua_blob_to_table(lua_State *lua, struct blob_field *msg, bool table){
 				lua_pushstring(lua, blob_field_get_string(child)); 
 				break; 
 			case BLOB_FIELD_ARRAY: 
-				juci_lua_blob_to_table(lua, child, false); 
+				orange_lua_blob_to_table(lua, child, false); 
 				break; 
 			case BLOB_FIELD_TABLE: 
-				juci_lua_blob_to_table(lua, child, true); 
+				orange_lua_blob_to_table(lua, child, true); 
 				break; 
 			default: 
 				lua_pushnil(lua); 	
@@ -93,7 +93,7 @@ static bool _lua_format_blob_is_array(lua_State *L){
 }
 
 
-int juci_lua_table_to_blob(lua_State *L, struct blob *b, bool table){
+int orange_lua_table_to_blob(lua_State *L, struct blob *b, bool table){
 	bool rv = true;
 
 	if(lua_type(L, -1) != LUA_TTABLE) {
@@ -128,11 +128,11 @@ int juci_lua_table_to_blob(lua_State *L, struct blob *b, bool table){
 				lua_pushvalue(L, -2); 
 				if (_lua_format_blob_is_array(L)){
 					blob_offset_t c = blob_open_array(b);
-					rv = juci_lua_table_to_blob(L, b, false);
+					rv = orange_lua_table_to_blob(L, b, false);
 					blob_close_array(b, c);
 				} else {
 					blob_offset_t c = blob_open_table(b);
-					rv = juci_lua_table_to_blob(L, b, true);
+					rv = orange_lua_table_to_blob(L, b, true);
 					blob_close_table(b, c);
 				}
 				// pop the value of the table we pushed earlier
@@ -158,16 +158,16 @@ static int l_json_parse(lua_State *L){
 		blob_offset_t b = blob_open_table(&tmp); 
 		blob_close_table(&tmp, b); 
 	}
-	if(juci_debug_level >= JUCI_DBG_TRACE){
+	if(orange_debug_level >= JUCI_DBG_TRACE){
 		TRACE("lua blob: "); 
 		blob_dump_json(&tmp); 
 	}
-	juci_lua_blob_to_table(L, blob_field_first_child(blob_head(&tmp)), true);
+	orange_lua_blob_to_table(L, blob_field_first_child(blob_head(&tmp)), true);
 	blob_free(&tmp); 
 	return 1; 
 }
 
-void juci_lua_publish_json_api(lua_State *L){
+void orange_lua_publish_json_api(lua_State *L){
 	// add fast json parsing
 	lua_newtable(L); 
 	lua_pushstring(L, "parse"); 
@@ -215,7 +215,7 @@ int l_file_write_fragment(lua_State *L){
 	return 0; 
 }
 
-void juci_lua_publish_file_api(lua_State *L){
+void orange_lua_publish_file_api(lua_State *L){
 	// add fast json parsing
 	lua_newtable(L); 
 	lua_pushstring(L, "writeFragment"); 
@@ -224,11 +224,11 @@ void juci_lua_publish_file_api(lua_State *L){
 	lua_setglobal(L, "fs"); 
 }
 
-static struct juci_session *l_get_session_ptr(lua_State *L){
+static struct orange_session *l_get_session_ptr(lua_State *L){
 	lua_getglobal(L, "SESSION"); 
 	luaL_checktype(L, -1, LUA_TTABLE); 
 	lua_getfield(L, -1, "_self"); 
-	struct juci_session *self = (struct juci_session *)lua_touserdata(L, -1); 
+	struct orange_session *self = (struct orange_session *)lua_touserdata(L, -1); 
 	lua_pop(L, 2); // pop JUCI and _self
 	if(!self){
 		ERROR("Invalid SESSION._self pointer!\n"); 
@@ -239,7 +239,7 @@ static struct juci_session *l_get_session_ptr(lua_State *L){
 
 // SESSION.access(scope, object, method, permission)
 static int l_session_access(lua_State *L){
-	struct juci_session *self = l_get_session_ptr(L); 
+	struct orange_session *self = l_get_session_ptr(L); 
 	if(!self){
 		lua_pushboolean(L, false); 
 		return 1; 
@@ -249,7 +249,7 @@ static int l_session_access(lua_State *L){
 	const char *method = luaL_checkstring(L, 3);  
 	const char *perm = luaL_checkstring(L, 4);  
 	TRACE("checking access to %s %s %s\n", scope, obj, method); 
-	if(scope && obj && method && juci_session_access(self, scope, obj, method, perm)){
+	if(scope && obj && method && orange_session_access(self, scope, obj, method, perm)){
 		lua_pushboolean(L, true); 
 		return 1; 
 	} 
@@ -258,21 +258,21 @@ static int l_session_access(lua_State *L){
 }
 
 static int l_session_get(lua_State *L){
-	struct juci_session *self = l_get_session_ptr(L); 
+	struct orange_session *self = l_get_session_ptr(L); 
 	lua_newtable(L); 
 	if(!self) return 1; 
 	lua_pushstring(L, "username"); lua_pushstring(L, self->user->username); lua_settable(L, -3); 
 	return 1; 
 }
 
-void juci_lua_publish_session_api(lua_State *L){
+void orange_lua_publish_session_api(lua_State *L){
 	lua_newtable(L); 
 	lua_pushstring(L, "access"); lua_pushcfunction(L, l_session_access); lua_settable(L, -3); 
 	lua_pushstring(L, "get"); lua_pushcfunction(L, l_session_get); lua_settable(L, -3); 
 	lua_setglobal(L, "SESSION"); 
 }
 
-void juci_lua_set_session(lua_State *L, struct juci_session *self){
+void orange_lua_set_session(lua_State *L, struct orange_session *self){
 	lua_getglobal(L, "SESSION"); 
 	luaL_checktype(L, -1, LUA_TTABLE); 
 	lua_pushstring(L, "_self"); lua_pushlightuserdata(L, self); lua_settable(L, -3); 

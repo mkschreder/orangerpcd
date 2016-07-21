@@ -28,9 +28,9 @@
 
 #include <libutype/avl-cmp.h>
 
-#include "juci.h"
-#include "juci_luaobject.h"
-#include "juci_ws_server.h"
+#include "orange.h"
+#include "orange_luaobject.h"
+#include "orange_ws_server.h"
 
 bool running = true; 
 
@@ -108,7 +108,7 @@ int main(int argc, char **argv){
   	const char *www_root = "/www"; 
 	const char *listen_socket = "ws://localhost:5303"; 
 	const char *plugin_dir = "plugins"; 
-	const char *pw_file = "/etc/juci-shadow"; 
+	const char *pw_file = "/etc/orange-shadow"; 
 	const char *acl_dir = "";
 
 	printf("RevoRPCD v%s\n",VERSION); 
@@ -130,7 +130,7 @@ int main(int argc, char **argv){
 				plugin_dir = optarg; 
 				break; 
 			case 'v': 
-				juci_debug_level++; 
+				orange_debug_level++; 
 				break; 
 			case 'x': 
 				pw_file = optarg; 
@@ -139,7 +139,7 @@ int main(int argc, char **argv){
 		}
 	}
 	
-    juci_server_t server = juci_ws_server_new(www_root); 
+    orange_server_t server = orange_ws_server_new(www_root); 
 
     if(ubus_server_listen(server, listen_socket) < 0){
         fprintf(stderr, "server could not listen on specified socket!\n"); 
@@ -148,7 +148,7 @@ int main(int argc, char **argv){
 
 	signal(SIGINT, handle_sigint); 
 
-	struct juci *app = juci_new(plugin_dir, pw_file, acl_dir); 
+	struct orange *app = orange_new(plugin_dir, pw_file, acl_dir); 
 
 	struct blob buf, out; 
 	blob_init(&buf, 0, 0); 
@@ -165,7 +165,7 @@ int main(int argc, char **argv){
         }
 		clock_gettime(CLOCK_MONOTONIC, &tse); 
 		TRACE("waited %lus %luns for message\n", tse.tv_sec - tss.tv_sec, tse.tv_nsec - tss.tv_nsec); 
-        if(juci_debug_level >= JUCI_DBG_DEBUG){
+        if(orange_debug_level >= JUCI_DBG_DEBUG){
 			DEBUG("got message from %08x: ", msg->peer); 
         	blob_dump_json(&msg->buf);
 		}
@@ -191,7 +191,7 @@ int main(int argc, char **argv){
 
 		if(rpc_method && strcmp(rpc_method, "call") == 0){
 			if(rpcmsg_parse_call_params(params, &sid, &object, &method, &args)){
-				int ret = juci_call(app, sid, object, method, args, &result->buf); 
+				int ret = orange_call(app, sid, object, method, args, &result->buf); 
 				if(ret < 0) {
 					char *str = strerror(-ret); 
 					if(!str) str = "UNKNOWN"; 
@@ -222,7 +222,7 @@ int main(int argc, char **argv){
 			const char *path = "*"; 	
 			if(rpcmsg_parse_list_params(params, &sid, &path)){
 				blob_put_string(&result->buf, "result"); 
-				juci_list(app, sid, path, &result->buf); 
+				orange_list(app, sid, path, &result->buf); 
 			}
 		} else if(rpc_method && strcmp(rpc_method, "challenge") == 0){
 			blob_put_string(&result->buf, "result"); 
@@ -240,7 +240,7 @@ int main(int argc, char **argv){
 			snprintf(token, sizeof(token), "%08x", msg->peer); //TODO: make hash
 
 			if(rpcmsg_parse_login(params, &username, &response)){
-				if(juci_login(app, username, token, response, &sid) == 0){
+				if(orange_login(app, username, token, response, &sid) == 0){
 					blob_put_string(&result->buf, "result"); 
 					blob_offset_t o = blob_open_table(&result->buf); 
 					blob_put_string(&result->buf, "success"); 
@@ -263,7 +263,7 @@ int main(int argc, char **argv){
 			}
 		} else if(rpc_method && strcmp(rpc_method, "logout") == 0){
 			const char *sid = NULL; 
-			if(rpcmsg_parse_authenticate(params, &sid) && juci_logout(app, sid) == 0){
+			if(rpcmsg_parse_authenticate(params, &sid) && orange_logout(app, sid) == 0){
 				blob_put_string(&result->buf, "result"); 
 				blob_offset_t o = blob_open_table(&result->buf); 
 					blob_put_string(&result->buf, "success"); 
@@ -275,8 +275,8 @@ int main(int argc, char **argv){
 			}
 		} else if(rpc_method && strcmp(rpc_method, "authenticate") == 0){
 			const char *sid = NULL; 
-			struct juci_session *session = NULL; 
-			if(rpcmsg_parse_authenticate(params, &sid) && (session = juci_find_session(app, sid))){
+			struct orange_session *session = NULL; 
+			if(rpcmsg_parse_authenticate(params, &sid) && (session = orange_find_session(app, sid))){
 				blob_put_string(&result->buf, "result"); 
 				blob_offset_t o = blob_open_table(&result->buf); 
 					blob_put_string(&result->buf, "sid"); 
@@ -299,7 +299,7 @@ int main(int argc, char **argv){
 		}	
 
 		blob_close_table(&result->buf, t); 
-		if(juci_debug_level >= JUCI_DBG_TRACE){
+		if(orange_debug_level >= JUCI_DBG_TRACE){
 			DEBUG("sending back: "); 
 			blob_field_dump_json(blob_field_first_child(blob_head(&result->buf))); 
 		}
@@ -309,7 +309,7 @@ int main(int argc, char **argv){
 
 	DEBUG("cleaning up\n"); 
 	ubus_server_delete(server); 
-	juci_delete(&app); 
+	orange_delete(&app); 
 	blob_free(&buf); 
 	blob_free(&out); 
 

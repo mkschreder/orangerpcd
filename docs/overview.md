@@ -12,14 +12,14 @@ preloaded lua backend scripts and all features present in the previous system
 Directory Structure
 -------------------
 
-- /usr/lib/juci/lib/: shared lua libraries
-	./juci/...
-- /usr/lib/juci/rpc/: all code accessible through websocket rpc.
-	./juci/...
+- /usr/lib/orange/lib/: shared lua libraries
+	./orange/...
+- /usr/lib/orange/rpc/: all code accessible through websocket rpc.
+	./orange/...
 	uci.lua
 	session.lua
-- /usr/lib/juci/acl/: all plugin specific access control lists
-	juci-network.json
+- /usr/lib/orange/acl/: all plugin specific access control lists
+	some-plugin.acl
 	...
 
 

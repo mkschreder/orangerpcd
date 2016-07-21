@@ -19,7 +19,7 @@ RPC.$connect("ws://localhost:1234").done(function(){
 		}); 
 		RPC.$call("/session", "access", {
 			scope: "page", 
-			object: "juci-test",
+			object: "orange-test",
 			method: "car",
 			perms: "w"
 		}).done(function(result){
@@ -37,7 +37,7 @@ RPC.$connect("ws://localhost:1234").done(function(){
 	RPC.$call("/uci", "revert", {}).done(function(result){
 		console.log("revert: "+result); 
 	}); 
-	RPC.$call("/juci/ethernet", "adapters", {foo:"bar"}).done(function(result){
+	RPC.$call("/orange/ethernet", "adapters", {foo:"bar"}).done(function(result){
 		console.log("Netstat: "+result); 
 	}); 
 	RPC.$call("/simple","print_hello", { message: "Hello World!" }).done(function(result){

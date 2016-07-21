@@ -1,14 +1,14 @@
 -- JUCI Lua Backend Server API
 -- Copyright (c) 2016 Martin Schröder <mkschreder.uk@gmail.com>. All rights reserved. 
 -- This module is distributed under JUCI Genereal Public License as published
--- at https://github.com/mkschreder/jucid/COPYING. See COPYING file for details. 
+-- at https://github.com/mkschreder/oranged/COPYING. See COPYING file for details. 
 
-local juci = require("juci/core"); 
+local orange = require("orange/core"); 
 
 local function ubus_call(o, m, opts)
 	local params = json.encode(opts); 
 	if params == "[]" then params = '{}'; end; 
-	local result = juci.shell("ubus call "..o.." "..m.." '"..params.."'"); 
+	local result = orange.shell("ubus call "..o.." "..m.." '"..params.."'"); 
 	return JSON.parse(result); 
 end
 

@@ -5,6 +5,6 @@ node_modules
 Makefile
 .deps
 autom4te.cache
-src/jucid
+src/oranged
 config.*
 aclocal.m4

@@ -31,19 +31,19 @@
 
 #include <uci.h>
 
-#include "juci.h"
-#include "juci_luaobject.h"
-#include "juci_lua.h"
-#include "juci_user.h"
+#include "orange.h"
+#include "orange_luaobject.h"
+#include "orange_lua.h"
+#include "orange_user.h"
 
 #include "sha1.h"
 
-#define JUCI_ACL_DIR_PATH "/usr/lib/juci/acl/"
+#define JUCI_ACL_DIR_PATH "/usr/lib/orange/acl/"
 
-int juci_debug_level = 0; 
+int orange_debug_level = 0; 
 
-int juci_load_passwords(struct juci *self, const char *pwfile); 
-int juci_load_plugins(struct juci *self, const char *path, const char *base_path){
+int orange_load_passwords(struct orange *self, const char *pwfile); 
+int orange_load_plugins(struct orange *self, const char *path, const char *base_path){
     int rv = 0; 
     if(!base_path) base_path = path; 
     DIR *dir = opendir(path); 
@@ -59,7 +59,7 @@ int juci_load_plugins(struct juci *self, const char *path, const char *base_path
         snprintf(fname, sizeof(fname), "%s/%s", path, ent->d_name); 
         
         if(ent->d_type == DT_DIR) {
-            rv |= juci_load_plugins(self, fname, base_path);  
+            rv |= orange_load_plugins(self, fname, base_path);  
         } else  if(ent->d_type == DT_REG || ent->d_type == DT_LNK){
 			// TODO: is there a better way to get filename without extension? 
 			char *ext = strrchr(fname, '.');  
@@ -73,15 +73,15 @@ int juci_load_plugins(struct juci *self, const char *path, const char *base_path
 			if(strcmp(ext, ".lua") != 0) continue; 
 			objname[len - strlen(ext)] = 0; 
 			INFO("loading plugin %s of %s at base %s\n", objname, fname, base_path); 
-			struct juci_luaobject *obj = juci_luaobject_new(objname); 
-			if(juci_luaobject_load(obj, fname) != 0 || avl_insert(&self->objects, &obj->avl) != 0){
+			struct orange_luaobject *obj = orange_luaobject_new(objname); 
+			if(orange_luaobject_load(obj, fname) != 0 || avl_insert(&self->objects, &obj->avl) != 0){
 				ERROR("ERR: could not load plugin %s\n", fname); 
-				juci_luaobject_delete(&obj); 
+				orange_luaobject_delete(&obj); 
 				continue; 
 			}
-			juci_lua_publish_json_api(obj->lua); 
-			juci_lua_publish_file_api(obj->lua); 
-			juci_lua_publish_session_api(obj->lua); 
+			orange_lua_publish_json_api(obj->lua); 
+			orange_lua_publish_file_api(obj->lua); 
+			orange_lua_publish_session_api(obj->lua); 
 		}
     }
     closedir(dir); 
@@ -90,7 +90,7 @@ int juci_load_plugins(struct juci *self, const char *path, const char *base_path
 
 // taken from rpcd source code (session.c)
 
-static void _juci_user_load_acls(struct juci_user *self, struct uci_section *s){
+static void _orange_user_load_acls(struct orange_user *self, struct uci_section *s){
 	struct uci_option *o;
 	struct uci_element *e, *l;
 
@@ -104,16 +104,16 @@ static void _juci_user_load_acls(struct juci_user *self, struct uci_section *s){
 			continue;
 		
 		uci_foreach_element(&o->v.list, l) {
-			juci_user_add_acl(self, l->name); 
+			orange_user_add_acl(self, l->name); 
 		}
 	}
 }
 
-static bool _juci_load_users(struct juci *self){
+static bool _orange_load_users(struct orange *self){
 	struct uci_package *p = NULL;
 	struct uci_section *s;
 	struct uci_element *e;
-	struct uci_ptr ptr = { .package = "jucid" };
+	struct uci_ptr ptr = { .package = "oranged" };
 	struct uci_context *uci = uci_alloc_context(); 
 
 	uci_load(uci, ptr.package, &p);
@@ -128,9 +128,9 @@ static bool _juci_load_users(struct juci *self){
 		if (strcmp(s->type, "login"))
 			continue;
 		
-		struct juci_user *user = juci_user_new(s->e.name); 
+		struct orange_user *user = orange_user_new(s->e.name); 
 
-		_juci_user_load_acls(user, s); 
+		_orange_user_load_acls(user, s); 
 		
 		TRACE("JUCI: loaded user config for user '%s'\n", s->e.name); 
 
@@ -142,53 +142,53 @@ static bool _juci_load_users(struct juci *self){
 	return true; 
 }
 
-struct juci* juci_new(const char *plugin_path, const char *pwfile, const char *acl_path ){
-	struct juci *self = calloc(1, sizeof(struct juci)); 
+struct orange* orange_new(const char *plugin_path, const char *pwfile, const char *acl_path ){
+	struct orange *self = calloc(1, sizeof(struct orange)); 
 	assert(self); 
 	avl_init(&self->objects, avl_strcmp, false, NULL); 
 	avl_init(&self->sessions, avl_strcmp, false, NULL); 
 	avl_init(&self->users, avl_strcmp, false, NULL); 
 	
 	// TODO: load users from config file
-	_juci_load_users(self); 
+	_orange_load_users(self); 
 	/*
-	struct juci_user *admin = juci_user_new("admin"); 
-	juci_user_add_acl(admin, "juci*"); 
-	juci_user_add_acl(admin, "user-admin"); 
+	struct orange_user *admin = orange_user_new("admin"); 
+	orange_user_add_acl(admin, "orange*"); 
+	orange_user_add_acl(admin, "user-admin"); 
 	avl_insert(&self->users, &admin->avl); 
 
-	struct juci_user *support = juci_user_new("support"); 
-	juci_user_add_acl(support, "juci*"); 
-	juci_user_add_acl(support, "user-support"); 
+	struct orange_user *support = orange_user_new("support"); 
+	orange_user_add_acl(support, "orange*"); 
+	orange_user_add_acl(support, "user-support"); 
 	avl_insert(&self->users, &support->avl); 
 */	
 	self->plugin_path = strdup(plugin_path); 
 	self->pwfile = strdup(pwfile); 
 	self->acl_path = strdup(acl_path); 
 
-	if(juci_load_passwords(self, self->pwfile) != 0){
+	if(orange_load_passwords(self, self->pwfile) != 0){
 		ERROR("could not load password file from %s\n", pwfile); 
 	}
-	juci_load_plugins(self, self->plugin_path, NULL); 
+	orange_load_plugins(self, self->plugin_path, NULL); 
 	
 
 	return self; 
 }
 
-void juci_delete(struct juci **_self){
-	struct juci *self = *_self; 
-	struct juci_luaobject *obj, *nobj;
-    struct juci_session *ses, *nses;
-    struct juci_user *user, *nuser;
+void orange_delete(struct orange **_self){
+	struct orange *self = *_self; 
+	struct orange_luaobject *obj, *nobj;
+    struct orange_session *ses, *nses;
+    struct orange_user *user, *nuser;
 
 	avl_remove_all_elements(&self->objects, obj, avl, nobj)
-		juci_luaobject_delete(&obj); 
+		orange_luaobject_delete(&obj); 
 
     avl_remove_all_elements(&self->sessions, ses, avl, nses)
-		juci_session_delete(&ses); 
+		orange_session_delete(&ses); 
 
     avl_remove_all_elements(&self->users, user, avl, nuser)
-		juci_user_delete(&user); 
+		orange_user_delete(&user); 
 	
 	free(self->pwfile); 
 	free(self->plugin_path); 
@@ -211,7 +211,7 @@ static char *_load_file(const char *path){
 	return text; 
 }
 
-int juci_load_passwords(struct juci *self, const char *pwfile){
+int orange_load_passwords(struct orange *self, const char *pwfile){
 	DEBUG("loading passwords from %s\n", pwfile); 
 	char *passwords = _load_file(pwfile); 
 	if(!passwords) return -EACCES; 
@@ -220,16 +220,16 @@ int juci_load_passwords(struct juci *self, const char *pwfile){
 	while(sscanf(cur, "%s %s", user, hash) == 2){	
 		struct avl_node *node = avl_find(&self->users, user); 
 		if(node){
-			struct juci_user *u = container_of(node, struct juci_user, avl); 
+			struct orange_user *u = container_of(node, struct orange_user, avl); 
 			if(u){
-				juci_user_set_pw_hash(u, hash); 
+				orange_user_set_pw_hash(u, hash); 
 				DEBUG("updated existing user %s\n", user); 
 			}
 		} else {
 			// create new user
-			struct juci_user *u = juci_user_new(user); 
+			struct orange_user *u = orange_user_new(user); 
 			// TODO: load acls from config as well!
-			juci_user_add_acl(u, "*"); 
+			orange_user_add_acl(u, "*"); 
 			avl_insert(&self->users, &u->avl); 
 			DEBUG("loaded new user %s\n", user); 
 		}
@@ -242,11 +242,11 @@ int juci_load_passwords(struct juci *self, const char *pwfile){
 	return 0; 
 }
 
-static struct juci_session* _find_session(struct juci *self, const char *sid){
+static struct orange_session* _find_session(struct orange *self, const char *sid){
 	if(!sid || strlen(sid) == 0) return NULL; 
 	struct avl_node *id = avl_find(&self->sessions, sid); 	
 	if(!id) return NULL;  
-	return container_of(id, struct juci_session, avl); 
+	return container_of(id, struct orange_session, avl); 
 }
 
 static bool _try_auth(const char *sha1hash, const char *challenge, const char *response){
@@ -266,7 +266,7 @@ static bool _try_auth(const char *sha1hash, const char *challenge, const char *r
 	return !strcmp((const char*)hash, response); 
 }
 
-static int _load_session_acls(struct juci_session *ses, const char *dir, const char *pat){
+static int _load_session_acls(struct orange_session *ses, const char *dir, const char *pat){
 	glob_t glob_result;
 	char path[255]; 
 	if(!strlen(dir)) dir = getenv("JUCI_ACL_DIR_PATH"); 
@@ -283,10 +283,10 @@ static int _load_session_acls(struct juci_session *ses, const char *dir, const c
 			int ret = sscanf(cur, "%s %s %s %s", scope, object, method, perm); 
 			if(ret == 4 && scope[0] == '!'){
 				DEBUG("revoking session acl '%s %s %s %s'\n", scope + 1, object, method, perm); 
-				juci_session_revoke(ses, scope + 1, object, method, perm); 
+				orange_session_revoke(ses, scope + 1, object, method, perm); 
 			} else if(ret == 4){
 				DEBUG("granting session acl '%s %s %s %s'\n", scope, object, method, perm); 
-				juci_session_grant(ses, scope, object, method, perm); 
+				orange_session_grant(ses, scope, object, method, perm); 
 			} else {
 				ERROR("parse error on line %d of %s, scanned %d fields\n", line, glob_result.gl_pathv[i], ret); 	
 			} 
@@ -301,34 +301,34 @@ static int _load_session_acls(struct juci_session *ses, const char *dir, const c
 	return 0; 
 }
 
-struct juci_session *juci_find_session(struct juci *self, const char *sid){ 
+struct orange_session *orange_find_session(struct orange *self, const char *sid){ 
 	return _find_session(self, sid); 
 }
 
-int juci_login(struct juci *self, const char *username, const char *challenge, const char *response, const char **new_sid){
+int orange_login(struct orange *self, const char *username, const char *challenge, const char *response, const char **new_sid){
 	struct avl_node *node = avl_find(&self->users, username); 
 	if(!node){
 		DEBUG("user %s not found!\n", username);
 		return -EINVAL; 
 	}
-	struct juci_user *user = container_of(node, struct juci_user, avl); 
+	struct orange_user *user = container_of(node, struct orange_user, avl); 
 	// update user hashes (TODO: perhaps this should be loaded into secure memory somehow and discarded after login?)
-	juci_load_passwords(self, self->pwfile); 
+	orange_load_passwords(self, self->pwfile); 
 
 	if(_try_auth(user->pwhash, challenge, response)){
-		struct juci_session *ses = juci_session_new(user); 	
-		struct juci_user_acl *acl; 
-		juci_user_for_each_acl(user, acl){
+		struct orange_session *ses = orange_session_new(user); 	
+		struct orange_user_acl *acl; 
+		orange_user_for_each_acl(user, acl){
 			_load_session_acls(ses, self->acl_path, acl->avl.key); 
 		}
 		struct blob buf; 
 		blob_init(&buf, 0, 0); 
-		juci_session_to_blob(ses, &buf); 
+		orange_session_to_blob(ses, &buf); 
 		//blob_dump_json(&buf); 
 		blob_free(&buf); 
 		if(avl_insert(&self->sessions, &ses->avl) != 0){
 			DEBUG("could not insert session!\n");
-			juci_session_delete(&ses); 
+			orange_session_delete(&ses); 
 			return -EINVAL; 
 		}
 		*new_sid = ses->sid; 
@@ -339,22 +339,22 @@ int juci_login(struct juci *self, const char *username, const char *challenge, c
 	return -EACCES; 
 }
 
-int juci_logout(struct juci *self, const char *sid){
+int orange_logout(struct orange *self, const char *sid){
 	struct avl_node *node = avl_find(&self->sessions, sid); 
 	if(!node) return -EINVAL; 
-	struct juci_session *ses = container_of(node, struct juci_session, avl); 
+	struct orange_session *ses = container_of(node, struct orange_session, avl); 
 	avl_delete(&self->sessions, node); 
-	juci_session_delete(&ses); 
+	orange_session_delete(&ses); 
 	return 0; 
 }
 
-int juci_call(struct juci *self, const char *sid, const char *object, const char *method, struct blob_field *args, struct blob *out){
+int orange_call(struct orange *self, const char *sid, const char *object, const char *method, struct blob_field *args, struct blob *out){
 	struct avl_node *avl = avl_find(&self->objects, object); 
 	if(!avl) {
 		ERROR("object not found: %s\n", object); 
 		return -ENOENT; 
 	}
-	struct juci_luaobject *obj = container_of(avl, struct juci_luaobject, avl); 
+	struct orange_luaobject *obj = container_of(avl, struct orange_luaobject, avl); 
 	self->current_session = _find_session(self, sid); 
 	if(self->current_session) {
 		DEBUG("found session for request: %s\n", sid); 
@@ -362,15 +362,15 @@ int juci_call(struct juci *self, const char *sid, const char *object, const char
 		DEBUG("could not find session for request!\n"); 
 		return -EACCES; 
 	}
-	if(!juci_session_access(self->current_session, "ubus", object, method, "x")){
+	if(!orange_session_access(self->current_session, "ubus", object, method, "x")){
 		ERROR("user %s does not have permission to execute rpc call: %s %s\n", self->current_session->user->username, object, method); 
 		return -EACCES; 
 	}
-	return juci_luaobject_call(obj, self->current_session, method, args, out); 
+	return orange_luaobject_call(obj, self->current_session, method, args, out); 
 }
 
-int juci_list(struct juci *self, const char *sid, const char *path, struct blob *out){
-	struct juci_luaobject *entry; 
+int orange_list(struct orange *self, const char *sid, const char *path, struct blob *out){
+	struct orange_luaobject *entry; 
 	blob_offset_t t = blob_open_table(out); 
 	avl_for_each_element(&self->objects, entry, avl){
 		blob_put_string(out, (char*)entry->avl.key); 

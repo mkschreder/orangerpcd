@@ -15,19 +15,11 @@
 	GNU General Public License for more details.
 */
 
-#include "juci_message.h"
 
-struct ubus_message *ubus_message_new(){
-	struct ubus_message *self = calloc(1, sizeof(struct ubus_message)); 
-	assert(self); 
-	blob_init(&self->buf, 0, 0); 
-	INIT_LIST_HEAD(&self->list); 
-	return self; 
-}
+#pragma once 
 
-void ubus_message_delete(struct ubus_message **self){
-	blob_free(&(*self)->buf); 
-	list_del_init(&(*self)->list); 
-	free(*self); 
-	*self = 0; 
-}
+#include <blobpack/blobpack.h>
+#include "orange_server.h"
+
+orange_server_t orange_ws_server_new(const char *www_root); 
+

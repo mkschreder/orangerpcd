@@ -67,7 +67,7 @@ static void _uci_config_to_blob(struct uci_package *p, struct blob *buf){
 	blob_close_table(buf, c);
 }
 
-int juci_uci_load_config(const char *config, struct blob *buf){
+int orange_uci_load_config(const char *config, struct blob *buf){
 	struct uci_package *p = NULL; 
 	struct uci_ptr ptr = { .package = config }; 
 	struct uci_context *uci = uci_alloc_context(); 

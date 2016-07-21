@@ -1,10 +1,10 @@
 -- JUCI Lua Backend Server API
 -- Copyright (c) 2016 Martin Schröder <mkschreder.uk@gmail.com>. All rights reserved. 
 -- This module is distributed under JUCI Genereal Public License as published
--- at https://github.com/mkschreder/jucid/COPYING. See COPYING file for details. 
+-- at https://github.com/mkschreder/oranged/COPYING. See COPYING file for details. 
 
-local juci = require("juci/core"); 
-local ubus = require("juci/ubus"); 
+local orange = require("orange/core"); 
+local ubus = require("orange/ubus"); 
 
 -- parse out dhcp information 
 local function read_dhcp_info()
@@ -92,7 +92,7 @@ end
 
 -- to get dhcp mac addresses: awk '$1 == "#"{print substr($9, 0, index($9, "/") - 1) " " $2}' /tmp/hosts/odhcpd | xargs ndisc6 -1 | awk '/Target.*link.*/{print $4}'
 local function read_ip6_dhcp_info()
-	local lines = juci.readfile("/tmp/hosts/odhcpd"); 
+	local lines = orange.readfile("/tmp/hosts/odhcpd"); 
 	if(not lines) then return {}; end
 	local result = {}; 
 	for line in lines:gmatch("[^\r\n]+") do
@@ -168,7 +168,7 @@ local function network_list_connected_clients(opts)
 		local clients_map = read_clients(); 
 	local clients_list = {}; 
 	for mac,cl in pairs(clients_map) do 
-		--local js = juci.shell("/usr/lib/rpcd/cgi/juci.macdb lookup '{\"mac\": \""..mac.."\"}'"); 
+		--local js = orange.shell("/usr/lib/rpcd/cgi/orange.macdb lookup '{\"mac\": \""..mac.."\"}'"); 
 		--cl.manufacturer = json.decode(js)["manufacturer"]; 
 		table.insert(clients_list, cl); 
 	end

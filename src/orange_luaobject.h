@@ -17,13 +17,21 @@
 
 #pragma once
 
-struct juci_session; 
+#include "internal.h"
 
-void juci_lua_publish_json_api(lua_State *L); 
-void juci_lua_publish_file_api(lua_State *L); 
+#include <blobpack/blobpack.h>
+#include <libutype/avl.h>
 
-int juci_lua_table_to_blob(lua_State *L, struct blob *b, bool table); 
-void juci_lua_blob_to_table(lua_State *lua, struct blob_field *msg, bool table); 
+struct orange_session; 
 
-void juci_lua_publish_session_api(lua_State *L); 
-void juci_lua_set_session(lua_State *L, struct juci_session *self); 
+struct orange_luaobject {
+	struct avl_node avl; 
+	char *name; 
+	struct blob signature; 
+	lua_State *lua; 
+}; 
+
+struct orange_luaobject* orange_luaobject_new(const char *name); 
+void orange_luaobject_delete(struct orange_luaobject **self); 
+int orange_luaobject_load(struct orange_luaobject *self, const char *file); 
+int orange_luaobject_call(struct orange_luaobject *self, struct orange_session *ses, const char *method, struct blob_field *in, struct blob *out); 

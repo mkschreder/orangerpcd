@@ -1,12 +1,12 @@
 -- JUCI Lua Backend Server API
 -- Copyright (c) 2016 Martin Schröder <mkschreder.uk@gmail.com>. All rights reserved. 
 -- This module is distributed under JUCI Genereal Public License as published
--- at https://github.com/mkschreder/jucid/COPYING. See COPYING file for details. 
+-- at https://github.com/mkschreder/oranged/COPYING. See COPYING file for details. 
 
-local juci = require("juci/core"); 
+local orange = require("orange/core"); 
 
 local function list_services(opts)
-	local netstat = juci.shell("netstat -nlp 2>/dev/null");
+	local netstat = orange.shell("netstat -nlp 2>/dev/null");
 	local services = {};  
 	for line in netstat:gmatch("[^\r\n]+") do
 		local proto, rq, sq, local_address, remote_address, state, process = line:match("([^%s]+)%s+([^%s]+)%s+([^%s]+)%s+([^%s]+)%s+([^%s]+)%s+([^%s]+)%s+([^%s]+)"); 

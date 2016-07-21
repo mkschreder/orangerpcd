@@ -3,7 +3,7 @@
 -- This module is distributed under GNU GPLv3 with additional permission for signed images.
 -- See LICENSE file for more details. 
 
-local ubus = require("juci/ubus"); 
+local ubus = require("orange/ubus"); 
 
 return ubus.bind("network.wireless", { "status" }); 
 

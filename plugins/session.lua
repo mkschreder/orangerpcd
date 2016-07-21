@@ -5,7 +5,7 @@
 -- This module is distributed under GNU GPLv3 with additional permission for signed images.
 -- See LICENSE file for more details. 
 
-local json = require("juci/json"); 
+local json = require("orange/json"); 
 
 local function session_access(opts)
 	print(json.encode(opts)); 

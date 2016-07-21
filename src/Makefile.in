@@ -76,7 +76,7 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-bin_PROGRAMS = revorpcd$(EXEEXT)
+bin_PROGRAMS = orangerpcd$(EXEEXT)
 subdir = src
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(top_srcdir)/config/depcomp
@@ -89,17 +89,19 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
-am_revorpcd_OBJECTS = revorpcd-base64.$(OBJEXT) \
-	revorpcd-juci_luaobject.$(OBJEXT) \
-	revorpcd-juci_session.$(OBJEXT) \
-	revorpcd-juci_message.$(OBJEXT) revorpcd-juci_id.$(OBJEXT) \
-	revorpcd-juci_lua.$(OBJEXT) revorpcd-juci.$(OBJEXT) \
-	revorpcd-juci_ws_server.$(OBJEXT) revorpcd-juci_user.$(OBJEXT) \
-	revorpcd-juci_uci.$(OBJEXT) revorpcd-sha1.$(OBJEXT) \
-	revorpcd-main.$(OBJEXT)
-revorpcd_OBJECTS = $(am_revorpcd_OBJECTS)
-revorpcd_DEPENDENCIES =
-revorpcd_LINK = $(CCLD) $(revorpcd_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
+am_orangerpcd_OBJECTS = orangerpcd-base64.$(OBJEXT) \
+	orangerpcd-orange_luaobject.$(OBJEXT) \
+	orangerpcd-orange_session.$(OBJEXT) \
+	orangerpcd-orange_message.$(OBJEXT) \
+	orangerpcd-orange_id.$(OBJEXT) orangerpcd-orange_lua.$(OBJEXT) \
+	orangerpcd-orange.$(OBJEXT) \
+	orangerpcd-orange_ws_server.$(OBJEXT) \
+	orangerpcd-orange_user.$(OBJEXT) \
+	orangerpcd-orange_uci.$(OBJEXT) orangerpcd-sha1.$(OBJEXT) \
+	orangerpcd-main.$(OBJEXT)
+orangerpcd_OBJECTS = $(am_orangerpcd_OBJECTS)
+orangerpcd_DEPENDENCIES =
+orangerpcd_LINK = $(CCLD) $(orangerpcd_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
@@ -133,8 +135,8 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(revorpcd_SOURCES)
-DIST_SOURCES = $(revorpcd_SOURCES)
+SOURCES = $(orangerpcd_SOURCES)
+DIST_SOURCES = $(orangerpcd_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -248,9 +250,9 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-revorpcd_SOURCES = base64.c juci_luaobject.c juci_session.c juci_message.c juci_id.c juci_lua.c juci.c juci_ws_server.c juci_user.c juci_uci.c sha1.c main.c
-revorpcd_CFLAGS = -std=gnu99 -Wall -Werror
-revorpcd_LDADD = -lblobpack -lusys -lutype -lpthread -lwebsockets -lcrypt -luci @LIBLUA_LINK@
+orangerpcd_SOURCES = base64.c orange_luaobject.c orange_session.c orange_message.c orange_id.c orange_lua.c orange.c orange_ws_server.c orange_user.c orange_uci.c sha1.c main.c
+orangerpcd_CFLAGS = -std=gnu99 -Wall -Werror
+orangerpcd_LDADD = -lblobpack -lusys -lutype -lpthread -lwebsockets -lcrypt -luci @LIBLUA_LINK@
 all: all-am
 
 .SUFFIXES:
@@ -328,9 +330,9 @@ uninstall-binPROGRAMS:
 clean-binPROGRAMS:
 	-test -z "$(bin_PROGRAMS)" || rm -f $(bin_PROGRAMS)
 
-revorpcd$(EXEEXT): $(revorpcd_OBJECTS) $(revorpcd_DEPENDENCIES) $(EXTRA_revorpcd_DEPENDENCIES) 
-	@rm -f revorpcd$(EXEEXT)
-	$(AM_V_CCLD)$(revorpcd_LINK) $(revorpcd_OBJECTS) $(revorpcd_LDADD) $(LIBS)
+orangerpcd$(EXEEXT): $(orangerpcd_OBJECTS) $(orangerpcd_DEPENDENCIES) $(EXTRA_orangerpcd_DEPENDENCIES) 
+	@rm -f orangerpcd$(EXEEXT)
+	$(AM_V_CCLD)$(orangerpcd_LINK) $(orangerpcd_OBJECTS) $(orangerpcd_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -338,18 +340,18 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/revorpcd-base64.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/revorpcd-juci.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/revorpcd-juci_id.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/revorpcd-juci_lua.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/revorpcd-juci_luaobject.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/revorpcd-juci_message.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/revorpcd-juci_session.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/revorpcd-juci_uci.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/revorpcd-juci_user.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/revorpcd-juci_ws_server.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/revorpcd-main.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/revorpcd-sha1.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/orangerpcd-base64.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/orangerpcd-main.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/orangerpcd-orange.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/orangerpcd-orange_id.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/orangerpcd-orange_lua.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/orangerpcd-orange_luaobject.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/orangerpcd-orange_message.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/orangerpcd-orange_session.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/orangerpcd-orange_uci.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/orangerpcd-orange_user.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/orangerpcd-orange_ws_server.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/orangerpcd-sha1.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -365,173 +367,173 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(COMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
 
-revorpcd-base64.o: base64.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -MT revorpcd-base64.o -MD -MP -MF $(DEPDIR)/revorpcd-base64.Tpo -c -o revorpcd-base64.o `test -f 'base64.c' || echo '$(srcdir)/'`base64.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/revorpcd-base64.Tpo $(DEPDIR)/revorpcd-base64.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='base64.c' object='revorpcd-base64.o' libtool=no @AMDEPBACKSLASH@
+orangerpcd-base64.o: base64.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(orangerpcd_CFLAGS) $(CFLAGS) -MT orangerpcd-base64.o -MD -MP -MF $(DEPDIR)/orangerpcd-base64.Tpo -c -o orangerpcd-base64.o `test -f 'base64.c' || echo '$(srcdir)/'`base64.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/orangerpcd-base64.Tpo $(DEPDIR)/orangerpcd-base64.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='base64.c' object='orangerpcd-base64.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -c -o revorpcd-base64.o `test -f 'base64.c' || echo '$(srcdir)/'`base64.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(orangerpcd_CFLAGS) $(CFLAGS) -c -o orangerpcd-base64.o `test -f 'base64.c' || echo '$(srcdir)/'`base64.c
 
-revorpcd-base64.obj: base64.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -MT revorpcd-base64.obj -MD -MP -MF $(DEPDIR)/revorpcd-base64.Tpo -c -o revorpcd-base64.obj `if test -f 'base64.c'; then $(CYGPATH_W) 'base64.c'; else $(CYGPATH_W) '$(srcdir)/base64.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/revorpcd-base64.Tpo $(DEPDIR)/revorpcd-base64.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='base64.c' object='revorpcd-base64.obj' libtool=no @AMDEPBACKSLASH@
+orangerpcd-base64.obj: base64.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(orangerpcd_CFLAGS) $(CFLAGS) -MT orangerpcd-base64.obj -MD -MP -MF $(DEPDIR)/orangerpcd-base64.Tpo -c -o orangerpcd-base64.obj `if test -f 'base64.c'; then $(CYGPATH_W) 'base64.c'; else $(CYGPATH_W) '$(srcdir)/base64.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/orangerpcd-base64.Tpo $(DEPDIR)/orangerpcd-base64.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='base64.c' object='orangerpcd-base64.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -c -o revorpcd-base64.obj `if test -f 'base64.c'; then $(CYGPATH_W) 'base64.c'; else $(CYGPATH_W) '$(srcdir)/base64.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(orangerpcd_CFLAGS) $(CFLAGS) -c -o orangerpcd-base64.obj `if test -f 'base64.c'; then $(CYGPATH_W) 'base64.c'; else $(CYGPATH_W) '$(srcdir)/base64.c'; fi`
 
-revorpcd-juci_luaobject.o: juci_luaobject.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -MT revorpcd-juci_luaobject.o -MD -MP -MF $(DEPDIR)/revorpcd-juci_luaobject.Tpo -c -o revorpcd-juci_luaobject.o `test -f 'juci_luaobject.c' || echo '$(srcdir)/'`juci_luaobject.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/revorpcd-juci_luaobject.Tpo $(DEPDIR)/revorpcd-juci_luaobject.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='juci_luaobject.c' object='revorpcd-juci_luaobject.o' libtool=no @AMDEPBACKSLASH@
+orangerpcd-orange_luaobject.o: orange_luaobject.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(orangerpcd_CFLAGS) $(CFLAGS) -MT orangerpcd-orange_luaobject.o -MD -MP -MF $(DEPDIR)/orangerpcd-orange_luaobject.Tpo -c -o orangerpcd-orange_luaobject.o `test -f 'orange_luaobject.c' || echo '$(srcdir)/'`orange_luaobject.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/orangerpcd-orange_luaobject.Tpo $(DEPDIR)/orangerpcd-orange_luaobject.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='orange_luaobject.c' object='orangerpcd-orange_luaobject.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -c -o revorpcd-juci_luaobject.o `test -f 'juci_luaobject.c' || echo '$(srcdir)/'`juci_luaobject.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(orangerpcd_CFLAGS) $(CFLAGS) -c -o orangerpcd-orange_luaobject.o `test -f 'orange_luaobject.c' || echo '$(srcdir)/'`orange_luaobject.c
 
-revorpcd-juci_luaobject.obj: juci_luaobject.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -MT revorpcd-juci_luaobject.obj -MD -MP -MF $(DEPDIR)/revorpcd-juci_luaobject.Tpo -c -o revorpcd-juci_luaobject.obj `if test -f 'juci_luaobject.c'; then $(CYGPATH_W) 'juci_luaobject.c'; else $(CYGPATH_W) '$(srcdir)/juci_luaobject.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/revorpcd-juci_luaobject.Tpo $(DEPDIR)/revorpcd-juci_luaobject.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='juci_luaobject.c' object='revorpcd-juci_luaobject.obj' libtool=no @AMDEPBACKSLASH@
+orangerpcd-orange_luaobject.obj: orange_luaobject.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(orangerpcd_CFLAGS) $(CFLAGS) -MT orangerpcd-orange_luaobject.obj -MD -MP -MF $(DEPDIR)/orangerpcd-orange_luaobject.Tpo -c -o orangerpcd-orange_luaobject.obj `if test -f 'orange_luaobject.c'; then $(CYGPATH_W) 'orange_luaobject.c'; else $(CYGPATH_W) '$(srcdir)/orange_luaobject.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/orangerpcd-orange_luaobject.Tpo $(DEPDIR)/orangerpcd-orange_luaobject.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='orange_luaobject.c' object='orangerpcd-orange_luaobject.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -c -o revorpcd-juci_luaobject.obj `if test -f 'juci_luaobject.c'; then $(CYGPATH_W) 'juci_luaobject.c'; else $(CYGPATH_W) '$(srcdir)/juci_luaobject.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(orangerpcd_CFLAGS) $(CFLAGS) -c -o orangerpcd-orange_luaobject.obj `if test -f 'orange_luaobject.c'; then $(CYGPATH_W) 'orange_luaobject.c'; else $(CYGPATH_W) '$(srcdir)/orange_luaobject.c'; fi`
 
-revorpcd-juci_session.o: juci_session.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -MT revorpcd-juci_session.o -MD -MP -MF $(DEPDIR)/revorpcd-juci_session.Tpo -c -o revorpcd-juci_session.o `test -f 'juci_session.c' || echo '$(srcdir)/'`juci_session.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/revorpcd-juci_session.Tpo $(DEPDIR)/revorpcd-juci_session.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='juci_session.c' object='revorpcd-juci_session.o' libtool=no @AMDEPBACKSLASH@
+orangerpcd-orange_session.o: orange_session.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(orangerpcd_CFLAGS) $(CFLAGS) -MT orangerpcd-orange_session.o -MD -MP -MF $(DEPDIR)/orangerpcd-orange_session.Tpo -c -o orangerpcd-orange_session.o `test -f 'orange_session.c' || echo '$(srcdir)/'`orange_session.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/orangerpcd-orange_session.Tpo $(DEPDIR)/orangerpcd-orange_session.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='orange_session.c' object='orangerpcd-orange_session.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -c -o revorpcd-juci_session.o `test -f 'juci_session.c' || echo '$(srcdir)/'`juci_session.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(orangerpcd_CFLAGS) $(CFLAGS) -c -o orangerpcd-orange_session.o `test -f 'orange_session.c' || echo '$(srcdir)/'`orange_session.c
 
-revorpcd-juci_session.obj: juci_session.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -MT revorpcd-juci_session.obj -MD -MP -MF $(DEPDIR)/revorpcd-juci_session.Tpo -c -o revorpcd-juci_session.obj `if test -f 'juci_session.c'; then $(CYGPATH_W) 'juci_session.c'; else $(CYGPATH_W) '$(srcdir)/juci_session.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/revorpcd-juci_session.Tpo $(DEPDIR)/revorpcd-juci_session.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='juci_session.c' object='revorpcd-juci_session.obj' libtool=no @AMDEPBACKSLASH@
+orangerpcd-orange_session.obj: orange_session.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(orangerpcd_CFLAGS) $(CFLAGS) -MT orangerpcd-orange_session.obj -MD -MP -MF $(DEPDIR)/orangerpcd-orange_session.Tpo -c -o orangerpcd-orange_session.obj `if test -f 'orange_session.c'; then $(CYGPATH_W) 'orange_session.c'; else $(CYGPATH_W) '$(srcdir)/orange_session.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/orangerpcd-orange_session.Tpo $(DEPDIR)/orangerpcd-orange_session.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='orange_session.c' object='orangerpcd-orange_session.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -c -o revorpcd-juci_session.obj `if test -f 'juci_session.c'; then $(CYGPATH_W) 'juci_session.c'; else $(CYGPATH_W) '$(srcdir)/juci_session.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(orangerpcd_CFLAGS) $(CFLAGS) -c -o orangerpcd-orange_session.obj `if test -f 'orange_session.c'; then $(CYGPATH_W) 'orange_session.c'; else $(CYGPATH_W) '$(srcdir)/orange_session.c'; fi`
 
-revorpcd-juci_message.o: juci_message.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -MT revorpcd-juci_message.o -MD -MP -MF $(DEPDIR)/revorpcd-juci_message.Tpo -c -o revorpcd-juci_message.o `test -f 'juci_message.c' || echo '$(srcdir)/'`juci_message.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/revorpcd-juci_message.Tpo $(DEPDIR)/revorpcd-juci_message.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='juci_message.c' object='revorpcd-juci_message.o' libtool=no @AMDEPBACKSLASH@
+orangerpcd-orange_message.o: orange_message.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(orangerpcd_CFLAGS) $(CFLAGS) -MT orangerpcd-orange_message.o -MD -MP -MF $(DEPDIR)/orangerpcd-orange_message.Tpo -c -o orangerpcd-orange_message.o `test -f 'orange_message.c' || echo '$(srcdir)/'`orange_message.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/orangerpcd-orange_message.Tpo $(DEPDIR)/orangerpcd-orange_message.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='orange_message.c' object='orangerpcd-orange_message.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -c -o revorpcd-juci_message.o `test -f 'juci_message.c' || echo '$(srcdir)/'`juci_message.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(orangerpcd_CFLAGS) $(CFLAGS) -c -o orangerpcd-orange_message.o `test -f 'orange_message.c' || echo '$(srcdir)/'`orange_message.c
 
-revorpcd-juci_message.obj: juci_message.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -MT revorpcd-juci_message.obj -MD -MP -MF $(DEPDIR)/revorpcd-juci_message.Tpo -c -o revorpcd-juci_message.obj `if test -f 'juci_message.c'; then $(CYGPATH_W) 'juci_message.c'; else $(CYGPATH_W) '$(srcdir)/juci_message.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/revorpcd-juci_message.Tpo $(DEPDIR)/revorpcd-juci_message.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='juci_message.c' object='revorpcd-juci_message.obj' libtool=no @AMDEPBACKSLASH@
+orangerpcd-orange_message.obj: orange_message.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(orangerpcd_CFLAGS) $(CFLAGS) -MT orangerpcd-orange_message.obj -MD -MP -MF $(DEPDIR)/orangerpcd-orange_message.Tpo -c -o orangerpcd-orange_message.obj `if test -f 'orange_message.c'; then $(CYGPATH_W) 'orange_message.c'; else $(CYGPATH_W) '$(srcdir)/orange_message.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/orangerpcd-orange_message.Tpo $(DEPDIR)/orangerpcd-orange_message.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='orange_message.c' object='orangerpcd-orange_message.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -c -o revorpcd-juci_message.obj `if test -f 'juci_message.c'; then $(CYGPATH_W) 'juci_message.c'; else $(CYGPATH_W) '$(srcdir)/juci_message.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(orangerpcd_CFLAGS) $(CFLAGS) -c -o orangerpcd-orange_message.obj `if test -f 'orange_message.c'; then $(CYGPATH_W) 'orange_message.c'; else $(CYGPATH_W) '$(srcdir)/orange_message.c'; fi`
 
-revorpcd-juci_id.o: juci_id.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -MT revorpcd-juci_id.o -MD -MP -MF $(DEPDIR)/revorpcd-juci_id.Tpo -c -o revorpcd-juci_id.o `test -f 'juci_id.c' || echo '$(srcdir)/'`juci_id.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/revorpcd-juci_id.Tpo $(DEPDIR)/revorpcd-juci_id.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='juci_id.c' object='revorpcd-juci_id.o' libtool=no @AMDEPBACKSLASH@
+orangerpcd-orange_id.o: orange_id.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(orangerpcd_CFLAGS) $(CFLAGS) -MT orangerpcd-orange_id.o -MD -MP -MF $(DEPDIR)/orangerpcd-orange_id.Tpo -c -o orangerpcd-orange_id.o `test -f 'orange_id.c' || echo '$(srcdir)/'`orange_id.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/orangerpcd-orange_id.Tpo $(DEPDIR)/orangerpcd-orange_id.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='orange_id.c' object='orangerpcd-orange_id.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -c -o revorpcd-juci_id.o `test -f 'juci_id.c' || echo '$(srcdir)/'`juci_id.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(orangerpcd_CFLAGS) $(CFLAGS) -c -o orangerpcd-orange_id.o `test -f 'orange_id.c' || echo '$(srcdir)/'`orange_id.c
 
-revorpcd-juci_id.obj: juci_id.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -MT revorpcd-juci_id.obj -MD -MP -MF $(DEPDIR)/revorpcd-juci_id.Tpo -c -o revorpcd-juci_id.obj `if test -f 'juci_id.c'; then $(CYGPATH_W) 'juci_id.c'; else $(CYGPATH_W) '$(srcdir)/juci_id.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/revorpcd-juci_id.Tpo $(DEPDIR)/revorpcd-juci_id.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='juci_id.c' object='revorpcd-juci_id.obj' libtool=no @AMDEPBACKSLASH@
+orangerpcd-orange_id.obj: orange_id.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(orangerpcd_CFLAGS) $(CFLAGS) -MT orangerpcd-orange_id.obj -MD -MP -MF $(DEPDIR)/orangerpcd-orange_id.Tpo -c -o orangerpcd-orange_id.obj `if test -f 'orange_id.c'; then $(CYGPATH_W) 'orange_id.c'; else $(CYGPATH_W) '$(srcdir)/orange_id.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/orangerpcd-orange_id.Tpo $(DEPDIR)/orangerpcd-orange_id.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='orange_id.c' object='orangerpcd-orange_id.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -c -o revorpcd-juci_id.obj `if test -f 'juci_id.c'; then $(CYGPATH_W) 'juci_id.c'; else $(CYGPATH_W) '$(srcdir)/juci_id.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(orangerpcd_CFLAGS) $(CFLAGS) -c -o orangerpcd-orange_id.obj `if test -f 'orange_id.c'; then $(CYGPATH_W) 'orange_id.c'; else $(CYGPATH_W) '$(srcdir)/orange_id.c'; fi`
 
-revorpcd-juci_lua.o: juci_lua.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -MT revorpcd-juci_lua.o -MD -MP -MF $(DEPDIR)/revorpcd-juci_lua.Tpo -c -o revorpcd-juci_lua.o `test -f 'juci_lua.c' || echo '$(srcdir)/'`juci_lua.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/revorpcd-juci_lua.Tpo $(DEPDIR)/revorpcd-juci_lua.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='juci_lua.c' object='revorpcd-juci_lua.o' libtool=no @AMDEPBACKSLASH@
+orangerpcd-orange_lua.o: orange_lua.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(orangerpcd_CFLAGS) $(CFLAGS) -MT orangerpcd-orange_lua.o -MD -MP -MF $(DEPDIR)/orangerpcd-orange_lua.Tpo -c -o orangerpcd-orange_lua.o `test -f 'orange_lua.c' || echo '$(srcdir)/'`orange_lua.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/orangerpcd-orange_lua.Tpo $(DEPDIR)/orangerpcd-orange_lua.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='orange_lua.c' object='orangerpcd-orange_lua.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -c -o revorpcd-juci_lua.o `test -f 'juci_lua.c' || echo '$(srcdir)/'`juci_lua.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(orangerpcd_CFLAGS) $(CFLAGS) -c -o orangerpcd-orange_lua.o `test -f 'orange_lua.c' || echo '$(srcdir)/'`orange_lua.c
 
-revorpcd-juci_lua.obj: juci_lua.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -MT revorpcd-juci_lua.obj -MD -MP -MF $(DEPDIR)/revorpcd-juci_lua.Tpo -c -o revorpcd-juci_lua.obj `if test -f 'juci_lua.c'; then $(CYGPATH_W) 'juci_lua.c'; else $(CYGPATH_W) '$(srcdir)/juci_lua.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/revorpcd-juci_lua.Tpo $(DEPDIR)/revorpcd-juci_lua.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='juci_lua.c' object='revorpcd-juci_lua.obj' libtool=no @AMDEPBACKSLASH@
+orangerpcd-orange_lua.obj: orange_lua.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(orangerpcd_CFLAGS) $(CFLAGS) -MT orangerpcd-orange_lua.obj -MD -MP -MF $(DEPDIR)/orangerpcd-orange_lua.Tpo -c -o orangerpcd-orange_lua.obj `if test -f 'orange_lua.c'; then $(CYGPATH_W) 'orange_lua.c'; else $(CYGPATH_W) '$(srcdir)/orange_lua.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/orangerpcd-orange_lua.Tpo $(DEPDIR)/orangerpcd-orange_lua.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='orange_lua.c' object='orangerpcd-orange_lua.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -c -o revorpcd-juci_lua.obj `if test -f 'juci_lua.c'; then $(CYGPATH_W) 'juci_lua.c'; else $(CYGPATH_W) '$(srcdir)/juci_lua.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(orangerpcd_CFLAGS) $(CFLAGS) -c -o orangerpcd-orange_lua.obj `if test -f 'orange_lua.c'; then $(CYGPATH_W) 'orange_lua.c'; else $(CYGPATH_W) '$(srcdir)/orange_lua.c'; fi`
 
-revorpcd-juci.o: juci.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -MT revorpcd-juci.o -MD -MP -MF $(DEPDIR)/revorpcd-juci.Tpo -c -o revorpcd-juci.o `test -f 'juci.c' || echo '$(srcdir)/'`juci.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/revorpcd-juci.Tpo $(DEPDIR)/revorpcd-juci.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='juci.c' object='revorpcd-juci.o' libtool=no @AMDEPBACKSLASH@
+orangerpcd-orange.o: orange.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(orangerpcd_CFLAGS) $(CFLAGS) -MT orangerpcd-orange.o -MD -MP -MF $(DEPDIR)/orangerpcd-orange.Tpo -c -o orangerpcd-orange.o `test -f 'orange.c' || echo '$(srcdir)/'`orange.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/orangerpcd-orange.Tpo $(DEPDIR)/orangerpcd-orange.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='orange.c' object='orangerpcd-orange.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -c -o revorpcd-juci.o `test -f 'juci.c' || echo '$(srcdir)/'`juci.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(orangerpcd_CFLAGS) $(CFLAGS) -c -o orangerpcd-orange.o `test -f 'orange.c' || echo '$(srcdir)/'`orange.c
 
-revorpcd-juci.obj: juci.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -MT revorpcd-juci.obj -MD -MP -MF $(DEPDIR)/revorpcd-juci.Tpo -c -o revorpcd-juci.obj `if test -f 'juci.c'; then $(CYGPATH_W) 'juci.c'; else $(CYGPATH_W) '$(srcdir)/juci.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/revorpcd-juci.Tpo $(DEPDIR)/revorpcd-juci.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='juci.c' object='revorpcd-juci.obj' libtool=no @AMDEPBACKSLASH@
+orangerpcd-orange.obj: orange.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(orangerpcd_CFLAGS) $(CFLAGS) -MT orangerpcd-orange.obj -MD -MP -MF $(DEPDIR)/orangerpcd-orange.Tpo -c -o orangerpcd-orange.obj `if test -f 'orange.c'; then $(CYGPATH_W) 'orange.c'; else $(CYGPATH_W) '$(srcdir)/orange.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/orangerpcd-orange.Tpo $(DEPDIR)/orangerpcd-orange.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='orange.c' object='orangerpcd-orange.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -c -o revorpcd-juci.obj `if test -f 'juci.c'; then $(CYGPATH_W) 'juci.c'; else $(CYGPATH_W) '$(srcdir)/juci.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(orangerpcd_CFLAGS) $(CFLAGS) -c -o orangerpcd-orange.obj `if test -f 'orange.c'; then $(CYGPATH_W) 'orange.c'; else $(CYGPATH_W) '$(srcdir)/orange.c'; fi`
 
-revorpcd-juci_ws_server.o: juci_ws_server.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -MT revorpcd-juci_ws_server.o -MD -MP -MF $(DEPDIR)/revorpcd-juci_ws_server.Tpo -c -o revorpcd-juci_ws_server.o `test -f 'juci_ws_server.c' || echo '$(srcdir)/'`juci_ws_server.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/revorpcd-juci_ws_server.Tpo $(DEPDIR)/revorpcd-juci_ws_server.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='juci_ws_server.c' object='revorpcd-juci_ws_server.o' libtool=no @AMDEPBACKSLASH@
+orangerpcd-orange_ws_server.o: orange_ws_server.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(orangerpcd_CFLAGS) $(CFLAGS) -MT orangerpcd-orange_ws_server.o -MD -MP -MF $(DEPDIR)/orangerpcd-orange_ws_server.Tpo -c -o orangerpcd-orange_ws_server.o `test -f 'orange_ws_server.c' || echo '$(srcdir)/'`orange_ws_server.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/orangerpcd-orange_ws_server.Tpo $(DEPDIR)/orangerpcd-orange_ws_server.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='orange_ws_server.c' object='orangerpcd-orange_ws_server.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -c -o revorpcd-juci_ws_server.o `test -f 'juci_ws_server.c' || echo '$(srcdir)/'`juci_ws_server.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(orangerpcd_CFLAGS) $(CFLAGS) -c -o orangerpcd-orange_ws_server.o `test -f 'orange_ws_server.c' || echo '$(srcdir)/'`orange_ws_server.c
 
-revorpcd-juci_ws_server.obj: juci_ws_server.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -MT revorpcd-juci_ws_server.obj -MD -MP -MF $(DEPDIR)/revorpcd-juci_ws_server.Tpo -c -o revorpcd-juci_ws_server.obj `if test -f 'juci_ws_server.c'; then $(CYGPATH_W) 'juci_ws_server.c'; else $(CYGPATH_W) '$(srcdir)/juci_ws_server.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/revorpcd-juci_ws_server.Tpo $(DEPDIR)/revorpcd-juci_ws_server.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='juci_ws_server.c' object='revorpcd-juci_ws_server.obj' libtool=no @AMDEPBACKSLASH@
+orangerpcd-orange_ws_server.obj: orange_ws_server.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(orangerpcd_CFLAGS) $(CFLAGS) -MT orangerpcd-orange_ws_server.obj -MD -MP -MF $(DEPDIR)/orangerpcd-orange_ws_server.Tpo -c -o orangerpcd-orange_ws_server.obj `if test -f 'orange_ws_server.c'; then $(CYGPATH_W) 'orange_ws_server.c'; else $(CYGPATH_W) '$(srcdir)/orange_ws_server.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/orangerpcd-orange_ws_server.Tpo $(DEPDIR)/orangerpcd-orange_ws_server.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='orange_ws_server.c' object='orangerpcd-orange_ws_server.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -c -o revorpcd-juci_ws_server.obj `if test -f 'juci_ws_server.c'; then $(CYGPATH_W) 'juci_ws_server.c'; else $(CYGPATH_W) '$(srcdir)/juci_ws_server.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(orangerpcd_CFLAGS) $(CFLAGS) -c -o orangerpcd-orange_ws_server.obj `if test -f 'orange_ws_server.c'; then $(CYGPATH_W) 'orange_ws_server.c'; else $(CYGPATH_W) '$(srcdir)/orange_ws_server.c'; fi`
 
-revorpcd-juci_user.o: juci_user.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -MT revorpcd-juci_user.o -MD -MP -MF $(DEPDIR)/revorpcd-juci_user.Tpo -c -o revorpcd-juci_user.o `test -f 'juci_user.c' || echo '$(srcdir)/'`juci_user.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/revorpcd-juci_user.Tpo $(DEPDIR)/revorpcd-juci_user.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='juci_user.c' object='revorpcd-juci_user.o' libtool=no @AMDEPBACKSLASH@
+orangerpcd-orange_user.o: orange_user.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(orangerpcd_CFLAGS) $(CFLAGS) -MT orangerpcd-orange_user.o -MD -MP -MF $(DEPDIR)/orangerpcd-orange_user.Tpo -c -o orangerpcd-orange_user.o `test -f 'orange_user.c' || echo '$(srcdir)/'`orange_user.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/orangerpcd-orange_user.Tpo $(DEPDIR)/orangerpcd-orange_user.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='orange_user.c' object='orangerpcd-orange_user.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -c -o revorpcd-juci_user.o `test -f 'juci_user.c' || echo '$(srcdir)/'`juci_user.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(orangerpcd_CFLAGS) $(CFLAGS) -c -o orangerpcd-orange_user.o `test -f 'orange_user.c' || echo '$(srcdir)/'`orange_user.c
 
-revorpcd-juci_user.obj: juci_user.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -MT revorpcd-juci_user.obj -MD -MP -MF $(DEPDIR)/revorpcd-juci_user.Tpo -c -o revorpcd-juci_user.obj `if test -f 'juci_user.c'; then $(CYGPATH_W) 'juci_user.c'; else $(CYGPATH_W) '$(srcdir)/juci_user.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/revorpcd-juci_user.Tpo $(DEPDIR)/revorpcd-juci_user.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='juci_user.c' object='revorpcd-juci_user.obj' libtool=no @AMDEPBACKSLASH@
+orangerpcd-orange_user.obj: orange_user.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(orangerpcd_CFLAGS) $(CFLAGS) -MT orangerpcd-orange_user.obj -MD -MP -MF $(DEPDIR)/orangerpcd-orange_user.Tpo -c -o orangerpcd-orange_user.obj `if test -f 'orange_user.c'; then $(CYGPATH_W) 'orange_user.c'; else $(CYGPATH_W) '$(srcdir)/orange_user.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/orangerpcd-orange_user.Tpo $(DEPDIR)/orangerpcd-orange_user.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='orange_user.c' object='orangerpcd-orange_user.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -c -o revorpcd-juci_user.obj `if test -f 'juci_user.c'; then $(CYGPATH_W) 'juci_user.c'; else $(CYGPATH_W) '$(srcdir)/juci_user.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(orangerpcd_CFLAGS) $(CFLAGS) -c -o orangerpcd-orange_user.obj `if test -f 'orange_user.c'; then $(CYGPATH_W) 'orange_user.c'; else $(CYGPATH_W) '$(srcdir)/orange_user.c'; fi`
 
-revorpcd-juci_uci.o: juci_uci.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -MT revorpcd-juci_uci.o -MD -MP -MF $(DEPDIR)/revorpcd-juci_uci.Tpo -c -o revorpcd-juci_uci.o `test -f 'juci_uci.c' || echo '$(srcdir)/'`juci_uci.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/revorpcd-juci_uci.Tpo $(DEPDIR)/revorpcd-juci_uci.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='juci_uci.c' object='revorpcd-juci_uci.o' libtool=no @AMDEPBACKSLASH@
+orangerpcd-orange_uci.o: orange_uci.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(orangerpcd_CFLAGS) $(CFLAGS) -MT orangerpcd-orange_uci.o -MD -MP -MF $(DEPDIR)/orangerpcd-orange_uci.Tpo -c -o orangerpcd-orange_uci.o `test -f 'orange_uci.c' || echo '$(srcdir)/'`orange_uci.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/orangerpcd-orange_uci.Tpo $(DEPDIR)/orangerpcd-orange_uci.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='orange_uci.c' object='orangerpcd-orange_uci.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -c -o revorpcd-juci_uci.o `test -f 'juci_uci.c' || echo '$(srcdir)/'`juci_uci.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(orangerpcd_CFLAGS) $(CFLAGS) -c -o orangerpcd-orange_uci.o `test -f 'orange_uci.c' || echo '$(srcdir)/'`orange_uci.c
 
-revorpcd-juci_uci.obj: juci_uci.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -MT revorpcd-juci_uci.obj -MD -MP -MF $(DEPDIR)/revorpcd-juci_uci.Tpo -c -o revorpcd-juci_uci.obj `if test -f 'juci_uci.c'; then $(CYGPATH_W) 'juci_uci.c'; else $(CYGPATH_W) '$(srcdir)/juci_uci.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/revorpcd-juci_uci.Tpo $(DEPDIR)/revorpcd-juci_uci.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='juci_uci.c' object='revorpcd-juci_uci.obj' libtool=no @AMDEPBACKSLASH@
+orangerpcd-orange_uci.obj: orange_uci.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(orangerpcd_CFLAGS) $(CFLAGS) -MT orangerpcd-orange_uci.obj -MD -MP -MF $(DEPDIR)/orangerpcd-orange_uci.Tpo -c -o orangerpcd-orange_uci.obj `if test -f 'orange_uci.c'; then $(CYGPATH_W) 'orange_uci.c'; else $(CYGPATH_W) '$(srcdir)/orange_uci.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/orangerpcd-orange_uci.Tpo $(DEPDIR)/orangerpcd-orange_uci.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='orange_uci.c' object='orangerpcd-orange_uci.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -c -o revorpcd-juci_uci.obj `if test -f 'juci_uci.c'; then $(CYGPATH_W) 'juci_uci.c'; else $(CYGPATH_W) '$(srcdir)/juci_uci.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(orangerpcd_CFLAGS) $(CFLAGS) -c -o orangerpcd-orange_uci.obj `if test -f 'orange_uci.c'; then $(CYGPATH_W) 'orange_uci.c'; else $(CYGPATH_W) '$(srcdir)/orange_uci.c'; fi`
 
-revorpcd-sha1.o: sha1.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -MT revorpcd-sha1.o -MD -MP -MF $(DEPDIR)/revorpcd-sha1.Tpo -c -o revorpcd-sha1.o `test -f 'sha1.c' || echo '$(srcdir)/'`sha1.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/revorpcd-sha1.Tpo $(DEPDIR)/revorpcd-sha1.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='sha1.c' object='revorpcd-sha1.o' libtool=no @AMDEPBACKSLASH@
+orangerpcd-sha1.o: sha1.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(orangerpcd_CFLAGS) $(CFLAGS) -MT orangerpcd-sha1.o -MD -MP -MF $(DEPDIR)/orangerpcd-sha1.Tpo -c -o orangerpcd-sha1.o `test -f 'sha1.c' || echo '$(srcdir)/'`sha1.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/orangerpcd-sha1.Tpo $(DEPDIR)/orangerpcd-sha1.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='sha1.c' object='orangerpcd-sha1.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -c -o revorpcd-sha1.o `test -f 'sha1.c' || echo '$(srcdir)/'`sha1.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(orangerpcd_CFLAGS) $(CFLAGS) -c -o orangerpcd-sha1.o `test -f 'sha1.c' || echo '$(srcdir)/'`sha1.c
 
-revorpcd-sha1.obj: sha1.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -MT revorpcd-sha1.obj -MD -MP -MF $(DEPDIR)/revorpcd-sha1.Tpo -c -o revorpcd-sha1.obj `if test -f 'sha1.c'; then $(CYGPATH_W) 'sha1.c'; else $(CYGPATH_W) '$(srcdir)/sha1.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/revorpcd-sha1.Tpo $(DEPDIR)/revorpcd-sha1.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='sha1.c' object='revorpcd-sha1.obj' libtool=no @AMDEPBACKSLASH@
+orangerpcd-sha1.obj: sha1.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(orangerpcd_CFLAGS) $(CFLAGS) -MT orangerpcd-sha1.obj -MD -MP -MF $(DEPDIR)/orangerpcd-sha1.Tpo -c -o orangerpcd-sha1.obj `if test -f 'sha1.c'; then $(CYGPATH_W) 'sha1.c'; else $(CYGPATH_W) '$(srcdir)/sha1.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/orangerpcd-sha1.Tpo $(DEPDIR)/orangerpcd-sha1.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='sha1.c' object='orangerpcd-sha1.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -c -o revorpcd-sha1.obj `if test -f 'sha1.c'; then $(CYGPATH_W) 'sha1.c'; else $(CYGPATH_W) '$(srcdir)/sha1.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(orangerpcd_CFLAGS) $(CFLAGS) -c -o orangerpcd-sha1.obj `if test -f 'sha1.c'; then $(CYGPATH_W) 'sha1.c'; else $(CYGPATH_W) '$(srcdir)/sha1.c'; fi`
 
-revorpcd-main.o: main.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -MT revorpcd-main.o -MD -MP -MF $(DEPDIR)/revorpcd-main.Tpo -c -o revorpcd-main.o `test -f 'main.c' || echo '$(srcdir)/'`main.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/revorpcd-main.Tpo $(DEPDIR)/revorpcd-main.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='main.c' object='revorpcd-main.o' libtool=no @AMDEPBACKSLASH@
+orangerpcd-main.o: main.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(orangerpcd_CFLAGS) $(CFLAGS) -MT orangerpcd-main.o -MD -MP -MF $(DEPDIR)/orangerpcd-main.Tpo -c -o orangerpcd-main.o `test -f 'main.c' || echo '$(srcdir)/'`main.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/orangerpcd-main.Tpo $(DEPDIR)/orangerpcd-main.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='main.c' object='orangerpcd-main.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -c -o revorpcd-main.o `test -f 'main.c' || echo '$(srcdir)/'`main.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(orangerpcd_CFLAGS) $(CFLAGS) -c -o orangerpcd-main.o `test -f 'main.c' || echo '$(srcdir)/'`main.c
 
-revorpcd-main.obj: main.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -MT revorpcd-main.obj -MD -MP -MF $(DEPDIR)/revorpcd-main.Tpo -c -o revorpcd-main.obj `if test -f 'main.c'; then $(CYGPATH_W) 'main.c'; else $(CYGPATH_W) '$(srcdir)/main.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/revorpcd-main.Tpo $(DEPDIR)/revorpcd-main.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='main.c' object='revorpcd-main.obj' libtool=no @AMDEPBACKSLASH@
+orangerpcd-main.obj: main.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(orangerpcd_CFLAGS) $(CFLAGS) -MT orangerpcd-main.obj -MD -MP -MF $(DEPDIR)/orangerpcd-main.Tpo -c -o orangerpcd-main.obj `if test -f 'main.c'; then $(CYGPATH_W) 'main.c'; else $(CYGPATH_W) '$(srcdir)/main.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/orangerpcd-main.Tpo $(DEPDIR)/orangerpcd-main.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='main.c' object='orangerpcd-main.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(revorpcd_CFLAGS) $(CFLAGS) -c -o revorpcd-main.obj `if test -f 'main.c'; then $(CYGPATH_W) 'main.c'; else $(CYGPATH_W) '$(srcdir)/main.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(orangerpcd_CFLAGS) $(CFLAGS) -c -o orangerpcd-main.obj `if test -f 'main.c'; then $(CYGPATH_W) 'main.c'; else $(CYGPATH_W) '$(srcdir)/main.c'; fi`
 
 ID: $(am__tagged_files)
 	$(am__define_uniq_tagged_files); mkid -fID $$unique

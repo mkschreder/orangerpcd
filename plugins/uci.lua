@@ -5,7 +5,7 @@
 -- This module is distributed under GNU GPLv3 with additional permission for signed images.
 -- See LICENSE file for more details. 
 
-local ubus = require("juci/ubus"); 
+local ubus = require("orange/ubus"); 
 
 -- TODO: add access control for uci calls!
 return ubus.bind("uci", {"get","set","add","configs","commit","revert","apply","rollback","delete"}); 

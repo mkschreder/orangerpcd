@@ -1,5 +1,5 @@
 /*	
-	This file is part of JUCI (https://github.com/mkschreder/juci.git)
+	This file is part of JUCI (https://github.com/mkschreder/orange.git)
 
 	Copyright (c) 2015-2016 Martin K. Schröder <mkschreder.uk@gmail.com>
 

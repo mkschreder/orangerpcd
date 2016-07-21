@@ -1,5 +1,5 @@
 {
-  "name": "revorpc",
+  "name": "orangerpc",
   "version": "0.0.1",
   "dependencies": {
     "JSON": "*",

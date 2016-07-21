@@ -15,23 +15,19 @@
 	GNU General Public License for more details.
 */
 
-#pragma once
+#include "orange_message.h"
 
-#include "internal.h"
+struct ubus_message *ubus_message_new(){
+	struct ubus_message *self = calloc(1, sizeof(struct ubus_message)); 
+	assert(self); 
+	blob_init(&self->buf, 0, 0); 
+	INIT_LIST_HEAD(&self->list); 
+	return self; 
+}
 
-#include <blobpack/blobpack.h>
-#include <libutype/avl.h>
-
-struct juci_session; 
-
-struct juci_luaobject {
-	struct avl_node avl; 
-	char *name; 
-	struct blob signature; 
-	lua_State *lua; 
-}; 
-
-struct juci_luaobject* juci_luaobject_new(const char *name); 
-void juci_luaobject_delete(struct juci_luaobject **self); 
-int juci_luaobject_load(struct juci_luaobject *self, const char *file); 
-int juci_luaobject_call(struct juci_luaobject *self, struct juci_session *ses, const char *method, struct blob_field *in, struct blob *out); 
+void ubus_message_delete(struct ubus_message **self){
+	blob_free(&(*self)->buf); 
+	list_del_init(&(*self)->list); 
+	free(*self); 
+	*self = 0; 
+}

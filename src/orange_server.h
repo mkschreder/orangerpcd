@@ -18,20 +18,20 @@
 #pragma once
 
 #include <inttypes.h>
-#include "juci_message.h"
+#include "orange_message.h"
 
 #define UBUS_PEER_BROADCAST (-1)
 
 struct ubus_server_api; 
-typedef const struct ubus_server_api** juci_server_t; 
+typedef const struct ubus_server_api** orange_server_t; 
 
 struct ubus_server_api {
-	void 	(*destroy)(juci_server_t ptr); 
-	int 	(*listen)(juci_server_t ptr, const char *path); 
-	int 	(*connect)(juci_server_t ptr, const char *path);
-	int 	(*send)(juci_server_t ptr, struct ubus_message **msg); 
-	int 	(*recv)(juci_server_t ptr, struct ubus_message **msg, unsigned long long timeout_us); 
-	void*	(*userdata)(juci_server_t ptr, void *data); 
+	void 	(*destroy)(orange_server_t ptr); 
+	int 	(*listen)(orange_server_t ptr, const char *path); 
+	int 	(*connect)(orange_server_t ptr, const char *path);
+	int 	(*send)(orange_server_t ptr, struct ubus_message **msg); 
+	int 	(*recv)(orange_server_t ptr, struct ubus_message **msg, unsigned long long timeout_us); 
+	void*	(*userdata)(orange_server_t ptr, void *data); 
 }; 
 
 #define UBUS_TARGET_PEER (0)

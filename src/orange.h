@@ -21,9 +21,9 @@
 #include <libutype/avl.h>
 #include <libutype/avl-cmp.h>
 
-#include "juci_session.h"
+#include "orange_session.h"
 
-struct juci {
+struct orange {
 	struct avl_tree objects; 
 	struct avl_tree sessions; 
 	struct avl_tree users; 
@@ -32,17 +32,17 @@ struct juci {
 	char *pwfile; 
 	char *acl_path; 
 
-	struct juci_session *current_session; 
+	struct orange_session *current_session; 
 }; 
 
-struct juci* juci_new(const char *plugin_path, const char *pwfile, const char *acl_dir); 
-void juci_delete(struct juci **_self); 
+struct orange* orange_new(const char *plugin_path, const char *pwfile, const char *acl_dir); 
+void orange_delete(struct orange **_self); 
 
-int juci_login(struct juci *self, const char *username, const char *challenge, const char *response, const char **new_sid); 
-int juci_logout(struct juci *self, const char *sid); 
-struct juci_session* juci_find_session(struct juci *self, const char *sid); 
-int juci_call(struct juci *self, const char *sid, const char *object, const char *method, struct blob_field *args, struct blob *out); 
-int juci_list(struct juci *self, const char *sid, const char *path, struct blob *out); 
+int orange_login(struct orange *self, const char *username, const char *challenge, const char *response, const char **new_sid); 
+int orange_logout(struct orange *self, const char *sid); 
+struct orange_session* orange_find_session(struct orange *self, const char *sid); 
+int orange_call(struct orange *self, const char *sid, const char *object, const char *method, struct blob_field *args, struct blob *out); 
+int orange_list(struct orange *self, const char *sid, const char *path, struct blob *out); 
    
 static inline bool url_scanf(const char *url, char *proto, char *host, int *port, char *page){
     if (sscanf(url, "%99[^:]://%99[^:]:%i/%199[^\n]", proto, host, port, page) == 4) return true; 

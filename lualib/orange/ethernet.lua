@@ -1,9 +1,9 @@
 -- JUCI Lua Backend Server API
 -- Copyright (c) 2016 Martin Schröder <mkschreder.uk@gmail.com>. All rights reserved. 
 -- This module is distributed under JUCI Genereal Public License as published
--- at https://github.com/mkschreder/jucid/COPYING. See COPYING file for details. 
+-- at https://github.com/mkschreder/oranged/COPYING. See COPYING file for details. 
 
-local juci = require("juci/core"); 
+local orange = require("orange/core"); 
 
 local function network_list_adapters(opts)
 	function words(str) 
@@ -40,7 +40,7 @@ local function network_list_adapters(opts)
 	
 	local adapters = {}; 
 	local obj = {}; 
-	local ip_output = juci.shell("ip addr"); 
+	local ip_output = orange.shell("ip addr"); 
 	for line in ip_output:gmatch("[^\r\n]+") do
 		local count,fields = words(line); 
 		if fields[1] then 

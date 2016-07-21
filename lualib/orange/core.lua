@@ -1,12 +1,12 @@
 -- JUCI Lua Backend Server API
 -- Copyright (c) 2016 Martin Schröder <mkschreder.uk@gmail.com>. All rights reserved. 
 -- This module is distributed under JUCI Genereal Public License as published
--- at https://github.com/mkschreder/jucid/COPYING. See COPYING file for details. 
+-- at https://github.com/mkschreder/oranged/COPYING. See COPYING file for details. 
 
 local table = require("table"); 
 local string = require("string"); 
 local io = require("io"); 
-local json = require("juci/json"); 
+local json = require("orange/json"); 
 
 local posix = require("posix.unistd"); 
 local sys = require("posix.sys.wait");
@@ -14,7 +14,7 @@ local stdio = require("posix.stdio");
 
 local base = _G
 
---module("juci"); 
+--module("orange"); 
 
 local function readfile(name)
 	local f = io.open(name, "r");
@@ -27,7 +27,7 @@ end
 
 local function log(source, msg)
 	local fd = io.open("/dev/console", "w"); 
-	fd:write((source or "juci")..": "..(msg or "").."\n"); 
+	fd:write((source or "orange")..": "..(msg or "").."\n"); 
 	fd:close();
 end
 

@@ -18,13 +18,13 @@
 #include <dirent.h>
 
 #include "internal.h"
-#include "juci_luaobject.h"
-#include "juci_lua.h"
+#include "orange_luaobject.h"
+#include "orange_lua.h"
 
-#define JUCI_LUA_LIB_PATH "/usr/lib/juci/lib/"
+#define JUCI_LUA_LIB_PATH "/usr/lib/orange/lib/"
 
-struct juci_luaobject* juci_luaobject_new(const char *name){
-	struct juci_luaobject *self = calloc(1, sizeof(struct juci_luaobject)); 
+struct orange_luaobject* orange_luaobject_new(const char *name){
+	struct orange_luaobject *self = calloc(1, sizeof(struct orange_luaobject)); 
 	assert(self); 
 	self->lua = luaL_newstate(); 
 	self->name = malloc(strlen(name) + 1); 
@@ -50,7 +50,7 @@ struct juci_luaobject* juci_luaobject_new(const char *name){
 		if(dir) { closedir(dir); break; }
 	}
 	if(!lua_libs) lua_libs = "./"; 
-	snprintf(newpath, 255, "%s/?.lua;%s/juci/?.lua;%s;?.lua", lua_libs, lua_libs, lua_tostring(self->lua, -1)); 
+	snprintf(newpath, 255, "%s/?.lua;%s/orange/?.lua;%s;?.lua", lua_libs, lua_libs, lua_tostring(self->lua, -1)); 
 	//TRACE("LUA: using lua path: %s\n", newpath); 
 	lua_pop(self->lua, 1); 
 	lua_pushstring(self->lua, newpath); 
@@ -60,7 +60,7 @@ struct juci_luaobject* juci_luaobject_new(const char *name){
 	return self; 
 }
 
-void juci_luaobject_delete(struct juci_luaobject **self){
+void orange_luaobject_delete(struct orange_luaobject **self){
 	lua_close((*self)->lua); 
 	blob_free(&(*self)->signature); 
 	free((*self)->name); 
@@ -68,7 +68,7 @@ void juci_luaobject_delete(struct juci_luaobject **self){
 	*self = NULL; 
 }
 
-int juci_luaobject_load(struct juci_luaobject *self, const char *file){
+int orange_luaobject_load(struct orange_luaobject *self, const char *file){
 	if(luaL_loadfile(self->lua, file) != 0){
 		ERROR("could not load plugin: %s\n", lua_tostring(self->lua, -1)); 
 		return -1; 
@@ -92,11 +92,11 @@ int juci_luaobject_load(struct juci_luaobject *self, const char *file){
 	return 0; 
 }
 
-int juci_luaobject_call(struct juci_luaobject *self, struct juci_session *session, const char *method, struct blob_field *in, struct blob *out){
+int orange_luaobject_call(struct orange_luaobject *self, struct orange_session *session, const char *method, struct blob_field *in, struct blob *out){
 	if(!self) return -1; 
 
 	// set self pointer of the global session object to point to current session
-	juci_lua_set_session(self->lua, session); 
+	orange_lua_set_session(self->lua, session); 
 
 	if(lua_type(self->lua, -1) != LUA_TTABLE) {
 		ERROR("lua state is broken. No table on stack!\n"); 
@@ -112,7 +112,7 @@ int juci_luaobject_call(struct juci_luaobject *self, struct juci_session *sessio
 		return -1; 
 	}
 
-	if(in) juci_lua_blob_to_table(self->lua, in, true); 
+	if(in) orange_lua_blob_to_table(self->lua, in, true); 
 	else lua_newtable(self->lua); 
 
 	if(lua_pcall(self->lua, 1, 1, 0) != 0){
@@ -123,7 +123,7 @@ int juci_luaobject_call(struct juci_luaobject *self, struct juci_session *sessio
 	blob_put_string(out, "result"); 
 	blob_offset_t t = blob_open_table(out); 
 	if(lua_type(self->lua, -1) == LUA_TTABLE) {
-		juci_lua_table_to_blob(self->lua, out, true); 
+		orange_lua_table_to_blob(self->lua, out, true); 
 	}
 	blob_close_table(out, t); 
 	
