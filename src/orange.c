@@ -362,7 +362,9 @@ int orange_call(struct orange *self, const char *sid, const char *object, const 
 		DEBUG("could not find session for request!\n"); 
 		return -EACCES; 
 	}
-	if(!orange_session_access(self->current_session, "ubus", object, method, "x")){
+	if(	!orange_session_access(self->current_session, "rpc", object, method, "x") && 
+		!orange_session_access(self->current_session, "ubus", object, method, "x") // deprecated
+	){
 		ERROR("user %s does not have permission to execute rpc call: %s %s\n", self->current_session->user->username, object, method); 
 		return -EACCES; 
 	}
