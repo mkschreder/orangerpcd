@@ -113,7 +113,7 @@ static bool _orange_load_users(struct orange *self){
 	struct uci_package *p = NULL;
 	struct uci_section *s;
 	struct uci_element *e;
-	struct uci_ptr ptr = { .package = "oranged" };
+	struct uci_ptr ptr = { .package = "orangerpcd" };
 	struct uci_context *uci = uci_alloc_context(); 
 
 	uci_load(uci, ptr.package, &p);
