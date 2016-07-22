@@ -416,9 +416,6 @@ static int _websocket_recv(orange_server_t socket, struct ubus_message **msg, un
 
 orange_server_t orange_ws_server_new(const char *www_root){
 	struct ubus_srv_ws *self = calloc(1, sizeof(struct ubus_srv_ws)); 
-
-	pthread_attr_t attr;
-
 	assert(self); 
 	self->www_root = (www_root)?www_root:"/www/"; 
 	self->protocols = calloc(2, sizeof(struct lws_protocols)); 
@@ -442,8 +439,6 @@ orange_server_t orange_ws_server_new(const char *www_root){
 		.userdata = _websocket_userdata
 	}; 
 	self->api = &api; 
-	pthread_attr_init(&attr);
-	pthread_attr_setstacksize(&attr, 128*1024);
-	pthread_create(&self->thread, &attr, _websocket_server_thread, self); 
+	pthread_create(&self->thread, NULL, _websocket_server_thread, self); 
 	return &self->api; 
 }
