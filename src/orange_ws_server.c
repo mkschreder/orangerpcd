@@ -122,10 +122,11 @@ static int _ubus_socket_callback(struct lws *wsi, enum lws_callback_reasons reas
 
 	struct ubus_srv_ws_client **user = (struct ubus_srv_ws_client **)_user; 
 	
-	if(user && *user && (*user)->disconnect) return -1; 
+	if(user && *user && (*user)->disconnect){
+		DEBUG("ws_client requested a disconnect!\n"); 
+		return -1; 
+	}
 	
-	//printf("%d.", reason); fflush(stdout); 
-
 	int32_t peer_id = lws_get_socket_fd(wsi); 
 	switch(reason){
 		case LWS_CALLBACK_ESTABLISHED: {
@@ -210,7 +211,7 @@ static int _ubus_socket_callback(struct lws *wsi, enum lws_callback_reasons reas
 				break; 
 			}
 			TRACE("received fragment of %d bytes\n", (int)len); 
-			if((!(*user)->buffer_start && lws_is_final_fragment(wsi)) || lws_is_final_fragment(wsi)){
+			if(lws_is_final_fragment(wsi)){
 				// write final fragment
 				char *ptr = (*user)->buffer + (*user)->buffer_start; 
 				memcpy(ptr, in, len); 
@@ -218,8 +219,7 @@ static int _ubus_socket_callback(struct lws *wsi, enum lws_callback_reasons reas
 
 				blob_reset(&(*user)->msg->buf); 
 				// if message is small and we have received all of it then skip the scratch buffer and process it directly 
-				if((!(*user)->buffer_start && !blob_put_json(&(*user)->msg->buf, in)) || 
-					((*user)->buffer_start && !blob_put_json(&(*user)->msg->buf, (*user)->buffer))){
+				if(!blob_put_json(&(*user)->msg->buf, (*user)->buffer)){
 					ERROR("got bad message!\n"); 
 					break; 
 				}
@@ -232,7 +232,7 @@ static int _ubus_socket_callback(struct lws *wsi, enum lws_callback_reasons reas
 				pthread_cond_signal(&self->rx_ready); 
 				pthread_mutex_unlock(&self->qlock); 
 				(*user)->buffer_start = 0; 
-			} else if(!lws_is_final_fragment(wsi)){
+			} else {
 				// write to scratch buffer
 				char *ptr = (*user)->buffer + (*user)->buffer_start; 
 				memcpy(ptr, in, len); 

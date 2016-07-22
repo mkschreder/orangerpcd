@@ -107,11 +107,11 @@ static bool rpcmsg_parse_login(struct blob_field *params, const char **username,
 int main(int argc, char **argv){
   	const char *www_root = "/www"; 
 	const char *listen_socket = "ws://localhost:5303"; 
-	const char *plugin_dir = "plugins"; 
-	const char *pw_file = "/etc/orange-shadow"; 
+	const char *plugin_dir = "/usr/lib/orange/api/"; 
+	const char *pw_file = "/etc/orange/shadow"; 
 	const char *acl_dir = "";
 
-	printf("RevoRPCD v%s\n",VERSION); 
+	printf("Orange RPCD v%s\n",VERSION); 
 	printf("Copyright (c) 2016 Martin Schröder\n"); 
 
 	int c = 0; 	
