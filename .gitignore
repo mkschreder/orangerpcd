@@ -6,5 +6,5 @@ Makefile
 .deps
 autom4te.cache
 src/orangerpcd
-config.*
+./config.*
 aclocal.m4
