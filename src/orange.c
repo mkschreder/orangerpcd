@@ -231,8 +231,6 @@ int orange_load_passwords(struct orange *self, const char *pwfile){
 		} else {
 			// create new user
 			struct orange_user *u = orange_user_new(user); 
-			// TODO: load acls from config as well!
-			orange_user_add_acl(u, "*"); 
 			avl_insert(&self->users, &u->avl); 
 			DEBUG("loaded new user %s\n", user); 
 		}
