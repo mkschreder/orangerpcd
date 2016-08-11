@@ -110,29 +110,33 @@ static void _orange_user_load_acls(struct orange_user *self, struct uci_section 
 }
 
 static bool _orange_load_users(struct orange *self){
+	static const char *config_name = "orange"; 
 	struct uci_package *p = NULL;
 	struct uci_section *s;
 	struct uci_element *e;
-	struct uci_ptr ptr = { .package = "orangerpcd" };
+	struct uci_ptr ptr = { .package = config_name };
 	struct uci_context *uci = uci_alloc_context(); 
 
 	uci_load(uci, ptr.package, &p);
 
-	if (!p)
+	if (!p) {
+		INFO("Could not find config file /etc/config/%s. Not loading any users!\n", config_name); 
 		return false;
+	}
 
-	uci_foreach_element(&p->sections, e)
-	{
+	INFO("loading users from config /etc/config/%s\n", config_name); 
+
+	uci_foreach_element(&p->sections, e){
 		s = uci_to_section(e);
 
 		if (strcmp(s->type, "login"))
 			continue;
 		
 		struct orange_user *user = orange_user_new(s->e.name); 
+		
+		TRACE("added user '%s'\n", s->e.name); 
 
 		_orange_user_load_acls(user, s); 
-		
-		TRACE("JUCI: loaded user config for user '%s'\n", s->e.name); 
 
 		avl_insert(&self->users, &user->avl); 
 	}
@@ -170,7 +174,6 @@ struct orange* orange_new(const char *plugin_path, const char *pwfile, const cha
 		ERROR("could not load password file from %s\n", pwfile); 
 	}
 	orange_load_plugins(self, self->plugin_path, NULL); 
-	
 
 	return self; 
 }
@@ -259,11 +262,11 @@ static bool _try_auth(const char *sha1hash, const char *challenge, const char *r
 	sha1_update(&ctx, (const unsigned char*)challenge, strlen(challenge)); 
 	sha1_update(&ctx, (const unsigned char*)sha1hash, strlen(sha1hash)); 
 	sha1_final(&ctx, binhash); 
-	char hash[64] = {0}; 
+	char hash[SHA1_BLOCK_SIZE*2+1] = {0}; 
 	for(int c = 0; c < SHA1_BLOCK_SIZE; c++) sprintf(hash + (c * 2), "%02x", binhash[c]); 
 
 	DEBUG("authenticating against digest %s\n", hash); 
-	return !strcmp((const char*)hash, response); 
+	return !strncmp((const char*)hash, response, SHA1_BLOCK_SIZE*2); 
 }
 
 static int _load_session_acls(struct orange_session *ses, const char *dir, const char *pat){

@@ -22,6 +22,7 @@
 #include <libutype/avl-cmp.h>
 
 #include "orange_session.h"
+#include "json_check.h"
 
 struct orange {
 	struct avl_tree objects; 

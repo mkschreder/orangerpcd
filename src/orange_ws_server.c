@@ -39,6 +39,7 @@
 #include "orange.h"
 #include "orange_id.h"
 #include "internal.h"
+#include "json_check.h"
 
 struct lws_context; 
 struct ubus_srv_ws {
@@ -54,6 +55,7 @@ struct ubus_srv_ws {
 	struct list_head rx_queue; 
 	const char *www_root; 
 	void *user_data; 
+	JSON_check jc; 
 }; 
 
 struct ubus_srv_ws_client {
@@ -218,8 +220,9 @@ static int _ubus_socket_callback(struct lws *wsi, enum lws_callback_reasons reas
 				ptr[len] = 0; 
 
 				blob_reset(&(*user)->msg->buf); 
+
 				// if message is small and we have received all of it then skip the scratch buffer and process it directly 
-				if(!blob_put_json(&(*user)->msg->buf, (*user)->buffer)){
+				if(!JSON_check_string(self->jc, (*user)->buffer) || !blob_put_json(&(*user)->msg->buf, (*user)->buffer)){
 					ERROR("got bad message!\n"); 
 					break; 
 				}
@@ -439,6 +442,7 @@ orange_server_t orange_ws_server_new(const char *www_root){
 		.userdata = _websocket_userdata
 	}; 
 	self->api = &api; 
+	self->jc = JSON_check_new(10); 
 	pthread_create(&self->thread, NULL, _websocket_server_thread, self); 
 	return &self->api; 
 }
