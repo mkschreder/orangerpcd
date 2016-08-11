@@ -200,8 +200,8 @@ reject(JSON_check jc)
 /*
     Delete the JSON_check object.
 */
-    free((void*)jc->stack);
-    free((void*)jc);
+    //free((void*)jc->stack);
+    //free((void*)jc);
     return false;
 }
 
@@ -262,6 +262,7 @@ static void JSON_check_reset(JSON_check jc){
 	jc->state = GO;
     jc->top = -1;
 	memset(jc->stack, 0, jc->depth * sizeof(int)); 
+    push(jc, MODE_DONE);
 }
 
 int
@@ -404,10 +405,10 @@ static int JSON_check_ok(JSON_check jc){
 }
 
 bool JSON_check_string(JSON_check jc, const char *str){
-	int len = strlen(str); 
 	JSON_check_reset(jc); 	
-	for(int c = 0; c < len; c++){
-		JSON_check_char(jc, str[c]); 
+	while(*str){
+		if(!JSON_check_char(jc, *str)) return false; 
+		str++; 
 	}
 	return JSON_check_ok(jc); 
 }
