@@ -1,0 +1,4 @@
+
+config login admin
+	list acls 'juci*'
+	list acls 'user-admin'
