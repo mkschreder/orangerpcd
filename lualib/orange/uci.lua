@@ -6,7 +6,6 @@
 local orange = require("orange/core"); 
 
 local function uci_load(config)
-	print("dump: "..config); 
 	local lines = orange:shell("uci show %s", config); 
 	local result = {}; 
 	for line in lines:gmatch("[^\r\n]+") do 
