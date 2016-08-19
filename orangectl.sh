@@ -9,6 +9,7 @@ if [ $(whoami) != "root" ]; then
 fi
 
 if [ ! -d ${HOOKS} ]; then mkdir -p ${HOOKS}; fi
+chown root:root ${HOOKS}
 chmod 600 ${HOOKS}
 
 while (( "$#" )); do
