@@ -120,13 +120,19 @@ int orange_luaobject_call(struct orange_luaobject *self, struct orange_session *
 		return -1; 
 	}
 
-	blob_put_string(out, "result"); 
-	blob_offset_t t = blob_open_table(out); 
 	if(lua_type(self->lua, -1) == LUA_TTABLE) {
+		blob_put_string(out, "result"); 
+		blob_offset_t t = blob_open_table(out); 
 		orange_lua_table_to_blob(self->lua, out, true); 
+		blob_close_table(out, t); 
+	} else if(lua_type(self->lua, -1) == LUA_TNUMBER){
+		blob_put_string(out, "error"); 
+		blob_offset_t t = blob_open_table(out); 
+		blob_put_string(out, "code"); 
+		blob_put_int(out, lua_tointeger(self->lua, -1));
+		blob_close_table(out, t); 
 	}
-	blob_close_table(out, t); 
-	
+
 	lua_pop(self->lua, 1); 	
 	return 0; 
 }
