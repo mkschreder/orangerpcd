@@ -54,6 +54,11 @@ local function uci_add(args)
 	return uci.add(args); 
 end
 
+local function uci_delete(args)
+	if(not SESSION.access("uci", args.config, "*", "w")) then return -1; end
+	return uci.delete(args); 
+end
+
 local function uci_revert(args)
 	if(not SESSION.access("uci", args.config, "*", "w")) then return -1; end
 	return uci.revert(args); 
@@ -70,6 +75,7 @@ res.configs = uci_configs; -- gets list of accessible configs
 res.set = uci_set; -- used to set values in uci 
 res.get = uci_get; -- used to retreive uci data 
 res.add = uci_add; -- add a uci section to a config
+res.delete = uci_add; -- delete a uci section from config
 res.revert = uci_revert; -- revert changes that are part of current transaction
 res.commit = uci_commit; -- commits changes that are part of current transaction
 
