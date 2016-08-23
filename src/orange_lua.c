@@ -265,11 +265,33 @@ static int l_session_get(lua_State *L){
 	return 1; 
 }
 
+static int l_core_fork_shell(lua_State *L){
+	const char *cmd = luaL_checkstring(L, 1); 
+	if(!cmd) {
+		lua_pushboolean(L, false); 
+		return 1; 
+	}
+
+	if(fork() == 0){
+		int r = system(cmd); 
+		exit(r); 
+	} 
+
+	lua_pushboolean(L, true); 
+	return 1; 
+}
+
 void orange_lua_publish_session_api(lua_State *L){
 	lua_newtable(L); 
 	lua_pushstring(L, "access"); lua_pushcfunction(L, l_session_access); lua_settable(L, -3); 
 	lua_pushstring(L, "get"); lua_pushcfunction(L, l_session_get); lua_settable(L, -3); 
 	lua_setglobal(L, "SESSION"); 
+}
+
+void orange_lua_publish_core_api(lua_State *L){
+	lua_newtable(L); 
+	lua_pushstring(L, "forkshell"); lua_pushcfunction(L, l_core_fork_shell); lua_settable(L, -3); 
+	lua_setglobal(L, "CORE"); 
 }
 
 void orange_lua_set_session(lua_State *L, struct orange_session *self){

@@ -82,6 +82,7 @@ int orange_load_plugins(struct orange *self, const char *path, const char *base_
 			orange_lua_publish_json_api(obj->lua); 
 			orange_lua_publish_file_api(obj->lua); 
 			orange_lua_publish_session_api(obj->lua); 
+			orange_lua_publish_core_api(obj->lua); 
 		}
     }
     closedir(dir); 

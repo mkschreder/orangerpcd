@@ -27,3 +27,5 @@ void orange_lua_blob_to_table(lua_State *lua, struct blob_field *msg, bool table
 
 void orange_lua_publish_session_api(lua_State *L); 
 void orange_lua_set_session(lua_State *L, struct orange_session *self); 
+
+void orange_lua_publish_core_api(lua_State *L); 
