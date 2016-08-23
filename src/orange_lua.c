@@ -203,6 +203,7 @@ int l_file_write_fragment(lua_State *L){
 	char *bin = alloca(in_size); // TODO: potential problem 
 	assert(bin); 
 	int size = base64_decode(data, in_size, bin);   
+	if(size > len) size = len; // TODO: figure out why decode returns wrong length. It should not do that.   
 	TRACE("writing %d bytes at offset %d to file. (supplied length: %lu)\n", (int)size, (int)offset, len); 
 	if(size != write(fd, bin, size)){
 		ERROR("could not write data to file!\n"); 
