@@ -40,22 +40,22 @@ local function uci_configs(args)
 end
 
 local function uci_get(args)
-	if(not SESSION.access("uci", args.config, "*", "r")) then return { error = "No uci permission to read config section!" }; end
+	if(not SESSION.access("uci", args.config, "*", "r")) then return -1; end
 	return uci.get(args); 
 end
 
 local function uci_set(args)
-	if(not SESSION.access("uci", args.config, "*", "w")) then return { error = "No uci permission to write config section!" }; end
+	if(not SESSION.access("uci", args.config, "*", "w")) then return -1; end
 	return uci.set(args); 
 end
 
 local function uci_add(args)
-	if(not SESSION.access("uci", args.config, "*", "w")) then return { error = "No uci permission to write config!" }; end
+	if(not SESSION.access("uci", args.config, "*", "w")) then return -1; end
 	return uci.add(args); 
 end
 
 local function uci_revert(args)
-	if(not SESSION.access("uci", args.config, "*", "w")) then return { error = "No uci permission to write config!" }; end
+	if(not SESSION.access("uci", args.config, "*", "w")) then return -1; end
 	return uci.revert(args); 
 end
 
