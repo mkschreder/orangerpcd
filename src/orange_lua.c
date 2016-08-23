@@ -186,7 +186,7 @@ int l_file_write_fragment(lua_State *L){
 	}
 	const char *file = luaL_checkstring(L, 1); 
 	long unsigned int offset = luaL_checkinteger(L, 2); 
-	//long unsigned int len = lua_tointeger(L, 3); 
+	long unsigned int len = lua_tointeger(L, 3); 
 	const char *data = luaL_checkstring(L, 4); 
 	
 	// write to the file (note: this is very innefficient but it is mostly just a proof of concept. 
@@ -203,7 +203,7 @@ int l_file_write_fragment(lua_State *L){
 	char *bin = alloca(in_size); // TODO: potential problem 
 	assert(bin); 
 	int size = base64_decode(data, in_size, bin);   
-	//printf("writing %d bytes at offset %d to file\n", (int)size, (int)offset); 
+	TRACE("writing %d bytes at offset %d to file. (supplied length: %lu)\n", (int)size, (int)offset, len); 
 	if(size != write(fd, bin, size)){
 		ERROR("could not write data to file!\n"); 
 		lua_pop(L, n); 
