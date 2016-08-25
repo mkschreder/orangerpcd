@@ -6,7 +6,7 @@ For details, see http://sourceforge.net/projects/libb64
 */
 
 #include "base64.h"
-
+#include <string.h>
 
 typedef enum
 {
@@ -20,14 +20,6 @@ typedef struct
 	int stepcount;
 } base64_encodestate;
 
-void base64_init_encodestate(base64_encodestate* state_in);
-
-char base64_encode_value(char value_in);
-
-int base64_encode_block(const char* plaintext_in, int length_in, char* code_out, base64_encodestate* state_in);
-
-int base64_encode_blockend(char* code_out, base64_encodestate* state_in);
-
 typedef enum
 {
 	step_a, step_b, step_c, step_d
@@ -39,32 +31,23 @@ typedef struct
 	char plainchar;
 } base64_decodestate;
 
-void base64_init_decodestate(base64_decodestate* state_in);
-
-int base64_decode_value(char value_in);
-
-int base64_decode_block(const char* code_in, const int length_in, char* plaintext_out, base64_decodestate* state_in);
-
 const int CHARS_PER_LINE = 72;
 
-void base64_init_encodestate(base64_encodestate* state_in)
-{
+static void base64_init_encodestate(base64_encodestate* state_in){
 	state_in->step = step_A;
 	state_in->result = 0;
 	state_in->stepcount = 0;
 }
 
-char base64_encode_value(char value_in)
-{
+static char base64_encode_value(char value_in){
 	static const char* encoding = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 	if (value_in > 63) return '=';
 	return encoding[(int)value_in];
 }
 
-int base64_encode_block(const char* plaintext_in, int length_in, char* code_out, base64_encodestate* state_in)
-{
+static int base64_encode_block(const char* plaintext_in, char* code_out, int size_out, base64_encodestate* state_in){
 	const char* plainchar = plaintext_in;
-	const char* const plaintextend = plaintext_in + length_in;
+	const char* const plaintextend = plaintext_in + strlen(plaintext_in);
 	char* codechar = code_out;
 	char result;
 	char fragment;
@@ -122,8 +105,7 @@ int base64_encode_block(const char* plaintext_in, int length_in, char* code_out,
 	return codechar - code_out;
 }
 
-int base64_encode_blockend(char* code_out, base64_encodestate* state_in)
-{
+static int base64_encode_blockend(char* code_out, base64_encodestate* state_in){
 	char* codechar = code_out;
 	
 	switch (state_in->step)
@@ -145,8 +127,7 @@ int base64_encode_blockend(char* code_out, base64_encodestate* state_in)
 	return codechar - code_out;
 }
 
-int base64_decode_value(char value_in)
-{
+static int base64_decode_value(char value_in){
 	static const char decoding[] = {62,-1,-1,-1,63,52,53,54,55,56,57,58,59,60,61,-1,-1,-1,-2,-1,-1,-1,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,-1,-1,-1,-1,-1,-1,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51};
 	static const char decoding_size = sizeof(decoding);
 	value_in -= 43;
@@ -154,14 +135,12 @@ int base64_decode_value(char value_in)
 	return decoding[(int)value_in];
 }
 
-void base64_init_decodestate(base64_decodestate* state_in)
-{
+static void base64_init_decodestate(base64_decodestate* state_in){
 	state_in->step = step_a;
 	state_in->plainchar = 0;
 }
 
-int base64_decode_block(const char* code_in, const int length_in, char* plaintext_out, base64_decodestate* state_in)
-{
+static int base64_decode_block(const char* code_in, const int length_in, char* plaintext_out, base64_decodestate* state_in){
 	const char* codechar = code_in;
 	char* plainchar = plaintext_out;
 	char fragment;
@@ -222,6 +201,14 @@ int base64_decode_block(const char* code_in, const int length_in, char* plaintex
 	}
 	/* control should not reach here */
 	return plainchar - plaintext_out;
+}
+
+int base64_encode(const char* text_in, char *code_out, const int length_out){
+	base64_encodestate st; 
+	base64_init_encodestate(&st); 	
+	base64_encode_block(text_in, code_out, length_out, &st); 
+	base64_encode_blockend(code_out, &st); 
+	return 0; 
 }
 
 int base64_decode(const char* code_in, const int length_in, char* plaintext_out){
