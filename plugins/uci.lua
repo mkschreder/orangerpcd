@@ -75,7 +75,7 @@ res.configs = uci_configs; -- gets list of accessible configs
 res.set = uci_set; -- used to set values in uci 
 res.get = uci_get; -- used to retreive uci data 
 res.add = uci_add; -- add a uci section to a config
-res.delete = uci_add; -- delete a uci section from config
+res.delete = uci_delete; -- delete a uci section from config
 res.revert = uci_revert; -- revert changes that are part of current transaction
 res.commit = uci_commit; -- commits changes that are part of current transaction
 
