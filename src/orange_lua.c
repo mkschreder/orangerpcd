@@ -290,7 +290,10 @@ static int l_core_b64e(lua_State *L){
 	}
 	int size = strlen(cmd); 
 	char *b64string = alloca(size); 
-	base64_encode(cmd, b64string, size); 
+	memset(b64string, 0, size); 
+	int n = base64_encode(cmd, b64string, size); 
+	b64string[n] = 0; 
+	TRACE("b64: %s %s %d\n", cmd, b64string, n); 
 	lua_pushstring(L, b64string); 
 	return 1; 
 }

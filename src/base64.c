@@ -122,7 +122,7 @@ static int base64_encode_blockend(char* code_out, base64_encodestate* state_in){
 	case step_A:
 		break;
 	}
-	*codechar++ = '\n';
+	//*codechar++ = '\n';
 	
 	return codechar - code_out;
 }
@@ -206,9 +206,9 @@ static int base64_decode_block(const char* code_in, const int length_in, char* p
 int base64_encode(const char* text_in, char *code_out, const int length_out){
 	base64_encodestate st; 
 	base64_init_encodestate(&st); 	
-	base64_encode_block(text_in, code_out, length_out, &st); 
-	base64_encode_blockend(code_out, &st); 
-	return 0; 
+	int n = base64_encode_block(text_in, code_out, length_out, &st); 
+	n += base64_encode_blockend(code_out + n, &st); 
+	return n; 
 }
 
 int base64_decode(const char* code_in, const int length_in, char* plaintext_out){
