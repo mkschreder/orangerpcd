@@ -3,7 +3,7 @@
 SHADOW=/etc/orange/shadow
 HOOKS=/usr/lib/orange/hooks/
 
-if [ $(which whoami) != "" ] && [ $(whoami) != "root" ]; then
+if [ "$(which whoami)" != "" ] && [ $(whoami) != "root" ]; then
 	echo "Need to be root!"; 
 	exit
 fi
@@ -18,6 +18,10 @@ chmod 600 ${HOOKS}
 while test "$#"; do
 	if [ "$1" = "passwd" ]; then
 		if [ "" != "$(grep "^$2" ${SHADOW} | cut -f 1 -d' ')" ]; then 
+			if [ "$(which sha1sum)" = "" ]; then 
+				echo "No sha1sum utility present on this system!"; 
+				exit 1; 
+			fi
 			SHA1SUM=$(printf "$3" | sha1sum | cut -f 1 -d' ')
 			sed -i "s/^$2.*$/$2 ${SHA1SUM}/g" ${SHADOW}
 			echo "Password for user $2 changed!"; 
