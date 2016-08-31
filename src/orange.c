@@ -29,7 +29,9 @@
 
 #include <blobpack/blobpack.h>
 
+#if HAVE_UCI
 #include <uci.h>
+#endif
 
 #include "orange.h"
 #include "orange_luaobject.h"
@@ -90,7 +92,7 @@ int orange_load_plugins(struct orange *self, const char *path, const char *base_
 }
 
 // taken from rpcd source code (session.c)
-/*
+#ifdef HAVE_UCI_H
 static void _orange_user_load_acls(struct orange_user *self, struct uci_section *s){
 	struct uci_option *o;
 	struct uci_element *e, *l;
@@ -109,9 +111,10 @@ static void _orange_user_load_acls(struct orange_user *self, struct uci_section 
 		}
 	}
 }
-*/
+#endif
 static bool _orange_load_users(struct orange *self){
-#if 0
+	// TODO: we need to fix this 
+#ifdef HAVE_UCI_H
 	static const char *config_name = "orange"; 
 	struct uci_package *p = NULL;
 	struct uci_section *s;

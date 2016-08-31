@@ -32,7 +32,6 @@
 #include <libutype/list.h>
 #include <fnmatch.h>
 #include <glob.h>
-#include <uci.h>
 #include <limits.h>
 #include <ctype.h>
 #include <crypt.h>

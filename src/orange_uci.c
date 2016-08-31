@@ -1,3 +1,5 @@
+
+#if 0
 #ifdef HAVE_UCI_H
 #include <uci.h>
 #else
@@ -5,7 +7,7 @@
 #endif
 
 #include <blobpack/blobpack.h>
-#if 0
+
 static void _uci_option_to_blob(struct uci_option *o, struct blob *buf){
 	struct uci_element *e;
 
