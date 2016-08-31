@@ -1,7 +1,6 @@
 language: c
 sudo: required
 install:
-  - sudo apt-get --force-yes install lua5.1
   - pip install --user cpp-coveralls
 before_script:
   - git clone https://github.com/mkschreder/libutype.git libutype
@@ -16,3 +15,4 @@ addons:
     packages:
     - lcov
     - lua5.1
+	- lua5.1-dev
