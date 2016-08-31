@@ -17,7 +17,7 @@ AC_CHECK_HEADERS([lua.h],[LIBLUA_LINK="-llua"])
 AC_SUBST(LIBLUA_LINK) 
 
 AC_CHECK_HEADERS([uci.h],[LIBUCI_LINK="-luci"])
-AC_SUBST(LIBLUA_LINK) 
+AC_SUBST(LIBUCI_LINK) 
 
 AC_OUTPUT(Makefile src/Makefile test/Makefile)
 
