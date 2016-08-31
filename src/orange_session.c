@@ -155,6 +155,7 @@ int orange_session_grant(struct orange_session *ses, const char *scope, const ch
 
     acl_scope = avl_find_element(&ses->acl_scopes, scope, acl_scope, avl);
 
+/*
     if (acl_scope) {
         uh_foreach_matching_acl_prefix(acl, &acl_scope->acls, object, function) {
             if (!strcmp(acl->object, object) &&
@@ -162,7 +163,7 @@ int orange_session_grant(struct orange_session *ses, const char *scope, const ch
                 return 0;
         }
     }
-
+*/
     if (!acl_scope) {
         acl_scope = calloc_a(sizeof(*acl_scope),
                              &new_scope, strlen(scope) + 1);
@@ -253,21 +254,27 @@ bool orange_session_access(struct orange_session *ses, const char *scope, const 
 	acl_scope = avl_find_element(&ses->acl_scopes, scope, acl_scope, avl);
 
 	if (acl_scope) {
+		size_t len = strlen(perm); 
+		char *found = alloca(len); 
+		memset(found, 0, len); 
+
 		uh_foreach_matching_acl(acl, &acl_scope->acls, obj, fun){
 			// check each character in perms and see if it is allowed
 			// if no perms are specified then this will always return true
 			for(int c = 0; c < strlen(perm); c++){
-				bool found = false; 
 				for(int j = 0; j < strlen(acl->perms); j++) {
 					if(perm[c] == acl->perms[j]) { 
-						found = true; 
+						found[c] = 1; 
 						break; 
 					}
 				}
-				if(!found) return false; 
+				
 			}
-			return true;
 		}
+		for(size_t i = 0; i < len; i++){
+			if(!found[i]) return false; 
+		}
+		return true; 
 	}
 
 	return false;
