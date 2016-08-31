@@ -2,6 +2,10 @@ language: c
 sudo: required
 install:
   - pip install --user cpp-coveralls
+before_script:
+  - wget https://github.com/mkschreder/libblobpack/archive/2.16.08.tar.gz -O /tmp/blobpack.tar.gz
+  - tar -xzvf /tmp/blobpack.tar.gz 
+  - pushd blobpack-2.16.08 && ./configure --prefix=/usr/ && make && sudo make install && popd
 script: autoreconf -if && ./configure --enable-code-coverage && make && make check
 after_success:
   - coveralls
@@ -9,3 +13,4 @@ addons:
   apt:
     packages:
     - lcov
+    - lua5.1
