@@ -13,6 +13,5 @@ after_success:
 addons:
   apt:
     packages:
-	- cmake
     - lcov
     - lua5.1
