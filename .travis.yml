@@ -15,4 +15,4 @@ addons:
     packages:
     - lcov
     - lua5.1
-	- lua5.1-dev
+    - lua5.1-dev
