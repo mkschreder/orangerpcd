@@ -29,7 +29,7 @@
 
 #include <blobpack/blobpack.h>
 
-#if HAVE_UCI
+#if HAVE_UCI_H
 #include <uci.h>
 #endif
 
