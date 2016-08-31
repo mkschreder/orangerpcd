@@ -249,8 +249,8 @@ static int l_session_access(lua_State *L){
 	const char *obj = luaL_checkstring(L, 2);  
 	const char *method = luaL_checkstring(L, 3);  
 	const char *perm = luaL_checkstring(L, 4);  
-	TRACE("checking access to %s %s %s\n", scope, obj, method); 
-	if(scope && obj && method && orange_session_access(self, scope, obj, method, perm)){
+	TRACE("checking access to %s %s %s %s\n", scope, obj, method, perm); 
+	if(scope && obj && method && perm && orange_session_access(self, scope, obj, method, perm)){
 		lua_pushboolean(L, true); 
 		return 1; 
 	} 

@@ -1,0 +1,11 @@
+language: c
+sudo: required
+install:
+  - pip install --user cpp-coveralls
+script: autoreconf -if && ./configure --enable-code-coverage && make && make check
+after_success:
+  - coveralls
+addons:
+  apt:
+    packages:
+    - lcov

@@ -1,5 +1,6 @@
+@CODE_COVERAGE_RULES@
 ACLOCAL_AMFLAGS=-I m4
-SUBDIRS=src
+SUBDIRS=src test
 EXTRA_DIST=autogen.mk
 
 node_modules: node_modules.tar.gz 

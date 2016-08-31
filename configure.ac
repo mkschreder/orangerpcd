@@ -3,8 +3,12 @@ AC_INIT(orangerpcd,[0.1.0],mkschreder.uk@gmail.com)
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_SRCDIR(src/main.c)
 
-AM_INIT_AUTOMAKE
+m4_pattern_allow([AM_DEFAULT_VERBOSITY])
 
+AM_INIT_AUTOMAKE
+AX_CODE_COVERAGE
+
+LT_INIT 
 AC_PROG_CC
 
 AC_CHECK_HEADERS([lua5.1/lua.h],[LIBLUA_LINK="-llua5.1"])
@@ -15,5 +19,5 @@ AC_SUBST(LIBLUA_LINK)
 AC_CHECK_HEADERS([uci.h],[LIBUCI_LINK="-luci"])
 AC_SUBST(LIBLUA_LINK) 
 
-AC_OUTPUT(Makefile src/Makefile)
+AC_OUTPUT(Makefile src/Makefile test/Makefile)
 
