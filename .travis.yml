@@ -16,3 +16,4 @@ addons:
     - lcov
     - lua5.1
     - lua5.1-dev
+    - libwebsockets-dev
