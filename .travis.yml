@@ -3,10 +3,6 @@ sudo: required
 install:
   - pip install --user cpp-coveralls
 before_script:
-  - git clone http://git.openwrt.org/project/ubox.git ubox
-  - pushd ubox && mkdir build && cd build && cmake .. && make && sudo make install && popd
-  - git clone http://git.openwrt.org/project/uci.git uci
-  - pushd uci && mkdir build && cd build && cmake .. && make && sudo make install && popd
   - git clone https://github.com/mkschreder/libutype.git libutype
   - pushd libutype && autoreconf -if && ./configure --prefix=/usr/ && make && sudo make install && popd
   - git clone https://github.com/mkschreder/libblobpack.git libblobpack
@@ -17,5 +13,6 @@ after_success:
 addons:
   apt:
     packages:
+	- cmake
     - lcov
     - lua5.1

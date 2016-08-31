@@ -90,7 +90,7 @@ int orange_load_plugins(struct orange *self, const char *path, const char *base_
 }
 
 // taken from rpcd source code (session.c)
-
+/*
 static void _orange_user_load_acls(struct orange_user *self, struct uci_section *s){
 	struct uci_option *o;
 	struct uci_element *e, *l;
@@ -109,8 +109,9 @@ static void _orange_user_load_acls(struct orange_user *self, struct uci_section 
 		}
 	}
 }
-
+*/
 static bool _orange_load_users(struct orange *self){
+#if 0
 	static const char *config_name = "orange"; 
 	struct uci_package *p = NULL;
 	struct uci_section *s;
@@ -143,7 +144,7 @@ static bool _orange_load_users(struct orange *self){
 	}
 
 	uci_free_context(uci); 
-
+#endif
 	return true; 
 }
 

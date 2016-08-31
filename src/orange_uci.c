@@ -5,7 +5,7 @@
 #endif
 
 #include <blobpack/blobpack.h>
-
+#if 0
 static void _uci_option_to_blob(struct uci_option *o, struct blob *buf){
 	struct uci_element *e;
 
@@ -82,3 +82,4 @@ int orange_uci_load_config(const char *config, struct blob *buf){
 	uci_free_context(uci); 
 	return 0; 
 }
+#endif
