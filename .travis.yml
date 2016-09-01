@@ -4,7 +4,7 @@ install:
   - pip install --user cpp-coveralls
 before_script:
   - git clone https://github.com/warmcat/libwebsockets.git libwebsockets
-  - pushd libwebsockets &&  git checkout v2.0.2 && mkdir build && cd build && cmake .. && make && sudo make install && popd 
+  - pushd libwebsockets &&  git checkout v2.0.2 && mkdir build && cd build && cmake -DCMAKE_INSTALL_PREFIX:PATH=/usr .. && make && sudo make install && popd 
   - git clone https://github.com/mkschreder/libutype.git libutype
   - pushd libutype && autoreconf -if && ./configure --prefix=/usr/ && make && sudo make install && popd
   - git clone https://github.com/mkschreder/libusys.git libusys
