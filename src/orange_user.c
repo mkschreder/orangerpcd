@@ -45,27 +45,4 @@ void orange_user_add_acl(struct orange_user *self, const char *acl){
 	avl_insert(&self->acls, &node->avl); 
 }
 
-int orange_user_from_blob_table(struct orange_user *self, struct blob_field *field){
-	struct blob_field *key, *value; 	
-	blob_field_for_each_kv(field, key, value){
-		const char *k = blob_field_get_string(key); 
-		const char *v = blob_field_get_string(value); 
-		if(strcmp(k, "password") == 0){
-			orange_user_set_pw_hash(self, v); 
-		} else if(strcmp(k, "apps") == 0){
-			struct blob_field *ch = 0; 
-			blob_field_for_each_child(value, ch){
-				//const char *appname = blob_field_get_string(ch); 
-				//orange_user_add_app_access(self, appname, true); 
-			}
-		} else if(strcmp(k, "caps") == 0){
-			struct blob_field *ch = 0; 
-			blob_field_for_each_child(value, ch){
-				//const char *capname = blob_field_get_string(ch); 
-				//orange_user_add_capability(self, capname); 
-			}
-		}
-	}
-	return 0; 
-}
 

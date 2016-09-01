@@ -30,10 +30,12 @@ static int ubus_cmp_id(const void *k1, const void *k2, void *ptr){
 		return *id1 > *id2;
 }
 
+/*
 void orange_id_string_tree_init(struct avl_tree *tree, bool dup)
 {
 	avl_init(tree, avl_strcmp, dup, NULL);
 }
+*/
 
 void orange_id_tree_init(struct avl_tree *tree){
 	if (random_fd < 0) {
