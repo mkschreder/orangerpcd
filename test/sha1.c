@@ -22,5 +22,14 @@ int main(){
 	
 	TEST(strcmp(hash, checkhash) == 0); 
 
+	const char *data = "123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890";   
+	const char *res = "897f72f444bda05207387a391ea70eb7cf02ffb0"; 
+	sha1_init(&ctx); 
+	sha1_update(&ctx, data, strlen(data)); 
+	sha1_final(&ctx, binhash); 
+	for(int c = 0; c < SHA1_BLOCK_SIZE; c++) sprintf(hash + (c * 2), "%02x", binhash[c]); 
+	
+	TEST(strcmp(hash, res) == 0); 
+
 	return 0; 
 }

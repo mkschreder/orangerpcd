@@ -39,8 +39,7 @@ void orange_id_tree_init(struct avl_tree *tree){
 	if (random_fd < 0) {
 		random_fd = open("/dev/urandom", O_RDONLY);
 		if (random_fd < 0) {
-			perror("open");
-			exit(1);
+			perror("!! ERROR failed to open /dev/urandom");
 		}
 	}
 
@@ -55,7 +54,8 @@ bool orange_id_alloc(struct avl_tree *tree, struct orange_id *id, uint32_t val){
 	}
 
 	do {
-		if (read(random_fd, &id->id, sizeof(id->id)) != sizeof(id->id))
+		if(random_fd < 0) id->id = rand(); 
+		else if(read(random_fd, &id->id, sizeof(id->id)) != sizeof(id->id))
 			return false;
 		id->id &= 0x7fffffff; // limit to only positive 32 bit ints
 	} while (avl_insert(tree, &id->avl) != 0);

@@ -12,7 +12,9 @@ struct test tests[] = {
 	{"{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"challenge\",\"params\":[]}", 1},
 	{"{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"challenge\",\"params\":[foo]}", 0},
 	{"{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"challenge\",\"params\":[foo:\"bar\"]}", 0},
-	{"{\"jsonrpc\":\"2.0\",\"id\":1,\"method\':\"challenge\",\"params\":[]}", 0}
+	{"{\"jsonrpc\":\"2.0\",\"id\":1,\"method\':\"challenge\",\"params\":[]}", 0},
+	{"{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"challenge\",\"params\":{\"FOO\":\"BAR\"}}", 1},
+	{"{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"challenge\",\"params\":{\"FOO\b:\"BAR\"}}", 0}
 }; 
 
 int main(){
