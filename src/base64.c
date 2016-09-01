@@ -140,7 +140,7 @@ static void base64_init_decodestate(base64_decodestate* state_in){
 	state_in->plainchar = 0;
 }
 
-static int base64_decode_block(const char* code_in, const int length_in, char* plaintext_out, base64_decodestate* state_in){
+static int base64_decode_block(const char* code_in, const int length_in, char* plaintext_out, size_t size_out, base64_decodestate* state_in){
 	const char* codechar = code_in;
 	char* plainchar = plaintext_out;
 	char fragment;
@@ -162,6 +162,7 @@ static int base64_decode_block(const char* code_in, const int length_in, char* p
 				fragment = (char)base64_decode_value(*codechar++);
 			} while (fragment < 0);
 			*plainchar    = (fragment & 0x03f) << 2;
+			if(plainchar >= (plaintext_out + size_out - 1)) break; 
 	case step_b:
 			do {
 				if (codechar == code_in+length_in)
@@ -174,6 +175,7 @@ static int base64_decode_block(const char* code_in, const int length_in, char* p
 			} while (fragment < 0);
 			*plainchar++ |= (fragment & 0x030) >> 4;
 			*plainchar    = (fragment & 0x00f) << 4;
+			if(plainchar >= (plaintext_out + size_out - 1)) break; 
 	case step_c:
 			do {
 				if (codechar == code_in+length_in)
@@ -186,6 +188,7 @@ static int base64_decode_block(const char* code_in, const int length_in, char* p
 			} while (fragment < 0);
 			*plainchar++ |= (fragment & 0x03c) >> 2;
 			*plainchar    = (fragment & 0x003) << 6;
+			if(plainchar >= (plaintext_out + size_out - 1)) break; 
 	case step_d:
 			do {
 				if (codechar == code_in+length_in)
@@ -197,22 +200,26 @@ static int base64_decode_block(const char* code_in, const int length_in, char* p
 				fragment = (char)base64_decode_value(*codechar++);
 			} while (fragment < 0);
 			*plainchar++   |= (fragment & 0x03f);
+			if(plainchar >= (plaintext_out + size_out - 1)) break; 
 		}
 	}
 	/* control should not reach here */
-	return plainchar - plaintext_out;
+	size_t s = plainchar - plaintext_out;
+	plaintext_out[s] = 0; 
+	return s; 
 }
 
-int base64_encode(const char* text_in, char *code_out, const int length_out){
+int base64_encode(const char* text_in, char *code_out, size_t length_out){
 	base64_encodestate st; 
 	base64_init_encodestate(&st); 	
 	int n = base64_encode_block(text_in, code_out, length_out, &st); 
 	n += base64_encode_blockend(code_out + n, &st); 
+	code_out[n] = 0; 
 	return n; 
 }
 
-int base64_decode(const char* code_in, const int length_in, char* plaintext_out){
+int base64_decode(const char* code_in, char* plaintext_out, size_t size_out){
 	base64_decodestate st; 
 	base64_init_decodestate(&st); 	
-	return base64_decode_block(code_in, length_in, plaintext_out, &st); 
+	return base64_decode_block(code_in, strlen(code_in), plaintext_out, size_out, &st); 
 }

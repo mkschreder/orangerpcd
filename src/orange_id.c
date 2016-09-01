@@ -30,12 +30,12 @@ static int ubus_cmp_id(const void *k1, const void *k2, void *ptr){
 		return *id1 > *id2;
 }
 
-void ubus_id_string_tree_init(struct avl_tree *tree, bool dup)
+void orange_id_string_tree_init(struct avl_tree *tree, bool dup)
 {
 	avl_init(tree, avl_strcmp, dup, NULL);
 }
 
-void ubus_id_tree_init(struct avl_tree *tree){
+void orange_id_tree_init(struct avl_tree *tree){
 	if (random_fd < 0) {
 		random_fd = open("/dev/urandom", O_RDONLY);
 		if (random_fd < 0) {
@@ -47,7 +47,7 @@ void ubus_id_tree_init(struct avl_tree *tree){
 	avl_init(tree, ubus_cmp_id, false, NULL);
 }
 
-bool ubus_id_alloc(struct avl_tree *tree, struct ubus_id *id, uint32_t val){
+bool orange_id_alloc(struct avl_tree *tree, struct orange_id *id, uint32_t val){
 	id->avl.key = &id->id;
 	if (val) {
 		id->id = val;
@@ -63,17 +63,17 @@ bool ubus_id_alloc(struct avl_tree *tree, struct ubus_id *id, uint32_t val){
 	return true;
 }
 
-void ubus_id_free(struct avl_tree *tree, struct ubus_id *id){
+void orange_id_free(struct avl_tree *tree, struct orange_id *id){
 	avl_delete(tree, &id->avl);
 }
 
-struct ubus_id *ubus_id_find(struct avl_tree *tree, uint32_t id){
+struct orange_id *orange_id_find(struct avl_tree *tree, uint32_t id){
 	struct avl_node *avl;
 
 	avl = avl_find(tree, &id);
 	if (!avl)
 		return NULL;
 
-	return container_of(avl, struct ubus_id, avl);
+	return container_of(avl, struct orange_id, avl);
 }
 

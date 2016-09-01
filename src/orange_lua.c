@@ -200,17 +200,20 @@ int l_file_write_fragment(lua_State *L){
 	}
 	lseek(fd, offset, SEEK_SET); 
 	int in_size = strlen(data); 
-	char *bin = alloca(in_size); // TODO: potential problem 
+	int bin_size = in_size * 2;  
+	char *bin = malloc(bin_size);
 	assert(bin); 
-	int size = base64_decode(data, in_size, bin);   
-	if(size > len) size = len; // TODO: figure out why decode returns wrong length. It should not do that.   
+	int size = base64_decode(data, bin, bin_size);   
+
 	TRACE("writing %d bytes at offset %d to file. (supplied length: %lu)\n", (int)size, (int)offset, len); 
 	if(size != write(fd, bin, size)){
 		ERROR("could not write data to file!\n"); 
 		lua_pop(L, n); 
 		close(fd); 
+		free(bin); 
 		return -1; 
 	}
+	free(bin); 
 	close(fd); 
 	lua_pop(L, n); 
 	return 0; 
@@ -288,13 +291,14 @@ static int l_core_b64e(lua_State *L){
 		lua_pushboolean(L, false); 
 		return 1; 
 	}
-	int size = strlen(cmd); 
-	char *b64string = alloca(size); 
+	int size = strlen(cmd) * 2 + 1; 
+	char *b64string = malloc(size); 
 	memset(b64string, 0, size); 
 	int n = base64_encode(cmd, b64string, size); 
 	b64string[n] = 0; 
 	TRACE("b64: %s %s %d\n", cmd, b64string, n); 
 	lua_pushstring(L, b64string); 
+	free(b64string); 
 	return 1; 
 }
 

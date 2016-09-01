@@ -1,3 +1,4 @@
+#include "test-funcs.h"
 #include "../src/json_check.h"
 #include "../src/json_check.c"
 #include <stdio.h>
@@ -17,11 +18,7 @@ struct test tests[] = {
 int main(){
 	JSON_check jc = JSON_check_new(10); 
 	for(int c = 0; c < sizeof(tests)/sizeof(tests[0]); c++){
-		if(!!JSON_check_string(jc, tests[c].str) != !!tests[c].valid){
-			printf("json check failed for %s\n", tests[c].str); 
-			return 0; 
-		}
+		TEST(!!JSON_check_string(jc, tests[c].str) == !!tests[c].valid); 
 	}
-	printf("SUCCESS!\n"); 
 	return 0; 
 }

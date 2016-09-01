@@ -77,7 +77,8 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-check_PROGRAMS = json_check$(EXEEXT) session$(EXEEXT)
+check_PROGRAMS = json_check$(EXEEXT) session$(EXEEXT) sha1$(EXEEXT) \
+	id$(EXEEXT) ws_server$(EXEEXT) b64$(EXEEXT)
 subdir = test
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(top_srcdir)/config/depcomp $(top_srcdir)/config/test-driver
@@ -91,13 +92,25 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 mkinstalldirs = $(install_sh) -d
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
-am_json_check_OBJECTS = json_check-json_check.$(OBJEXT)
-json_check_OBJECTS = $(am_json_check_OBJECTS)
-json_check_LDADD = $(LDADD)
+am_b64_OBJECTS = b64-b64.$(OBJEXT)
+b64_OBJECTS = $(am_b64_OBJECTS)
+b64_LDADD = $(LDADD)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
 am__v_lt_1 = 
+b64_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(b64_CFLAGS) $(CFLAGS) \
+	$(b64_LDFLAGS) $(LDFLAGS) -o $@
+am_id_OBJECTS = id-id.$(OBJEXT)
+id_OBJECTS = $(am_id_OBJECTS)
+id_LDADD = $(LDADD)
+id_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(id_CFLAGS) $(CFLAGS) \
+	$(id_LDFLAGS) $(LDFLAGS) -o $@
+am_json_check_OBJECTS = json_check-json_check.$(OBJEXT)
+json_check_OBJECTS = $(am_json_check_OBJECTS)
+json_check_LDADD = $(LDADD)
 json_check_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(json_check_CFLAGS) \
 	$(CFLAGS) $(json_check_LDFLAGS) $(LDFLAGS) -o $@
@@ -107,6 +120,18 @@ session_LDADD = $(LDADD)
 session_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(session_CFLAGS) \
 	$(CFLAGS) $(session_LDFLAGS) $(LDFLAGS) -o $@
+am_sha1_OBJECTS = sha1-sha1.$(OBJEXT)
+sha1_OBJECTS = $(am_sha1_OBJECTS)
+sha1_LDADD = $(LDADD)
+sha1_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(sha1_CFLAGS) $(CFLAGS) \
+	$(sha1_LDFLAGS) $(LDFLAGS) -o $@
+am_ws_server_OBJECTS = ws_server-ws_server.$(OBJEXT)
+ws_server_OBJECTS = $(am_ws_server_OBJECTS)
+ws_server_LDADD = $(LDADD)
+ws_server_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(ws_server_CFLAGS) \
+	$(CFLAGS) $(ws_server_LDFLAGS) $(LDFLAGS) -o $@
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -141,8 +166,10 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(json_check_SOURCES) $(session_SOURCES)
-DIST_SOURCES = $(json_check_SOURCES) $(session_SOURCES)
+SOURCES = $(b64_SOURCES) $(id_SOURCES) $(json_check_SOURCES) \
+	$(session_SOURCES) $(sha1_SOURCES) $(ws_server_SOURCES)
+DIST_SOURCES = $(b64_SOURCES) $(id_SOURCES) $(json_check_SOURCES) \
+	$(session_SOURCES) $(sha1_SOURCES) $(ws_server_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -502,7 +529,19 @@ json_check_CFLAGS = $(CODE_COVERAGE_CFLAGS) -I../src/ -D_GNU_SOURCE -std=c99
 json_check_LDFLAGS = $(CODE_COVERAGE_LDFLAGS) -L../src/.libs/ -lblobpack -lm
 session_SOURCES = session.c
 session_CFLAGS = $(CODE_COVERAGE_CFLAGS) -I../src/ -D_GNU_SOURCE -std=c99 
-session_LDFLAGS = $(CODE_COVERAGE_LDFLAGS) -L../src/.libs/ -lblobpack -lorange -lm 
+session_LDFLAGS = $(CODE_COVERAGE_LDFLAGS) -L../src/.libs/ -lblobpack -lorange  
+sha1_SOURCES = sha1.c
+sha1_CFLAGS = $(CODE_COVERAGE_CFLAGS) -I../src/ -D_GNU_SOURCE -std=c99 
+sha1_LDFLAGS = $(CODE_COVERAGE_LDFLAGS) -L../src/.libs/ -lblobpack -lorange 
+ws_server_SOURCES = ws_server.c
+ws_server_CFLAGS = $(CODE_COVERAGE_CFLAGS) -I../src/ -D_GNU_SOURCE -std=c99 
+ws_server_LDFLAGS = $(CODE_COVERAGE_LDFLAGS) -L../src/.libs/ -lblobpack -lorange 
+id_SOURCES = id.c
+id_CFLAGS = $(CODE_COVERAGE_CFLAGS) -I../src/ -D_GNU_SOURCE -std=c99 
+id_LDFLAGS = $(CODE_COVERAGE_LDFLAGS) -L../src/.libs/ -lblobpack -lorange 
+b64_SOURCES = b64.c
+b64_CFLAGS = $(CODE_COVERAGE_CFLAGS) -I../src/ -D_GNU_SOURCE -std=c99 
+b64_LDFLAGS = $(CODE_COVERAGE_LDFLAGS) -L../src/.libs/ -lblobpack -lorange 
 TESTS = $(check_PROGRAMS)
 all: all-am
 
@@ -548,6 +587,14 @@ clean-checkPROGRAMS:
 	echo " rm -f" $$list; \
 	rm -f $$list
 
+b64$(EXEEXT): $(b64_OBJECTS) $(b64_DEPENDENCIES) $(EXTRA_b64_DEPENDENCIES) 
+	@rm -f b64$(EXEEXT)
+	$(AM_V_CCLD)$(b64_LINK) $(b64_OBJECTS) $(b64_LDADD) $(LIBS)
+
+id$(EXEEXT): $(id_OBJECTS) $(id_DEPENDENCIES) $(EXTRA_id_DEPENDENCIES) 
+	@rm -f id$(EXEEXT)
+	$(AM_V_CCLD)$(id_LINK) $(id_OBJECTS) $(id_LDADD) $(LIBS)
+
 json_check$(EXEEXT): $(json_check_OBJECTS) $(json_check_DEPENDENCIES) $(EXTRA_json_check_DEPENDENCIES) 
 	@rm -f json_check$(EXEEXT)
 	$(AM_V_CCLD)$(json_check_LINK) $(json_check_OBJECTS) $(json_check_LDADD) $(LIBS)
@@ -556,14 +603,26 @@ session$(EXEEXT): $(session_OBJECTS) $(session_DEPENDENCIES) $(EXTRA_session_DEP
 	@rm -f session$(EXEEXT)
 	$(AM_V_CCLD)$(session_LINK) $(session_OBJECTS) $(session_LDADD) $(LIBS)
 
+sha1$(EXEEXT): $(sha1_OBJECTS) $(sha1_DEPENDENCIES) $(EXTRA_sha1_DEPENDENCIES) 
+	@rm -f sha1$(EXEEXT)
+	$(AM_V_CCLD)$(sha1_LINK) $(sha1_OBJECTS) $(sha1_LDADD) $(LIBS)
+
+ws_server$(EXEEXT): $(ws_server_OBJECTS) $(ws_server_DEPENDENCIES) $(EXTRA_ws_server_DEPENDENCIES) 
+	@rm -f ws_server$(EXEEXT)
+	$(AM_V_CCLD)$(ws_server_LINK) $(ws_server_OBJECTS) $(ws_server_LDADD) $(LIBS)
+
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
 
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/b64-b64.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/id-id.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/json_check-json_check.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/session-session.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sha1-sha1.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ws_server-ws_server.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -585,6 +644,34 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LTCOMPILE) -c -o $@ $<
+
+b64-b64.o: b64.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(b64_CFLAGS) $(CFLAGS) -MT b64-b64.o -MD -MP -MF $(DEPDIR)/b64-b64.Tpo -c -o b64-b64.o `test -f 'b64.c' || echo '$(srcdir)/'`b64.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/b64-b64.Tpo $(DEPDIR)/b64-b64.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='b64.c' object='b64-b64.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(b64_CFLAGS) $(CFLAGS) -c -o b64-b64.o `test -f 'b64.c' || echo '$(srcdir)/'`b64.c
+
+b64-b64.obj: b64.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(b64_CFLAGS) $(CFLAGS) -MT b64-b64.obj -MD -MP -MF $(DEPDIR)/b64-b64.Tpo -c -o b64-b64.obj `if test -f 'b64.c'; then $(CYGPATH_W) 'b64.c'; else $(CYGPATH_W) '$(srcdir)/b64.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/b64-b64.Tpo $(DEPDIR)/b64-b64.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='b64.c' object='b64-b64.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(b64_CFLAGS) $(CFLAGS) -c -o b64-b64.obj `if test -f 'b64.c'; then $(CYGPATH_W) 'b64.c'; else $(CYGPATH_W) '$(srcdir)/b64.c'; fi`
+
+id-id.o: id.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(id_CFLAGS) $(CFLAGS) -MT id-id.o -MD -MP -MF $(DEPDIR)/id-id.Tpo -c -o id-id.o `test -f 'id.c' || echo '$(srcdir)/'`id.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/id-id.Tpo $(DEPDIR)/id-id.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='id.c' object='id-id.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(id_CFLAGS) $(CFLAGS) -c -o id-id.o `test -f 'id.c' || echo '$(srcdir)/'`id.c
+
+id-id.obj: id.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(id_CFLAGS) $(CFLAGS) -MT id-id.obj -MD -MP -MF $(DEPDIR)/id-id.Tpo -c -o id-id.obj `if test -f 'id.c'; then $(CYGPATH_W) 'id.c'; else $(CYGPATH_W) '$(srcdir)/id.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/id-id.Tpo $(DEPDIR)/id-id.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='id.c' object='id-id.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(id_CFLAGS) $(CFLAGS) -c -o id-id.obj `if test -f 'id.c'; then $(CYGPATH_W) 'id.c'; else $(CYGPATH_W) '$(srcdir)/id.c'; fi`
 
 json_check-json_check.o: json_check.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(json_check_CFLAGS) $(CFLAGS) -MT json_check-json_check.o -MD -MP -MF $(DEPDIR)/json_check-json_check.Tpo -c -o json_check-json_check.o `test -f 'json_check.c' || echo '$(srcdir)/'`json_check.c
@@ -613,6 +700,34 @@ session-session.obj: session.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='session.c' object='session-session.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(session_CFLAGS) $(CFLAGS) -c -o session-session.obj `if test -f 'session.c'; then $(CYGPATH_W) 'session.c'; else $(CYGPATH_W) '$(srcdir)/session.c'; fi`
+
+sha1-sha1.o: sha1.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sha1_CFLAGS) $(CFLAGS) -MT sha1-sha1.o -MD -MP -MF $(DEPDIR)/sha1-sha1.Tpo -c -o sha1-sha1.o `test -f 'sha1.c' || echo '$(srcdir)/'`sha1.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/sha1-sha1.Tpo $(DEPDIR)/sha1-sha1.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='sha1.c' object='sha1-sha1.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sha1_CFLAGS) $(CFLAGS) -c -o sha1-sha1.o `test -f 'sha1.c' || echo '$(srcdir)/'`sha1.c
+
+sha1-sha1.obj: sha1.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sha1_CFLAGS) $(CFLAGS) -MT sha1-sha1.obj -MD -MP -MF $(DEPDIR)/sha1-sha1.Tpo -c -o sha1-sha1.obj `if test -f 'sha1.c'; then $(CYGPATH_W) 'sha1.c'; else $(CYGPATH_W) '$(srcdir)/sha1.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/sha1-sha1.Tpo $(DEPDIR)/sha1-sha1.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='sha1.c' object='sha1-sha1.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sha1_CFLAGS) $(CFLAGS) -c -o sha1-sha1.obj `if test -f 'sha1.c'; then $(CYGPATH_W) 'sha1.c'; else $(CYGPATH_W) '$(srcdir)/sha1.c'; fi`
+
+ws_server-ws_server.o: ws_server.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(ws_server_CFLAGS) $(CFLAGS) -MT ws_server-ws_server.o -MD -MP -MF $(DEPDIR)/ws_server-ws_server.Tpo -c -o ws_server-ws_server.o `test -f 'ws_server.c' || echo '$(srcdir)/'`ws_server.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/ws_server-ws_server.Tpo $(DEPDIR)/ws_server-ws_server.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='ws_server.c' object='ws_server-ws_server.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(ws_server_CFLAGS) $(CFLAGS) -c -o ws_server-ws_server.o `test -f 'ws_server.c' || echo '$(srcdir)/'`ws_server.c
+
+ws_server-ws_server.obj: ws_server.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(ws_server_CFLAGS) $(CFLAGS) -MT ws_server-ws_server.obj -MD -MP -MF $(DEPDIR)/ws_server-ws_server.Tpo -c -o ws_server-ws_server.obj `if test -f 'ws_server.c'; then $(CYGPATH_W) 'ws_server.c'; else $(CYGPATH_W) '$(srcdir)/ws_server.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/ws_server-ws_server.Tpo $(DEPDIR)/ws_server-ws_server.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='ws_server.c' object='ws_server-ws_server.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(ws_server_CFLAGS) $(CFLAGS) -c -o ws_server-ws_server.obj `if test -f 'ws_server.c'; then $(CYGPATH_W) 'ws_server.c'; else $(CYGPATH_W) '$(srcdir)/ws_server.c'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo
@@ -823,6 +938,34 @@ json_check.log: json_check$(EXEEXT)
 session.log: session$(EXEEXT)
 	@p='session$(EXEEXT)'; \
 	b='session'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+sha1.log: sha1$(EXEEXT)
+	@p='sha1$(EXEEXT)'; \
+	b='sha1'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+id.log: id$(EXEEXT)
+	@p='id$(EXEEXT)'; \
+	b='id'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+ws_server.log: ws_server$(EXEEXT)
+	@p='ws_server$(EXEEXT)'; \
+	b='ws_server'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+b64.log: b64$(EXEEXT)
+	@p='b64$(EXEEXT)'; \
+	b='b64'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \

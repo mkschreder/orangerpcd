@@ -59,7 +59,7 @@ struct ubus_srv_ws {
 }; 
 
 struct ubus_srv_ws_client {
-	struct ubus_id id; 
+	struct orange_id id; 
 	struct list_head tx_queue; 
 	struct ubus_message *msg; // incoming message
 	struct lws *wsi; 
@@ -135,7 +135,7 @@ static int _ubus_socket_callback(struct lws *wsi, enum lws_callback_reasons reas
 			struct ubus_srv_ws *self = (struct ubus_srv_ws*)proto->user; 
 			pthread_mutex_lock(&self->qlock); 
 			struct ubus_srv_ws_client *client = ubus_srv_ws_client_new(lws_get_socket_fd(wsi)); 
-			ubus_id_alloc(&self->clients, &client->id, 0); 
+			orange_id_alloc(&self->clients, &client->id, 0); 
 			*user = client; 
 			char hostname[255], ipaddr[255]; 
 			lws_get_peer_addresses(wsi, peer_id, hostname, sizeof(hostname), ipaddr, sizeof(ipaddr)); 
@@ -154,7 +154,7 @@ static int _ubus_socket_callback(struct lws *wsi, enum lws_callback_reasons reas
 			struct ubus_srv_ws *self = (struct ubus_srv_ws*)proto->user; 
 			pthread_mutex_lock(&self->qlock); 
 			//if(self->on_message) self->on_message(&self->api, (*user)->id.id, UBUS_MSG_PEER_DISCONNECTED, 0, NULL); 
-			ubus_id_free(&self->clients, &(*user)->id); 
+			orange_id_free(&self->clients, &(*user)->id); 
 			ubus_srv_ws_client_delete(user); 	
 			pthread_mutex_unlock(&self->qlock); 
 			*user = 0; 
@@ -288,10 +288,10 @@ void _websocket_destroy(orange_server_t socket){
 
 	if(self->ctx) lws_context_destroy(self->ctx); 
 
-	struct ubus_id *id, *tmp; 
+	struct orange_id *id, *tmp; 
 	avl_for_each_element_safe(&self->clients, id, avl, tmp){
 		struct ubus_srv_ws_client *client = container_of(id, struct ubus_srv_ws_client, id);  
-		ubus_id_free(&self->clients, &client->id); 
+		orange_id_free(&self->clients, &client->id); 
 		ubus_srv_ws_client_delete(&client); 
 	}
 	
@@ -348,7 +348,7 @@ static void *_websocket_server_thread(void *ptr){
 static int _websocket_send(orange_server_t socket, struct ubus_message **msg){
 	struct ubus_srv_ws *self = container_of(socket, struct ubus_srv_ws, api); 
 	pthread_mutex_lock(&self->qlock); 
-	struct ubus_id *id = ubus_id_find(&self->clients, (*msg)->peer); 
+	struct orange_id *id = orange_id_find(&self->clients, (*msg)->peer); 
 	if(!id) {
 		pthread_mutex_unlock(&self->qlock); 
 		return -1; 
@@ -429,7 +429,7 @@ orange_server_t orange_ws_server_new(const char *www_root){
 		.per_session_data_size = sizeof(struct ubus_srv_ws_client*),
 		.user = self
 	};
-	ubus_id_tree_init(&self->clients); 
+	orange_id_tree_init(&self->clients); 
 	pthread_mutex_init(&self->qlock, NULL); 
 	pthread_cond_init(&self->rx_ready, NULL); 
 	INIT_LIST_HEAD(&self->rx_queue); 
