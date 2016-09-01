@@ -61,7 +61,7 @@ struct orange_session_acl {
 	struct avl_node avl;
 	const char *object;
 	const char *function;
-	const char *perms; 
+	char *perms; 
 	int sort_len;
 };
 
@@ -194,7 +194,7 @@ int orange_session_grant(struct orange_session *ses, const char *scope, const ch
 
     return 0;
 }
-
+/*
 int orange_session_revoke(struct orange_session *ses,
                    const char *scope, const char *object, const char *function, const char *perm){
     struct orange_session_acl *acl, *next;
@@ -245,6 +245,33 @@ int orange_session_revoke(struct orange_session *ses,
     }
 
     return 0;
+}
+*/
+
+//! New revoke marks permissions as '-' without actually deleting any nodes. 
+int orange_session_revoke(struct orange_session *ses,
+               const char *scope, const char *object, const char *function, const char *perm){
+	struct orange_session_acl *acl;
+	struct orange_session_acl_scope *acl_scope;
+
+	acl_scope = avl_find_element(&ses->acl_scopes, scope, acl_scope, avl);
+	if (acl_scope) {
+		size_t len = strlen(perm); 
+
+		uh_foreach_matching_acl(acl, &acl_scope->acls, object, function){
+			for(int c = 0; c < len; c++){
+				for(int j = 0; j < strlen(acl->perms); j++) {
+					if(perm[c] == acl->perms[j]) { 
+						acl->perms[j] = '-'; 
+					}
+				}
+				
+			}
+		}
+		return 0; 
+	}
+
+	return -ENOENT;
 }
 
 bool orange_session_access(struct orange_session *ses, const char *scope, const char *obj, const char *fun, const char *perm){
