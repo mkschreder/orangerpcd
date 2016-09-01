@@ -151,6 +151,11 @@ static bool _orange_load_users(struct orange *self){
 	return true; 
 }
 
+void orange_add_user(struct orange *self, struct orange_user **user){
+	avl_insert(&self->users, &(*user)->avl); 
+	*user = NULL; 
+}
+
 struct orange* orange_new(const char *plugin_path, const char *pwfile, const char *acl_path ){
 	struct orange *self = calloc(1, sizeof(struct orange)); 
 	assert(self); 
@@ -233,12 +238,13 @@ int orange_load_passwords(struct orange *self, const char *pwfile){
 				orange_user_set_pw_hash(u, hash); 
 				DEBUG("updated existing user %s\n", user); 
 			}
-		} else {
+		} 
+		/*else {
 			// create new user
 			struct orange_user *u = orange_user_new(user); 
 			avl_insert(&self->users, &u->avl); 
 			DEBUG("loaded new user %s\n", user); 
-		}
+		}*/
 
 		while(*cur != '\n' && *cur) cur++; 
 		while(*cur == '\n') cur++; 
@@ -256,13 +262,13 @@ static struct orange_session* _find_session(struct orange *self, const char *sid
 }
 
 static bool _try_auth(const char *sha1hash, const char *challenge, const char *response){
-	DEBUG("trying to authenticate hash %s using challenge %s and response %s\n", sha1hash, challenge, response); 
+	DEBUG("trying to authenticate hash %s using challenge %s and response %s\n", sha1hash, (challenge)?challenge:"", response); 
 	if(!sha1hash) return false; 
 	
 	unsigned char binhash[SHA1_BLOCK_SIZE+1] = {0}; 
 	SHA1_CTX ctx; 
 	sha1_init(&ctx); 
-	sha1_update(&ctx, (const unsigned char*)challenge, strlen(challenge)); 
+	if(challenge) sha1_update(&ctx, (const unsigned char*)challenge, strlen(challenge)); 
 	sha1_update(&ctx, (const unsigned char*)sha1hash, strlen(sha1hash)); 
 	sha1_final(&ctx, binhash); 
 	char hash[SHA1_BLOCK_SIZE*2+1] = {0}; 
@@ -311,7 +317,10 @@ struct orange_session *orange_find_session(struct orange *self, const char *sid)
 	return _find_session(self, sid); 
 }
 
-int orange_login(struct orange *self, const char *username, const char *challenge, const char *response, const char **new_sid){
+int orange_login(struct orange *self, const char *username, const char *challenge, const char *response, struct orange_sid *sid){
+	// always reset the output value
+	memset(sid, 0, sizeof(struct orange_sid)); 
+
 	struct avl_node *node = avl_find(&self->users, username); 
 	if(!node){
 		DEBUG("user %s not found!\n", username);
@@ -325,6 +334,7 @@ int orange_login(struct orange *self, const char *username, const char *challeng
 		struct orange_session *ses = orange_session_new(user); 	
 		struct orange_user_acl *acl; 
 		orange_user_for_each_acl(user, acl){
+			DEBUG("loading session acl from user profile: %s\n", (char*)acl->avl.key); 
 			_load_session_acls(ses, self->acl_path, acl->avl.key); 
 		}
 		struct blob buf; 
@@ -337,12 +347,30 @@ int orange_login(struct orange *self, const char *username, const char *challeng
 			orange_session_delete(&ses); 
 			return -EINVAL; 
 		}
-		*new_sid = ses->sid; 
+		memcpy(sid, &ses->sid, sizeof(struct orange_sid)); 
 		return 0; 
 	} else {
 		DEBUG("login failed for %s!\n", username); 
 	}
 	return -EACCES; 
+}
+
+int orange_login_plaintext(struct orange *self, const char *username, const char *password, struct orange_sid *sid){
+	unsigned char binhash[SHA1_BLOCK_SIZE+1] = {0}; 
+	SHA1_CTX ctx; 
+	sha1_init(&ctx); 
+	sha1_update(&ctx, (const unsigned char*)password, strlen(password)); 
+	sha1_final(&ctx, binhash); 
+	char hash[SHA1_BLOCK_SIZE*2+1] = {0}; 
+	for(int c = 0; c < SHA1_BLOCK_SIZE; c++) sprintf(hash + (c * 2), "%02x", binhash[c]); 
+	
+	// hash again to simulate what would happen on the client
+	sha1_init(&ctx); 
+	sha1_update(&ctx, (const unsigned char*)hash, strlen(hash)); 
+	sha1_final(&ctx, binhash); 
+	for(int c = 0; c < SHA1_BLOCK_SIZE; c++) sprintf(hash + (c * 2), "%02x", binhash[c]); 
+
+	return orange_login(self, username, NULL, hash, sid); 
 }
 
 int orange_logout(struct orange *self, const char *sid){

@@ -21,7 +21,7 @@ int main(){
 
 	int r = base64_encode(str, ebuf, sizeof(ebuf)); 
 
-	printf("'%s' -> '%s' (%d)\n", str, ebuf, strlen(ebuf)); 
+	printf("'%s' -> '%s' (%lu)\n", str, ebuf, strlen(ebuf)); 
 	
 	TEST(strcmp(ebuf, bcheck) == 0); 
 	TEST(r == strlen(ebuf)); 

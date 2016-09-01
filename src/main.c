@@ -234,7 +234,8 @@ int main(int argc, char **argv){
 			blob_close_table(&result->buf, o); 
 		} else if(rpc_method && strcmp(rpc_method, "login") == 0){
 			// TODO: make challenge response work. Perhaps use custom pw database where only sha1 hasing is used. 
-			const char *username = NULL, *response = NULL, *sid = ""; 
+			const char *username = NULL, *response = NULL; 
+			struct orange_sid sid; 
 
 			char token[32]; 
 			snprintf(token, sizeof(token), "%08x", msg->peer); //TODO: make hash
@@ -244,7 +245,7 @@ int main(int argc, char **argv){
 					blob_put_string(&result->buf, "result"); 
 					blob_offset_t o = blob_open_table(&result->buf); 
 					blob_put_string(&result->buf, "success"); 
-					blob_put_string(&result->buf, sid); 
+					blob_put_string(&result->buf, sid.hash); 
 					blob_close_table(&result->buf, o); 
 				} else {
 					blob_put_string(&result->buf, "error"); 

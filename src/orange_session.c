@@ -65,7 +65,7 @@ struct orange_session_acl {
 	int sort_len;
 };
 
-static int _generate_sid(orange_sid_t dest){
+static int _generate_sid(struct orange_sid *sid){
 	unsigned char buf[16] = { 0 };
 	FILE *f;
 	int i;
@@ -82,7 +82,7 @@ static int _generate_sid(orange_sid_t dest){
 		return ret;
 
 	for (i = 0; i < sizeof(buf); i++)
-		sprintf(dest + (i<<1), "%02x", buf[i]);
+		sprintf(&sid->hash[i<<1], "%02x", buf[i]);
 
 	return 0;
 }
@@ -91,9 +91,9 @@ struct orange_session *orange_session_new(struct orange_user *user){
 	struct orange_session *self = calloc(1, sizeof(struct orange_session)); 
 	assert(self); 
 	
-	_generate_sid(self->sid); 
+	_generate_sid(&self->sid); 
 
-	self->avl.key = self->sid; 
+	self->avl.key = self->sid.hash; 
 
 	avl_init(&self->acl_scopes, avl_strcmp, false, NULL);
 	avl_init(&self->data, avl_strcmp, false, NULL);

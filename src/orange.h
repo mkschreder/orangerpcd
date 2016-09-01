@@ -39,7 +39,10 @@ struct orange {
 struct orange* orange_new(const char *plugin_path, const char *pwfile, const char *acl_dir); 
 void orange_delete(struct orange **_self); 
 
-int orange_login(struct orange *self, const char *username, const char *challenge, const char *response, const char **new_sid); 
+void orange_add_user(struct orange *self, struct orange_user **user); 
+
+int orange_login_plaintext(struct orange *self, const char *username, const char *password, struct orange_sid *sid); 
+int orange_login(struct orange *self, const char *username, const char *challenge, const char *response, struct orange_sid *new_sid); 
 int orange_logout(struct orange *self, const char *sid); 
 struct orange_session* orange_find_session(struct orange *self, const char *sid); 
 int orange_call(struct orange *self, const char *sid, const char *object, const char *method, struct blob_field *args, struct blob *out); 

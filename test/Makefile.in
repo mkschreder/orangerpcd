@@ -78,7 +78,7 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 check_PROGRAMS = json_check$(EXEEXT) session$(EXEEXT) sha1$(EXEEXT) \
-	id$(EXEEXT) ws_server$(EXEEXT) b64$(EXEEXT)
+	id$(EXEEXT) ws_server$(EXEEXT) b64$(EXEEXT) orange$(EXEEXT)
 subdir = test
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(top_srcdir)/config/depcomp $(top_srcdir)/config/test-driver
@@ -114,6 +114,12 @@ json_check_LDADD = $(LDADD)
 json_check_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(json_check_CFLAGS) \
 	$(CFLAGS) $(json_check_LDFLAGS) $(LDFLAGS) -o $@
+am_orange_OBJECTS = orange-orange.$(OBJEXT)
+orange_OBJECTS = $(am_orange_OBJECTS)
+orange_LDADD = $(LDADD)
+orange_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(orange_CFLAGS) $(CFLAGS) \
+	$(orange_LDFLAGS) $(LDFLAGS) -o $@
 am_session_OBJECTS = session-session.$(OBJEXT)
 session_OBJECTS = $(am_session_OBJECTS)
 session_LDADD = $(LDADD)
@@ -167,9 +173,11 @@ am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
 SOURCES = $(b64_SOURCES) $(id_SOURCES) $(json_check_SOURCES) \
-	$(session_SOURCES) $(sha1_SOURCES) $(ws_server_SOURCES)
+	$(orange_SOURCES) $(session_SOURCES) $(sha1_SOURCES) \
+	$(ws_server_SOURCES)
 DIST_SOURCES = $(b64_SOURCES) $(id_SOURCES) $(json_check_SOURCES) \
-	$(session_SOURCES) $(sha1_SOURCES) $(ws_server_SOURCES)
+	$(orange_SOURCES) $(session_SOURCES) $(sha1_SOURCES) \
+	$(ws_server_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -542,6 +550,9 @@ id_LDFLAGS = $(CODE_COVERAGE_LDFLAGS) -L../src/.libs/ -lblobpack -lorange
 b64_SOURCES = b64.c
 b64_CFLAGS = $(CODE_COVERAGE_CFLAGS) -I../src/ -D_GNU_SOURCE -std=c99 
 b64_LDFLAGS = $(CODE_COVERAGE_LDFLAGS) -L../src/.libs/ -lblobpack -lorange 
+orange_SOURCES = orange.c
+orange_CFLAGS = $(CODE_COVERAGE_CFLAGS) -I../src/ -D_GNU_SOURCE -std=c99 
+orange_LDFLAGS = $(CODE_COVERAGE_LDFLAGS) -L../src/.libs/ -lblobpack -lorange 
 TESTS = $(check_PROGRAMS)
 all: all-am
 
@@ -599,6 +610,10 @@ json_check$(EXEEXT): $(json_check_OBJECTS) $(json_check_DEPENDENCIES) $(EXTRA_js
 	@rm -f json_check$(EXEEXT)
 	$(AM_V_CCLD)$(json_check_LINK) $(json_check_OBJECTS) $(json_check_LDADD) $(LIBS)
 
+orange$(EXEEXT): $(orange_OBJECTS) $(orange_DEPENDENCIES) $(EXTRA_orange_DEPENDENCIES) 
+	@rm -f orange$(EXEEXT)
+	$(AM_V_CCLD)$(orange_LINK) $(orange_OBJECTS) $(orange_LDADD) $(LIBS)
+
 session$(EXEEXT): $(session_OBJECTS) $(session_DEPENDENCIES) $(EXTRA_session_DEPENDENCIES) 
 	@rm -f session$(EXEEXT)
 	$(AM_V_CCLD)$(session_LINK) $(session_OBJECTS) $(session_LDADD) $(LIBS)
@@ -620,6 +635,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/b64-b64.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/id-id.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/json_check-json_check.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/orange-orange.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/session-session.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sha1-sha1.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ws_server-ws_server.Po@am__quote@
@@ -686,6 +702,20 @@ json_check-json_check.obj: json_check.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='json_check.c' object='json_check-json_check.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(json_check_CFLAGS) $(CFLAGS) -c -o json_check-json_check.obj `if test -f 'json_check.c'; then $(CYGPATH_W) 'json_check.c'; else $(CYGPATH_W) '$(srcdir)/json_check.c'; fi`
+
+orange-orange.o: orange.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(orange_CFLAGS) $(CFLAGS) -MT orange-orange.o -MD -MP -MF $(DEPDIR)/orange-orange.Tpo -c -o orange-orange.o `test -f 'orange.c' || echo '$(srcdir)/'`orange.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/orange-orange.Tpo $(DEPDIR)/orange-orange.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='orange.c' object='orange-orange.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(orange_CFLAGS) $(CFLAGS) -c -o orange-orange.o `test -f 'orange.c' || echo '$(srcdir)/'`orange.c
+
+orange-orange.obj: orange.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(orange_CFLAGS) $(CFLAGS) -MT orange-orange.obj -MD -MP -MF $(DEPDIR)/orange-orange.Tpo -c -o orange-orange.obj `if test -f 'orange.c'; then $(CYGPATH_W) 'orange.c'; else $(CYGPATH_W) '$(srcdir)/orange.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/orange-orange.Tpo $(DEPDIR)/orange-orange.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='orange.c' object='orange-orange.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(orange_CFLAGS) $(CFLAGS) -c -o orange-orange.obj `if test -f 'orange.c'; then $(CYGPATH_W) 'orange.c'; else $(CYGPATH_W) '$(srcdir)/orange.c'; fi`
 
 session-session.o: session.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(session_CFLAGS) $(CFLAGS) -MT session-session.o -MD -MP -MF $(DEPDIR)/session-session.Tpo -c -o session-session.o `test -f 'session.c' || echo '$(srcdir)/'`session.c
@@ -966,6 +996,13 @@ ws_server.log: ws_server$(EXEEXT)
 b64.log: b64$(EXEEXT)
 	@p='b64$(EXEEXT)'; \
 	b='b64'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+orange.log: orange$(EXEEXT)
+	@p='orange$(EXEEXT)'; \
+	b='orange'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \

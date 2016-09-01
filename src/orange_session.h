@@ -1,14 +1,16 @@
 #pragma once
 
-// 1 extra byte for trailing zero
-typedef char orange_sid_t[32 + 1]; 
-
 #include <libutype/avl.h>
 #include "orange_user.h"
 
+struct orange_sid {
+	// 1 extra byte for trailing zero
+	char hash[32 + 1]; 
+}; 
+
 struct orange_session {
 	struct avl_node avl; 
-	orange_sid_t sid; 
+	struct orange_sid sid; 
 	struct avl_tree data; 
 	struct avl_tree acl_scopes; 
 	
