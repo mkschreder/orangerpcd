@@ -66,6 +66,7 @@ int orange_load_plugins(struct orange *self, const char *path, const char *base_
 			// TODO: is there a better way to get filename without extension? 
 			char *ext = strrchr(fname, '.');  
 			if(!ext) continue;
+
 			char *name = fname + strlen(base_path); 
 			int len = strlen(name); 
 			char *objname = alloca( len + 1 ); 
@@ -74,13 +75,25 @@ int orange_load_plugins(struct orange *self, const char *path, const char *base_
 
 			if(strcmp(ext, ".lua") != 0) continue; 
 			objname[len - strlen(ext)] = 0; 
+
+			struct avl_node *node = avl_find(&self->objects, objname); 
+			if(node) {
+				ERROR("ERR: trying to load plugin for object that already exists in the directory!\n"); 
+				continue; 
+			}
+
 			INFO("loading plugin %s of %s at base %s\n", objname, fname, base_path); 
+
 			struct orange_luaobject *obj = orange_luaobject_new(objname); 
-			if(orange_luaobject_load(obj, fname) != 0 || avl_insert(&self->objects, &obj->avl) != 0){
+			if(orange_luaobject_load(obj, fname) != 0){
 				ERROR("ERR: could not load plugin %s\n", fname); 
 				orange_luaobject_delete(&obj); 
 				continue; 
 			}
+			
+			// add to directory
+			avl_insert(&self->objects, &obj->avl); 
+
 			orange_lua_publish_json_api(obj->lua); 
 			orange_lua_publish_file_api(obj->lua); 
 			orange_lua_publish_session_api(obj->lua); 

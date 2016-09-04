@@ -42,13 +42,14 @@ void handle_sigint(){
 
 int main(int argc, char **argv){
   	const char *www_root = "/www"; 
-	const char *listen_socket = "ws://localhost:5303"; 
+	const char *listen_socket = "ws://127.0.0.1:5303"; 
 	const char *plugin_dir = "/usr/lib/orange/api/"; 
 	const char *pw_file = "/etc/orange/shadow"; 
 	const char *acl_dir = "";
 
 	printf("Orange RPCD v%s\n",VERSION); 
-	printf("Copyright (c) 2016 Martin Schröder\n"); 
+	printf("Lua/JSONRPC server\n"); 
+	printf("Copyright (c) 2016 Martin Schröder <mkschreder.uk@gmail.com>\n"); 
 
 	int c = 0; 	
 	while((c = getopt(argc, argv, "d:l:p:vx:a:")) != -1){

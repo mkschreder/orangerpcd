@@ -1,4 +1,4 @@
-local function echo(args)
+local function test_echo(args)
 	return args; 
 end
 
@@ -15,17 +15,17 @@ local function test_c_calls(args)
 end
 
 local function test_error_code(args)
-	return -1; -- test returning an error code
+	return args.code or -1; -- test returning an error code
 end
 
-local function exit(args)
-	os.exit(0); 
+local function test_exit(args)
+	os.exit(args.code or 0); 
 end
 
 return {
-	echo = echo, 
+	echo = test_echo, 
 	test_c_calls = test_c_calls,
 	error_code = test_error_code,
-	exit = exit
+	exit = test_exit
 }
 

@@ -77,10 +77,14 @@ RPC.prototype.connect = function(){
 					req.resolve(json.result); 
 				} else if(req && json.error){
 					req.reject(json.error); 
+				} else if(!req){
+					console.error("Request not found!"); 
+					process.exit(-1); 
 				}
 				self.requests[json.id] = undefined; 
 			} catch(e){
-
+				console.error("### could not parse response!"); 
+				process.exit(-1); 
 			}
 		} 
 
@@ -89,9 +93,11 @@ RPC.prototype.connect = function(){
 	self.socket.onerror = function(e){    
 		console.debug("Websocket error: "+e);         
 		self.connect.reject(); 
+		process.exit(-1); 
 	}
 	self.socket.onclose = function(){    
 		console.debug("websocket closed!"); 
+		process.exit(-1); 
 	}
 	return self.connect.promise(); 
 }
@@ -107,7 +113,11 @@ RPC.prototype.request = function(params){
 	}; 
 	self.requests[msg.id] = def; 
 	console.debug("REQUEST: "+JSON.stringify(msg));
-	self.socket.send(JSON.stringify(msg)+"\n"); 
+	try {
+		self.socket.send(JSON.stringify(msg)+"\n"); 
+	} catch(e){
+		console.error("#### socket send failed!"); 
+	}
 	return def.promise(); 
 }
 
@@ -130,6 +140,20 @@ RPC.prototype.login = function(params){
 			console.debug("Login failed!"); 
 			def.reject(); 
 		});
+	}); 
+	return def.promise(); 
+}
+
+RPC.prototype.logout = function(params){
+	var self = this; 
+	var def = $.Deferred(); 
+	self.request({
+		method: "logout", 
+		params: [self.sid]
+	}).done(function(e){
+		def.resolve(e); 
+	}).fail(function(e){
+		def.reject(e); 
 	}); 
 	return def.promise(); 
 }
@@ -162,6 +186,7 @@ RPC.prototype.list = function(params){
 	return def.promise(); 
 }
 
+var return_code = 0; 
 var client = new RPC(); 
 client.connect({
 	host: config.host, 
@@ -175,7 +200,12 @@ client.connect({
 		console.error("Could not login!"); 
 		process.exit(-1); 
 	}); 
-}).then(function(){; 
+}).then(function(){
+	if(cli_params.length == 0) {
+		console.log("No arguments given!"); 
+		process.exit(0); 
+	}
+
 	while(cli_params.length > 0){
 		var action = cli_params.shift(); 	
 		if(action == "call"){
@@ -196,10 +226,10 @@ client.connect({
 			}).done(function(r){
 				console.debug("Response: "+JSON.stringify(r)); 
 				console.log(JSON.stringify({result: r}, null, 4)); 
-				process.exit(0); 
 			}).fail(function(r){
+				console.debug("Error: "+JSON.stringify(r)); 
 				console.error(JSON.stringify({error: r}, null, 4)); 
-				process.exit(-1); 
+				return_code = r.code; 
 			}); 
 		} else if(action == "list"){
 			var wildcard = cli_params.shift(); 
@@ -207,16 +237,21 @@ client.connect({
 				path: wildcard
 			}).done(function(r){
 				console.log(JSON.stringify(r, null, 4)); 
-				process.exit(0); 
 			}).fail(function(r){
 				console.error(JSON.stringify({error: r})); 
-				process.exit(-1); 
+				return_code = -1; 
 			}); 
-
-			//usage(); 
-		}
+		} 
 	}
-}).then(function(e){
+}).then(function(){
+	return client.logout().done(function(){
+		process.exit(return_code); 
+	}).fail(function(){
+		process.exit(-1); 
+	}); 
+}).then(function(){
 	console.debug("Done!"); 
+}).fail(function(){
+	process.exit(return_code); 
 }); 
 

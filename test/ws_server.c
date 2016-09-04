@@ -14,7 +14,7 @@
 int main(){
 	orange_debug_level+=4; 
 
-	const char *listen_socket = "ws://localhost:61413"; 
+	const char *listen_socket = "ws://127.0.0.1:61413"; 
 	orange_server_t server = orange_ws_server_new("test-www"); 
 	struct orange *app = orange_new("test-plugins", "test-pwfile", "test-acls");
 	struct orange_rpc rpc; 
@@ -32,6 +32,8 @@ int main(){
 		exit(ret); 
 	} 
 
+	// test scanurl and also test invalid socket connection
+	if(orange_server_listen(server, "asdf://localhostasd") >= 0) return -1; 
     if(orange_server_listen(server, listen_socket) < 0){
         fprintf(stderr, "server could not listen on specified socket!\n"); 
         return -1;                       

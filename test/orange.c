@@ -36,6 +36,7 @@ int main(){
 	struct orange_sid sid; 
 	TEST(orange_login_plaintext(app, "admin", "admin", &sid) == 0); 
 	TEST(orange_call(app, sid.hash, "/test", "echo", blob_field_first_child(blob_head(&args)), &out) == 0);   
+	TEST(orange_call(app, sid.hash, "/test", "noexist", blob_field_first_child(blob_head(&args)), &out) < 0);   
 	TEST(orange_call(app, sid.hash, "/test", "test_c_calls", blob_field_first_child(blob_head(&args)), &out) == 0);   
 	TEST(orange_logout(app, sid.hash) == 0); 
 
