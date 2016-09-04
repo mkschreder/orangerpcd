@@ -208,6 +208,8 @@ static int _orange_socket_callback(struct lws *wsi, enum lws_callback_reasons re
 				} 
 			}
 			pthread_mutex_unlock(&self->qlock); 
+			// FIXME: we need to only call this when we actually either have more data to write. But we do this every time for now just to make sure server works. 
+			lws_callback_on_writable(wsi); 	
 			lws_rx_flow_control(wsi, 1); 
 			break; 
 		}
@@ -368,7 +370,6 @@ static int _websocket_send(orange_server_t socket, struct orange_message **msg){
 	struct orange_srv_ws_frame *frame = orange_srv_ws_frame_new(blob_field_first_child(blob_head(&(*msg)->buf))); 
 	list_add_tail(&frame->list, &client->tx_queue); 	
 	pthread_mutex_unlock(&self->qlock); 
-	lws_callback_on_writable(client->wsi); 	
 	orange_message_delete(msg); 
 	return 0; 
 }

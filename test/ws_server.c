@@ -12,7 +12,7 @@
 #include "../src/internal.h"
 
 int main(){
-	orange_debug_level+=2; 
+	orange_debug_level+=4; 
 
 	const char *listen_socket = "ws://localhost:61413"; 
 	orange_server_t server = orange_ws_server_new("test-www"); 
