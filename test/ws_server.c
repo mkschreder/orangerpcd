@@ -9,8 +9,11 @@
 #include "../src/orange.h"
 #include "../src/orange_ws_server.h"
 #include "../src/orange_rpc.h"
+#include "../src/internal.h"
 
 int main(){
+	orange_debug_level+=2; 
+
 	const char *listen_socket = "ws://localhost:61413"; 
 	orange_server_t server = orange_ws_server_new("test-www"); 
 	struct orange *app = orange_new("test-plugins", "test-pwfile", "test-acls");
@@ -39,7 +42,7 @@ int main(){
 		if(ret == -ETIMEDOUT){
 			printf("Timed out while waiting for request!\n"); 
 			exit(1); 
-		} else if(ret < 0) break; 
+		}
 	}
 	
 	orange_server_delete(server); 

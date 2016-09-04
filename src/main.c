@@ -90,6 +90,7 @@ int main(int argc, char **argv){
 	orange_rpc_init(&rpc); 
 
 	while(running){
+		// FIXME: do we ever need to exit the server? Add this.  
 		orange_rpc_process_requests(&rpc, server, app, 10000UL);  
 	}
 	

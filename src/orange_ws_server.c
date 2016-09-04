@@ -194,17 +194,17 @@ static int _orange_socket_callback(struct lws *wsi, enum lws_callback_reasons re
 					DEBUG("sent %d out of %d bytes\n", frame->sent_count, frame->len); 
 
 				} while(frame->sent_count < frame->len && !lws_partial_buffered(wsi));  
+	
+				// FIXME: is this always going to be called at the right time? 
+				if(frame->sent_count >= frame->len){
+					list_del_init(&frame->list); 
+					orange_srv_ws_frame_delete(&frame); 
+				} 
 
 				// if there is more then we need to tell lws to call us again
 				if(lws_partial_buffered(wsi)){
 					lws_callback_on_writable(wsi); 
 					break; 
-				} 
-				
-				// FIXME: is this always going to be called at the right time? 
-				if(frame->sent_count >= frame->len){
-					list_del_init(&frame->list); 
-					orange_srv_ws_frame_delete(&frame); 
 				} 
 			}
 			pthread_mutex_unlock(&self->qlock); 
@@ -242,8 +242,8 @@ static int _orange_socket_callback(struct lws *wsi, enum lws_callback_reasons re
 				list_add_tail(&(*user)->msg->list, &self->rx_queue); 
 				(*user)->msg = orange_message_new(); 
 				blob_reset(&(*user)->msg->buf); 
-				pthread_cond_signal(&self->rx_ready); 
 				pthread_mutex_unlock(&self->qlock); 
+				pthread_cond_signal(&self->rx_ready); 
 				(*user)->buffer_start = 0; 
 			} else {
 				// write to scratch buffer

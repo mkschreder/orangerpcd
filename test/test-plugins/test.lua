@@ -14,6 +14,10 @@ local function test_c_calls(args)
 	return {}; 
 end
 
+local function test_error_code(args)
+	return -1; -- test returning an error code
+end
+
 local function exit(args)
 	os.exit(0); 
 end
@@ -21,6 +25,7 @@ end
 return {
 	echo = echo, 
 	test_c_calls = test_c_calls,
+	error_code = test_error_code,
 	exit = exit
 }
 

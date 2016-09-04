@@ -99,10 +99,14 @@ int orange_rpc_process_requests(struct orange_rpc *self, orange_server_t server,
 	struct timespec tss, tse; 
 
 	clock_gettime(CLOCK_MONOTONIC, &tss); 
-	
-	if(orange_server_recv(server, &msg, timeout_us) < 0 || !msg){  
-		return -ETIMEDOUT; 
+
+	int ret = orange_server_recv(server, &msg, timeout_us); 
+
+	if(ret < 0){  
+		return ret; 
 	}
+	
+	if(!msg) return 0; 
 
 	clock_gettime(CLOCK_MONOTONIC, &tse); 
 
