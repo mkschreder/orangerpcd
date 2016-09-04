@@ -1,2 +1,3 @@
 rpc /test echo x
 rpc /test test_c_calls x
+rpc /test exit x

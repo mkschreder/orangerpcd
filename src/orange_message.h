@@ -19,7 +19,7 @@
 #include <blobpack/blobpack.h>
 #include <libutype/list.h>
 
-enum ubus_msg_type {
+enum orange_msg_type {
 	// initial server message
 	UBUS_MSG_INVALID,
 
@@ -41,17 +41,17 @@ enum ubus_msg_type {
 	__UBUS_MSG_LAST
 }; 
 
-struct ubus_message {
+struct orange_message {
 	struct list_head list; 
 	struct blob buf; 
 	int32_t peer; 
 }; 
 
-struct ubus_message *ubus_message_new(); 
-void ubus_message_delete(struct ubus_message **self); 
-static inline struct blob *ubus_message_blob(struct ubus_message *self) { return &self->buf; }
+struct orange_message *orange_message_new(); 
+void orange_message_delete(struct orange_message **self); 
+static inline struct blob *orange_message_blob(struct orange_message *self) { return &self->buf; }
 
-static __attribute__((unused)) const char *ubus_message_types[] = {
+static __attribute__((unused)) const char *orange_message_types[] = {
 	"UBUS_MSG_HELLO",
 	"UBUS_MSG_METHOD_CALL", 
 	"UBUS_MSG_METHOD_RETURN",
@@ -59,7 +59,7 @@ static __attribute__((unused)) const char *ubus_message_types[] = {
 	"UBUS_MSG_SIGNAL"
 }; 
 
-enum ubus_msg_status {
+enum orange_msg_status {
 	UBUS_STATUS_OK,
 	UBUS_STATUS_INVALID_COMMAND,
 	UBUS_STATUS_INVALID_ARGUMENT,

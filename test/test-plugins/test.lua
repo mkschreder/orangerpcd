@@ -14,8 +14,13 @@ local function test_c_calls(args)
 	return {}; 
 end
 
+local function exit(args)
+	os.exit(0); 
+end
+
 return {
 	echo = echo, 
-	test_c_calls = test_c_calls
+	test_c_calls = test_c_calls,
+	exit = exit
 }
 

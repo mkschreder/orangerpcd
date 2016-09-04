@@ -131,7 +131,7 @@ am_liborange_la_OBJECTS = liborange_la-base64.lo \
 	liborange_la-orange_id.lo liborange_la-orange_lua.lo \
 	liborange_la-orange_ws_server.lo liborange_la-orange_user.lo \
 	liborange_la-orange_uci.lo liborange_la-sha1.lo \
-	liborange_la-orange.lo
+	liborange_la-orange.lo liborange_la-orange_rpc.lo
 liborange_la_OBJECTS = $(am_liborange_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -336,7 +336,7 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 lib_LTLIBRARIES = liborange.la
 include_HEADERS = orange.h orange_id.h orange_lua.h orange_luaobject.h orange_message.h orange_server.h orange_uci.h orange_user.h orange_ws_server.h sha1.h 
-liborange_la_SOURCES = base64.c json_check.c orange_luaobject.c orange_session.c orange_message.c orange_id.c orange_lua.c orange_ws_server.c orange_user.c orange_uci.c sha1.c orange.c 
+liborange_la_SOURCES = base64.c json_check.c orange_luaobject.c orange_session.c orange_message.c orange_id.c orange_lua.c orange_ws_server.c orange_user.c orange_uci.c sha1.c orange.c orange_rpc.c 
 liborange_la_CFLAGS = $(CODE_COVERAGE_CFLAGS) -std=gnu99 -Wall -Werror
 liborange_la_LIBADD = -lblobpack -lutype -lpthread -lwebsockets -lcrypt -lrt @LIBLUA_LINK@ @LIBUCI_LINK@
 orangerpcd_SOURCES = main.c
@@ -481,6 +481,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liborange_la-orange_lua.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liborange_la-orange_luaobject.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liborange_la-orange_message.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liborange_la-orange_rpc.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liborange_la-orange_session.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liborange_la-orange_uci.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liborange_la-orange_user.Plo@am__quote@
@@ -592,6 +593,13 @@ liborange_la-orange.lo: orange.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='orange.c' object='liborange_la-orange.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(liborange_la_CFLAGS) $(CFLAGS) -c -o liborange_la-orange.lo `test -f 'orange.c' || echo '$(srcdir)/'`orange.c
+
+liborange_la-orange_rpc.lo: orange_rpc.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(liborange_la_CFLAGS) $(CFLAGS) -MT liborange_la-orange_rpc.lo -MD -MP -MF $(DEPDIR)/liborange_la-orange_rpc.Tpo -c -o liborange_la-orange_rpc.lo `test -f 'orange_rpc.c' || echo '$(srcdir)/'`orange_rpc.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/liborange_la-orange_rpc.Tpo $(DEPDIR)/liborange_la-orange_rpc.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='orange_rpc.c' object='liborange_la-orange_rpc.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(liborange_la_CFLAGS) $(CFLAGS) -c -o liborange_la-orange_rpc.lo `test -f 'orange_rpc.c' || echo '$(srcdir)/'`orange_rpc.c
 
 orangerpcd-main.o: main.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(orangerpcd_CFLAGS) $(CFLAGS) -MT orangerpcd-main.o -MD -MP -MF $(DEPDIR)/orangerpcd-main.Tpo -c -o orangerpcd-main.o `test -f 'main.c' || echo '$(srcdir)/'`main.c

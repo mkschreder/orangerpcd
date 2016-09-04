@@ -14,20 +14,18 @@
 	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 	GNU General Public License for more details.
 */
+#pragma once
 
-#include "orange_message.h"
+#include "orange_server.h"
 
-struct orange_message *orange_message_new(){
-	struct orange_message *self = calloc(1, sizeof(struct orange_message)); 
-	assert(self); 
-	blob_init(&self->buf, 0, 0); 
-	INIT_LIST_HEAD(&self->list); 
-	return self; 
-}
+struct orange; 
 
-void orange_message_delete(struct orange_message **self){
-	blob_free(&(*self)->buf); 
-	list_del_init(&(*self)->list); 
-	free(*self); 
-	*self = 0; 
-}
+struct orange_rpc{
+	struct blob buf; 
+	struct blob out; 
+}; 
+
+void orange_rpc_init(struct orange_rpc *self); 
+void orange_rpc_deinit(struct orange_rpc *self); 
+
+int orange_rpc_process_requests(struct orange_rpc *self, orange_server_t server, struct orange *ctx, unsigned long long timeout_us); 

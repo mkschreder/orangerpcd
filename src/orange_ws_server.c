@@ -42,12 +42,12 @@
 #include "json_check.h"
 
 struct lws_context; 
-struct ubus_srv_ws {
+struct orange_srv_ws {
 	struct lws_context *ctx; 
 	struct lws_protocols *protocols; 
 	struct avl_tree clients; 
 	//struct blob buf; 
-	const struct ubus_server_api *api; 
+	const struct orange_server_api *api; 
 	bool shutdown; 
 	pthread_t thread; 
 	pthread_mutex_t qlock; 
@@ -58,10 +58,10 @@ struct ubus_srv_ws {
 	JSON_check jc; 
 }; 
 
-struct ubus_srv_ws_client {
+struct orange_srv_ws_client {
 	struct orange_id id; 
 	struct list_head tx_queue; 
-	struct ubus_message *msg; // incoming message
+	struct orange_message *msg; // incoming message
 	struct lws *wsi; 
 
 	char buffer[32768]; 
@@ -70,16 +70,16 @@ struct ubus_srv_ws_client {
 	bool disconnect;
 }; 
 
-struct ubus_srv_ws_frame {
+struct orange_srv_ws_frame {
 	struct list_head list; 
 	uint8_t *buf; 
 	int len; 
 	int sent_count; 
 }; 
 
-struct ubus_srv_ws_frame *ubus_srv_ws_frame_new(struct blob_field *msg){
+struct orange_srv_ws_frame *orange_srv_ws_frame_new(struct blob_field *msg){
 	assert(msg); 
-	struct ubus_srv_ws_frame *self = calloc(1, sizeof(struct ubus_srv_ws_frame)); 
+	struct orange_srv_ws_frame *self = calloc(1, sizeof(struct orange_srv_ws_frame)); 
 	assert(self); 
 	INIT_LIST_HEAD(&self->list); 
 	char *json = blob_field_to_json(msg); 
@@ -91,7 +91,7 @@ struct ubus_srv_ws_frame *ubus_srv_ws_frame_new(struct blob_field *msg){
 	return self; 
 }
 
-void ubus_srv_ws_frame_delete(struct ubus_srv_ws_frame **self){
+void orange_srv_ws_frame_delete(struct orange_srv_ws_frame **self){
 	assert(self && *self); 
 	free((*self)->buf); 
 	free(*self); 
@@ -99,30 +99,30 @@ void ubus_srv_ws_frame_delete(struct ubus_srv_ws_frame **self){
 }
 
 
-static struct ubus_srv_ws_client *ubus_srv_ws_client_new(){
-	struct ubus_srv_ws_client *self = calloc(1, sizeof(struct ubus_srv_ws_client)); 
+static struct orange_srv_ws_client *orange_srv_ws_client_new(){
+	struct orange_srv_ws_client *self = calloc(1, sizeof(struct orange_srv_ws_client)); 
 	assert(self); 
 	INIT_LIST_HEAD(&self->tx_queue); 
-	self->msg = ubus_message_new(); 
+	self->msg = orange_message_new(); 
 	return self; 
 }
 
-static void ubus_srv_ws_client_delete(struct ubus_srv_ws_client **self){
+static void orange_srv_ws_client_delete(struct orange_srv_ws_client **self){
 	// TODO: free tx_queue
-	struct ubus_srv_ws_frame *pos, *tmp; 
+	struct orange_srv_ws_frame *pos, *tmp; 
 	list_for_each_entry_safe(pos, tmp, &(*self)->tx_queue, list){
-		ubus_srv_ws_frame_delete(&pos);  
+		orange_srv_ws_frame_delete(&pos);  
 	}	
-	ubus_message_delete(&(*self)->msg); 
+	orange_message_delete(&(*self)->msg); 
 	free(*self); 
 	*self = NULL;
 }
 
-static int _ubus_socket_callback(struct lws *wsi, enum lws_callback_reasons reason, void *_user, void *in, size_t len){
+static int _orange_socket_callback(struct lws *wsi, enum lws_callback_reasons reason, void *_user, void *in, size_t len){
 	// TODO: keeping user data in protocol is probably not the right place. Fix it. 
 	const struct lws_protocols *proto = lws_get_protocol(wsi); 
 
-	struct ubus_srv_ws_client **user = (struct ubus_srv_ws_client **)_user; 
+	struct orange_srv_ws_client **user = (struct orange_srv_ws_client **)_user; 
 	
 	if(user && *user && (*user)->disconnect){
 		DEBUG("ws_client requested a disconnect!\n"); 
@@ -132,9 +132,9 @@ static int _ubus_socket_callback(struct lws *wsi, enum lws_callback_reasons reas
 	int32_t peer_id = lws_get_socket_fd(wsi); 
 	switch(reason){
 		case LWS_CALLBACK_ESTABLISHED: {
-			struct ubus_srv_ws *self = (struct ubus_srv_ws*)proto->user; 
+			struct orange_srv_ws *self = (struct orange_srv_ws*)proto->user; 
 			pthread_mutex_lock(&self->qlock); 
-			struct ubus_srv_ws_client *client = ubus_srv_ws_client_new(lws_get_socket_fd(wsi)); 
+			struct orange_srv_ws_client *client = orange_srv_ws_client_new(lws_get_socket_fd(wsi)); 
 			orange_id_alloc(&self->clients, &client->id, 0); 
 			*user = client; 
 			char hostname[255], ipaddr[255]; 
@@ -151,21 +151,21 @@ static int _ubus_socket_callback(struct lws *wsi, enum lws_callback_reasons reas
 			break; 
 		case LWS_CALLBACK_CLOSED: {
 			DEBUG("websocket: client disconnected %p %p\n", _user, *user); 
-			struct ubus_srv_ws *self = (struct ubus_srv_ws*)proto->user; 
+			struct orange_srv_ws *self = (struct orange_srv_ws*)proto->user; 
 			pthread_mutex_lock(&self->qlock); 
 			//if(self->on_message) self->on_message(&self->api, (*user)->id.id, UBUS_MSG_PEER_DISCONNECTED, 0, NULL); 
 			orange_id_free(&self->clients, &(*user)->id); 
-			ubus_srv_ws_client_delete(user); 	
+			orange_srv_ws_client_delete(user); 	
 			pthread_mutex_unlock(&self->qlock); 
 			*user = 0; 
 			break; 
 		}
 		case LWS_CALLBACK_SERVER_WRITEABLE: {
-			struct ubus_srv_ws *self = (struct ubus_srv_ws*)proto->user; 
+			struct orange_srv_ws *self = (struct orange_srv_ws*)proto->user; 
 			pthread_mutex_lock(&self->qlock); 
 			while(!list_empty(&(*user)->tx_queue)){
 				// TODO: handle partial writes correctly 
-				struct ubus_srv_ws_frame *frame = list_first_entry(&(*user)->tx_queue, struct ubus_srv_ws_frame, list);
+				struct orange_srv_ws_frame *frame = list_first_entry(&(*user)->tx_queue, struct orange_srv_ws_frame, list);
 				int left = frame->len - frame->sent_count; 
 				int len = left; 
 				int flags; 
@@ -190,7 +190,7 @@ static int _ubus_socket_callback(struct lws *wsi, enum lws_callback_reasons reas
 				DEBUG("sent %d out of %d bytes\n", frame->sent_count, frame->len); 
 				if(frame->sent_count >= frame->len){
 					list_del_init(&frame->list); 
-					ubus_srv_ws_frame_delete(&frame); 
+					orange_srv_ws_frame_delete(&frame); 
 				} else {
 					pthread_mutex_unlock(&self->qlock); 
 					lws_callback_on_writable(wsi); 
@@ -205,7 +205,7 @@ static int _ubus_socket_callback(struct lws *wsi, enum lws_callback_reasons reas
 			assert(proto); 
 			assert(user); 
 			if(!user) break; 
-			struct ubus_srv_ws *self = (struct ubus_srv_ws*)proto->user; 
+			struct orange_srv_ws *self = (struct orange_srv_ws*)proto->user; 
 			if((*user)->buffer_start + len > sizeof((*user)->buffer)){
 				// messages larger than maximum size are discarded
 				(*user)->buffer_start = 0; 
@@ -230,7 +230,7 @@ static int _ubus_socket_callback(struct lws *wsi, enum lws_callback_reasons reas
 				(*user)->msg->peer = (*user)->id.id; 
 				pthread_mutex_lock(&self->qlock); 
 				list_add_tail(&(*user)->msg->list, &self->rx_queue); 
-				(*user)->msg = ubus_message_new(); 
+				(*user)->msg = orange_message_new(); 
 				blob_reset(&(*user)->msg->buf); 
 				pthread_cond_signal(&self->rx_ready); 
 				pthread_mutex_unlock(&self->qlock); 
@@ -247,7 +247,7 @@ static int _ubus_socket_callback(struct lws *wsi, enum lws_callback_reasons reas
 			break; 
 		}
 		/*case LWS_CALLBACK_HTTP: {
-			struct ubus_srv_ws *self = (struct ubus_srv_ws*)proto->user; 
+			struct orange_srv_ws *self = (struct orange_srv_ws*)proto->user; 
             char *requested_uri = (char *) in;
             DEBUG("requested URI: %s\n", requested_uri);
            
@@ -279,7 +279,7 @@ static int _ubus_socket_callback(struct lws *wsi, enum lws_callback_reasons reas
 }
 
 void _websocket_destroy(orange_server_t socket){
-	struct ubus_srv_ws *self = container_of(socket, struct ubus_srv_ws, api); 
+	struct orange_srv_ws *self = container_of(socket, struct orange_srv_ws, api); 
 	self->shutdown = true; 
 	DEBUG("websocket: joining worker thread..\n"); 
 	pthread_join(self->thread, NULL); 
@@ -290,14 +290,14 @@ void _websocket_destroy(orange_server_t socket){
 
 	struct orange_id *id, *tmp; 
 	avl_for_each_element_safe(&self->clients, id, avl, tmp){
-		struct ubus_srv_ws_client *client = container_of(id, struct ubus_srv_ws_client, id);  
+		struct orange_srv_ws_client *client = container_of(id, struct orange_srv_ws_client, id);  
 		orange_id_free(&self->clients, &client->id); 
-		ubus_srv_ws_client_delete(&client); 
+		orange_srv_ws_client_delete(&client); 
 	}
 	
-	struct ubus_message *msg, *nmsg; 
+	struct orange_message *msg, *nmsg; 
 	list_for_each_entry_safe(msg, nmsg, &self->rx_queue, list){
-		ubus_message_delete(&msg); 
+		orange_message_delete(&msg); 
 	}
 
 	DEBUG("websocket: context destroyed\n"); 
@@ -306,7 +306,7 @@ void _websocket_destroy(orange_server_t socket){
 }
 
 int _websocket_listen(orange_server_t socket, const char *path){
-	struct ubus_srv_ws *self = container_of(socket, struct ubus_srv_ws, api); 
+	struct orange_srv_ws *self = container_of(socket, struct orange_srv_ws, api); 
 	struct lws_context_creation_info info; 
 	memset(&info, 0, sizeof(info)); 
 
@@ -331,12 +331,12 @@ int _websocket_listen(orange_server_t socket, const char *path){
 }
 
 static int _websocket_connect(orange_server_t socket, const char *path){
-	//struct ubus_srv_ws *self = container_of(socket, struct ubus_srv_ws, api); 
+	//struct orange_srv_ws *self = container_of(socket, struct orange_srv_ws, api); 
 	return -1; 
 }
 
 static void *_websocket_server_thread(void *ptr){
-	struct ubus_srv_ws *self = (struct ubus_srv_ws*)ptr; 
+	struct orange_srv_ws *self = (struct orange_srv_ws*)ptr; 
 	while(!self->shutdown){
 		if(!self->ctx) { sleep(1); continue;} 
 		lws_service(self->ctx, 10);	
@@ -345,8 +345,8 @@ static void *_websocket_server_thread(void *ptr){
 	return 0; 
 }
 
-static int _websocket_send(orange_server_t socket, struct ubus_message **msg){
-	struct ubus_srv_ws *self = container_of(socket, struct ubus_srv_ws, api); 
+static int _websocket_send(orange_server_t socket, struct orange_message **msg){
+	struct orange_srv_ws *self = container_of(socket, struct orange_srv_ws, api); 
 	pthread_mutex_lock(&self->qlock); 
 	struct orange_id *id = orange_id_find(&self->clients, (*msg)->peer); 
 	if(!id) {
@@ -354,17 +354,17 @@ static int _websocket_send(orange_server_t socket, struct ubus_message **msg){
 		return -1; 
 	}
 	
-	struct ubus_srv_ws_client *client = (struct ubus_srv_ws_client*)container_of(id, struct ubus_srv_ws_client, id);  
-	struct ubus_srv_ws_frame *frame = ubus_srv_ws_frame_new(blob_field_first_child(blob_head(&(*msg)->buf))); 
+	struct orange_srv_ws_client *client = (struct orange_srv_ws_client*)container_of(id, struct orange_srv_ws_client, id);  
+	struct orange_srv_ws_frame *frame = orange_srv_ws_frame_new(blob_field_first_child(blob_head(&(*msg)->buf))); 
 	list_add_tail(&frame->list, &client->tx_queue); 	
 	pthread_mutex_unlock(&self->qlock); 
 	lws_callback_on_writable(client->wsi); 	
-	ubus_message_delete(msg); 
+	orange_message_delete(msg); 
 	return 0; 
 }
 
 static void *_websocket_userdata(orange_server_t socket, void *ptr){
-	struct ubus_srv_ws *self = container_of(socket, struct ubus_srv_ws, api); 
+	struct orange_srv_ws *self = container_of(socket, struct orange_srv_ws, api); 
 	if(!ptr) return self->user_data; 
 	self->user_data = ptr; 
 	return ptr; 
@@ -386,8 +386,8 @@ static void _timeout_us(struct timespec *t, unsigned long long timeout_us){
 	}
 }
 
-static int _websocket_recv(orange_server_t socket, struct ubus_message **msg, unsigned long long timeout_us){
-	struct ubus_srv_ws *self = container_of(socket, struct ubus_srv_ws, api); 
+static int _websocket_recv(orange_server_t socket, struct orange_message **msg, unsigned long long timeout_us){
+	struct orange_srv_ws *self = container_of(socket, struct orange_srv_ws, api); 
 
 	*msg = NULL; 
 	if(self->shutdown) return -1; 
@@ -408,7 +408,7 @@ static int _websocket_recv(orange_server_t socket, struct ubus_message **msg, un
 	}
 
 	// pop a message from the stack
-	struct ubus_message *m = list_first_entry(&self->rx_queue, struct ubus_message, list); 
+	struct orange_message *m = list_first_entry(&self->rx_queue, struct orange_message, list); 
 	list_del_init(&m->list); 
 	*msg = m; 
 
@@ -418,22 +418,22 @@ static int _websocket_recv(orange_server_t socket, struct ubus_message **msg, un
 }
 
 orange_server_t orange_ws_server_new(const char *www_root){
-	struct ubus_srv_ws *self = calloc(1, sizeof(struct ubus_srv_ws)); 
+	struct orange_srv_ws *self = calloc(1, sizeof(struct orange_srv_ws)); 
 	assert(self); 
 	self->www_root = (www_root)?www_root:"/www/"; 
 	self->protocols = calloc(2, sizeof(struct lws_protocols)); 
 	assert(self->protocols); 
 	self->protocols[0] = (struct lws_protocols){
 		.name = "rpc",
-		.callback = _ubus_socket_callback,
-		.per_session_data_size = sizeof(struct ubus_srv_ws_client*),
+		.callback = _orange_socket_callback,
+		.per_session_data_size = sizeof(struct orange_srv_ws_client*),
 		.user = self
 	};
 	orange_id_tree_init(&self->clients); 
 	pthread_mutex_init(&self->qlock, NULL); 
 	pthread_cond_init(&self->rx_ready, NULL); 
 	INIT_LIST_HEAD(&self->rx_queue); 
-	static const struct ubus_server_api api = {
+	static const struct orange_server_api api = {
 		.destroy = _websocket_destroy, 
 		.listen = _websocket_listen, 
 		.connect = _websocket_connect, 

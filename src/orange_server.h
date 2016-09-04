@@ -22,25 +22,25 @@
 
 #define UBUS_PEER_BROADCAST (-1)
 
-struct ubus_server_api; 
-typedef const struct ubus_server_api** orange_server_t; 
+struct orange_server_api; 
+typedef const struct orange_server_api** orange_server_t; 
 
-struct ubus_server_api {
+struct orange_server_api {
 	void 	(*destroy)(orange_server_t ptr); 
 	int 	(*listen)(orange_server_t ptr, const char *path); 
 	int 	(*connect)(orange_server_t ptr, const char *path);
-	int 	(*send)(orange_server_t ptr, struct ubus_message **msg); 
-	int 	(*recv)(orange_server_t ptr, struct ubus_message **msg, unsigned long long timeout_us); 
+	int 	(*send)(orange_server_t ptr, struct orange_message **msg); 
+	int 	(*recv)(orange_server_t ptr, struct orange_message **msg, unsigned long long timeout_us); 
 	void*	(*userdata)(orange_server_t ptr, void *data); 
 }; 
 
 #define UBUS_TARGET_PEER (0)
 #define UBUS_BROADCAST_PEER (-1)
 
-#define ubus_server_delete(sock) {(*sock)->destroy(sock); sock = NULL;} 
-#define ubus_server_listen(sock, path) (*sock)->listen(sock, path)
-#define ubus_server_connect(sock, path) (*sock)->connect(sock, path) 
-#define ubus_server_send(sock, msg) (*sock)->send(sock, msg)
-#define ubus_server_recv(sock, msg, timeout) (*sock)->recv(sock, msg, timeout)
-#define ubus_server_get_userdata(sock) (*sock)->userdata(sock, NULL)
-#define ubus_server_set_userdata(sock, ptr) (*sock)->userdata(sock, ptr)
+#define orange_server_delete(sock) {(*sock)->destroy(sock); sock = NULL;} 
+#define orange_server_listen(sock, path) (*sock)->listen(sock, path)
+#define orange_server_connect(sock, path) (*sock)->connect(sock, path) 
+#define orange_server_send(sock, msg) (*sock)->send(sock, msg)
+#define orange_server_recv(sock, msg, timeout) (*sock)->recv(sock, msg, timeout)
+#define orange_server_get_userdata(sock) (*sock)->userdata(sock, NULL)
+#define orange_server_set_userdata(sock, ptr) (*sock)->userdata(sock, ptr)
