@@ -166,36 +166,46 @@ static int _orange_socket_callback(struct lws *wsi, enum lws_callback_reasons re
 			while(!list_empty(&(*user)->tx_queue)){
 				// TODO: handle partial writes correctly 
 				struct orange_srv_ws_frame *frame = list_first_entry(&(*user)->tx_queue, struct orange_srv_ws_frame, list);
-				int left = frame->len - frame->sent_count; 
-				int len = left; 
-				int flags; 
-				if(frame->sent_count == 0){
-					flags = LWS_WRITE_TEXT; 
-				} else {
-					flags = LWS_WRITE_CONTINUATION; 
-				}
-				// fragment the message by standard mtu size. 
-				if(left > 1500){
-					len = 1500; 
-					flags |= LWS_WRITE_NO_FIN; 
+				do {
+					int left = frame->len - frame->sent_count; 
+					int len = left; 
+					int flags; 
+					if(frame->sent_count == 0){
+						flags = LWS_WRITE_TEXT; 
+					} else {
+						flags = LWS_WRITE_CONTINUATION; 
+					}
+					// fragment the message by standard mtu size. 
+					if(left > 1500){
+						len = 1500; 
+						flags |= LWS_WRITE_NO_FIN; 
+					} 
+
+					int n = lws_write(wsi, &frame->buf[LWS_SEND_BUFFER_PRE_PADDING]+frame->sent_count, len, flags);
+					if(n < 0) { 
+						DEBUG("error while sending data over websocket!\n"); 
+						pthread_mutex_unlock(&self->qlock); 
+						// disconnect
+						return 1; 
+					}
+					// increment sent count
+					frame->sent_count += n; 
+
+					DEBUG("sent %d out of %d bytes\n", frame->sent_count, frame->len); 
+
+				} while(frame->sent_count < frame->len && !lws_partial_buffered(wsi));  
+
+				// if there is more then we need to tell lws to call us again
+				if(lws_partial_buffered(wsi)){
+					lws_callback_on_writable(wsi); 
+					break; 
 				} 
-				int n = lws_write(wsi, &frame->buf[LWS_SEND_BUFFER_PRE_PADDING]+frame->sent_count, len, flags);
-				if(n < 0) { 
-					DEBUG("error while sending data over websocket!\n"); 
-					pthread_mutex_unlock(&self->qlock); 
-					// disconnect
-					return 1; 
-				}
-				frame->sent_count += n; 
-				DEBUG("sent %d out of %d bytes\n", frame->sent_count, frame->len); 
+				
+				// FIXME: is this always going to be called at the right time? 
 				if(frame->sent_count >= frame->len){
 					list_del_init(&frame->list); 
 					orange_srv_ws_frame_delete(&frame); 
-				} else {
-					pthread_mutex_unlock(&self->qlock); 
-					lws_callback_on_writable(wsi); 
-					return 0; 
-				}
+				} 
 			}
 			pthread_mutex_unlock(&self->qlock); 
 			lws_rx_flow_control(wsi, 1); 
