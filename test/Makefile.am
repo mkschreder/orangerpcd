@@ -22,3 +22,4 @@ orange_SOURCES=orange.c
 orange_CFLAGS=$(CODE_COVERAGE_CFLAGS) -I../src/ -D_GNU_SOURCE -std=c99 
 orange_LDFLAGS=$(CODE_COVERAGE_LDFLAGS) -L../src/.libs/ -lblobpack -lorange 
 TESTS=$(check_PROGRAMS)
+@VALGRIND_CHECK_RULES@

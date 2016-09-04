@@ -45,7 +45,7 @@
 int orange_debug_level = 0; 
 
 int orange_load_passwords(struct orange *self, const char *pwfile); 
-int orange_load_plugins(struct orange *self, const char *path, const char *base_path){
+static int orange_load_plugins(struct orange *self, const char *path, const char *base_path){
     int rv = 0; 
     if(!base_path) base_path = path; 
     DIR *dir = opendir(path); 
@@ -242,26 +242,31 @@ int orange_load_passwords(struct orange *self, const char *pwfile){
 	char *passwords = _load_file(pwfile); 
 	if(!passwords) return -EACCES; 
 	char *cur = passwords; 
-	char user[32], hash[64]; 
-	while(sscanf(cur, "%s %s", user, hash) == 2){	
-		struct avl_node *node = avl_find(&self->users, user); 
-		if(node){
-			struct orange_user *u = container_of(node, struct orange_user, avl); 
-			if(u){
-				orange_user_set_pw_hash(u, hash); 
-				DEBUG("updated existing user %s\n", user); 
-			}
-		} 
-		/*else {
-			// create new user
-			struct orange_user *u = orange_user_new(user); 
-			avl_insert(&self->users, &u->avl); 
-			DEBUG("loaded new user %s\n", user); 
-		}*/
-
+	int line = 0; 
+	while(1){	
+		char *nl = strchr(cur, '\n'); 
+		if(nl) *nl = 0; 
+		char *user = strtok(cur, " "); 
+		char *hash = strtok(NULL, " "); 
+		if(user && hash){
+			struct avl_node *node = avl_find(&self->users, user); 
+			if(node){
+				struct orange_user *u = container_of(node, struct orange_user, avl); 
+				if(u){
+					orange_user_set_pw_hash(u, hash); 
+					DEBUG("updated existing user %s\n", user); 
+				}
+			} 
+		} else {
+			ERROR("Could not load user password on line %d: expected format <user> <hash>!\n", line); 
+		}
+		if(!nl) break; 
+		cur = nl; *cur = '\n'; // restore the new line
+		// skip until begining of next line
 		while(*cur != '\n' && *cur) cur++; 
 		while(*cur == '\n') cur++; 
 		if(*cur == 0) break; 
+		line++; 
 	}
 	free(passwords); 
 	return 0; 
@@ -275,8 +280,9 @@ static struct orange_session* _find_session(struct orange *self, const char *sid
 }
 
 static bool _try_auth(const char *sha1hash, const char *challenge, const char *response){
-	DEBUG("trying to authenticate hash %s using challenge %s and response %s\n", sha1hash, (challenge)?challenge:"", response); 
 	if(!sha1hash) return false; 
+
+	DEBUG("trying to authenticate hash %s using challenge %s and response %s\n", (sha1hash)?sha1hash:"(null)", (challenge)?challenge:"(null)", response); 
 	
 	unsigned char binhash[SHA1_BLOCK_SIZE+1] = {0}; 
 	SHA1_CTX ctx; 
@@ -294,27 +300,36 @@ static bool _try_auth(const char *sha1hash, const char *challenge, const char *r
 static int _load_session_acls(struct orange_session *ses, const char *dir, const char *pat){
 	glob_t glob_result;
 	char path[255]; 
-	if(!strlen(dir)) dir = getenv("JUCI_ACL_DIR_PATH"); 
+	if(!dir || !strlen(dir)) dir = getenv("JUCI_ACL_DIR_PATH"); 
 	if(!dir) dir = JUCI_ACL_DIR_PATH; 
 	DEBUG("loading acls from %s/%s.acl\n", dir, pat); 
 	snprintf(path, sizeof(path), "%s/%s.acl", dir, pat); 
 	glob(path, 0, NULL, &glob_result);
 	for(unsigned int i=0;i<glob_result.gl_pathc;++i){
 		char *text = _load_file(glob_result.gl_pathv[i]); 
+		if(!text) continue; 
 		char *cur = text; 	
-		char scope[255], object[255], method[255], perm[32]; 
 		int line = 1; 
-		while(true){	
-			int ret = sscanf(cur, "%s %s %s %s", scope, object, method, perm); 
-			if(ret == 4 && scope[0] == '!'){
-				DEBUG("revoking session acl '%s %s %s %s'\n", scope + 1, object, method, perm); 
-				orange_session_revoke(ses, scope + 1, object, method, perm); 
-			} else if(ret == 4){
-				DEBUG("granting session acl '%s %s %s %s'\n", scope, object, method, perm); 
-				orange_session_grant(ses, scope, object, method, perm); 
+		while(true){
+			char *nl = strchr(cur, '\n'); 
+			if(nl) *nl = 0; 
+			char *scope = strtok(cur, " "); 
+			char *object = strtok(NULL, " "); 
+			char *method = strtok(NULL, " "); 
+			char *perm = strtok(NULL, " "); 
+			if(scope && object && method && perm){
+				if(scope[0] == '!'){
+					DEBUG("revoking session acl '%s %s %s %s'\n", scope + 1, object, method, perm); 
+					orange_session_revoke(ses, scope + 1, object, method, perm); 
+				} else {
+					DEBUG("granting session acl '%s %s %s %s'\n", scope, object, method, perm); 
+					orange_session_grant(ses, scope, object, method, perm); 
+				} 
 			} else {
-				ERROR("parse error on line %d of %s, scanned %d fields\n", line, glob_result.gl_pathv[i], ret); 	
-			} 
+				ERROR("parse error on line %d of %s: expected 4 fields separated by spaces!\n", line, glob_result.gl_pathv[i]); 	
+			}
+			if(!nl) break; // if this was the last line then we break 
+			cur = nl; *cur = '\n'; // restore newline 
 			while(*cur != '\n' && *cur != 0) cur++; 
 			while(*cur == '\n') cur++; 
 			if(*cur == 0) break; 
@@ -347,7 +362,7 @@ int orange_login(struct orange *self, const char *username, const char *challeng
 		struct orange_session *ses = orange_session_new(user); 	
 		struct orange_user_acl *acl; 
 		orange_user_for_each_acl(user, acl){
-			DEBUG("loading session acl from user profile: %s\n", (char*)acl->avl.key); 
+			DEBUG("loading session acl from user profile: %s\n", (const char*)acl->avl.key); 
 			_load_session_acls(ses, self->acl_path, acl->avl.key); 
 		}
 		struct blob buf; 
@@ -379,7 +394,7 @@ int orange_login_plaintext(struct orange *self, const char *username, const char
 	
 	// hash again to simulate what would happen on the client
 	sha1_init(&ctx); 
-	sha1_update(&ctx, (const unsigned char*)hash, strlen(hash)); 
+	sha1_update(&ctx, (const unsigned char*)hash, SHA1_BLOCK_SIZE * 2); 
 	sha1_final(&ctx, binhash); 
 	for(int c = 0; c < SHA1_BLOCK_SIZE; c++) sprintf(hash + (c * 2), "%02x", binhash[c]); 
 
@@ -422,7 +437,7 @@ int orange_list(struct orange *self, const char *sid, const char *path, struct b
 	struct orange_luaobject *entry; 
 	blob_offset_t t = blob_open_table(out); 
 	avl_for_each_element(&self->objects, entry, avl){
-		blob_put_string(out, (char*)entry->avl.key); 
+		blob_put_string(out, (const char*)entry->avl.key); 
 		blob_put_attr(out, blob_field_first_child(blob_head(&entry->signature))); 
 	}
 	blob_close_table(out, t); 

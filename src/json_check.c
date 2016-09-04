@@ -258,6 +258,12 @@ JSON_check JSON_check_new(int depth){
     return jc;
 }
 
+void JSON_check_free(JSON_check *self){
+	free((*self)->stack);
+	free(*self); 
+	*self = NULL; 	
+}
+
 static void JSON_check_reset(JSON_check jc){
 	jc->state = GO;
     jc->top = -1;
@@ -265,9 +271,7 @@ static void JSON_check_reset(JSON_check jc){
     push(jc, MODE_DONE);
 }
 
-int
-JSON_check_char(JSON_check jc, int next_char)
-{
+static int JSON_check_char(JSON_check jc, int next_char){
 /*
     After calling new_JSON_check, call this function for each character (or
     partial character) in your JSON text. It can accept UTF-8, UTF-16, or

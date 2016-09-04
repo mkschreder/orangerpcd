@@ -139,9 +139,9 @@ int orange_rpc_process_requests(struct orange_rpc *self, orange_server_t server,
 
 	if(rpc_method && strcmp(rpc_method, "call") == 0){
 		if(rpcmsg_parse_call_params(params, &sid, &object, &method, &args)){
-			int ret = orange_call(ctx, sid, object, method, args, &result->buf); 
-			if(ret < 0) {
-				char *str = strerror(-ret); 
+			int res = orange_call(ctx, sid, object, method, args, &result->buf); 
+			if(res < 0) {
+				const char *str = strerror(-res); 
 				if(!str) str = "UNKNOWN"; 
 				blob_put_string(&result->buf, "error"); 
 				blob_offset_t o = blob_open_table(&result->buf); 
@@ -183,17 +183,17 @@ int orange_rpc_process_requests(struct orange_rpc *self, orange_server_t server,
 	} else if(rpc_method && strcmp(rpc_method, "login") == 0){
 		// TODO: make challenge response work. Perhaps use custom pw database where only sha1 hasing is used. 
 		const char *username = NULL, *response = NULL; 
-		struct orange_sid sid; 
+		struct orange_sid _sid; 
 
 		char token[32]; 
 		snprintf(token, sizeof(token), "%08x", msg->peer); //TODO: make hash
 
 		if(rpcmsg_parse_login(params, &username, &response)){
-			if(orange_login(ctx, username, token, response, &sid) == 0){
+			if(orange_login(ctx, username, token, response, &_sid) == 0){
 				blob_put_string(&result->buf, "result"); 
 				blob_offset_t o = blob_open_table(&result->buf); 
 				blob_put_string(&result->buf, "success"); 
-				blob_put_string(&result->buf, sid.hash); 
+				blob_put_string(&result->buf, _sid.hash); 
 				blob_close_table(&result->buf, o); 
 			} else {
 				blob_put_string(&result->buf, "error"); 
@@ -211,8 +211,8 @@ int orange_rpc_process_requests(struct orange_rpc *self, orange_server_t server,
 			DEBUG("Could not parse login parameters!\n"); 
 		}
 	} else if(rpc_method && strcmp(rpc_method, "logout") == 0){
-		const char *sid = NULL; 
-		if(rpcmsg_parse_authenticate(params, &sid) && orange_logout(ctx, sid) == 0){
+		const char *_sid = NULL; 
+		if(rpcmsg_parse_authenticate(params, &_sid) && orange_logout(ctx, _sid) == 0){
 			blob_put_string(&result->buf, "result"); 
 			blob_offset_t o = blob_open_table(&result->buf); 
 				blob_put_string(&result->buf, "success"); 
@@ -223,13 +223,13 @@ int orange_rpc_process_requests(struct orange_rpc *self, orange_server_t server,
 			blob_put_string(&result->buf, "Could not logout!"); 
 		}
 	} else if(rpc_method && strcmp(rpc_method, "authenticate") == 0){
-		const char *sid = NULL; 
+		const char *_sid = NULL; 
 		struct orange_session *session = NULL; 
-		if(rpcmsg_parse_authenticate(params, &sid) && (session = orange_find_session(ctx, sid))){
+		if(rpcmsg_parse_authenticate(params, &_sid) && (session = orange_find_session(ctx, _sid))){
 			blob_put_string(&result->buf, "result"); 
 			blob_offset_t o = blob_open_table(&result->buf); 
 				blob_put_string(&result->buf, "sid"); 
-				blob_put_string(&result->buf, sid);
+				blob_put_string(&result->buf, _sid);
 				blob_put_string(&result->buf, "username"); 
 				blob_put_string(&result->buf, session->user->username);  
 			blob_close_table(&result->buf, o); 

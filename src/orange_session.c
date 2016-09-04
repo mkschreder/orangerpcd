@@ -68,7 +68,7 @@ struct orange_session_acl {
 static int _generate_sid(struct orange_sid *sid){
 	unsigned char buf[16] = { 0 };
 	FILE *f;
-	int i;
+	unsigned int i;
 	int ret;
 
 	f = fopen("/dev/urandom", "r");
@@ -259,8 +259,8 @@ int orange_session_revoke(struct orange_session *ses,
 		size_t len = strlen(perm); 
 
 		uh_foreach_matching_acl(acl, &acl_scope->acls, object, function){
-			for(int c = 0; c < len; c++){
-				for(int j = 0; j < strlen(acl->perms); j++) {
+			for(size_t c = 0; c < len; c++){
+				for(size_t j = 0; j < strlen(acl->perms); j++) {
 					if(perm[c] == acl->perms[j]) { 
 						acl->perms[j] = '-'; 
 					}
@@ -288,8 +288,8 @@ bool orange_session_access(struct orange_session *ses, const char *scope, const 
 		uh_foreach_matching_acl(acl, &acl_scope->acls, obj, fun){
 			// check each character in perms and see if it is allowed
 			// if no perms are specified then this will always return true
-			for(int c = 0; c < strlen(perm); c++){
-				for(int j = 0; j < strlen(acl->perms); j++) {
+			for(size_t c = 0; c < strlen(perm); c++){
+				for(size_t j = 0; j < strlen(acl->perms); j++) {
 					if(perm[c] == acl->perms[j]) { 
 						found[c] = 1; 
 						break; 

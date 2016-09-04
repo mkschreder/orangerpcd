@@ -35,7 +35,7 @@
 
 bool running = true; 
 
-void handle_sigint(){
+static void handle_sigint(int sig){
 	DEBUG("Interrupted!\n"); 
 	running = false; 
 }

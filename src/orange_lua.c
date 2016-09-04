@@ -178,7 +178,7 @@ void orange_lua_publish_json_api(lua_State *L){
 
 #include "base64.h"
 
-int l_file_write_fragment(lua_State *L){
+static int l_file_write_fragment(lua_State *L){
 	int n = lua_gettop(L); 
 	if(n != 4 || !lua_isstring(L, 1) || !lua_isnumber(L, 2) || !lua_isnumber(L, 3) || !lua_isstring(L, 4)){
 		ERROR("invalid arguments to %s\n", __FUNCTION__); 

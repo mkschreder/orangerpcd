@@ -11,26 +11,36 @@
 #include "../src/orange_rpc.h"
 #include "../src/internal.h"
 
+static int running = 1; 
+static orange_server_t server = NULL; 
+static struct orange *app = NULL; 
+static struct orange_rpc rpc; 
+
+void _cleanup(){
+	printf("cleaning up..\n"); 
+	orange_server_delete(server); 
+	orange_delete(&app); 
+}
+
 int main(){
 	orange_debug_level+=4; 
-
-	const char *listen_socket = "ws://127.0.0.1:61413"; 
-	orange_server_t server = orange_ws_server_new("test-www"); 
-	struct orange *app = orange_new("test-plugins", "test-pwfile", "test-acls");
-	struct orange_rpc rpc; 
-	orange_rpc_init(&rpc); 
-
-	// add admin user
-	struct orange_user *admin = orange_user_new("admin"); 
-	orange_user_add_acl(admin, "test-acl"); 
-	orange_add_user(app, &admin); 
 
 	// fork off a test client
 	if(fork() == 0){
 		sleep(1); 
 		int ret = system("./ws_server_tests.sh"); 
 		exit(ret); 
-	} 
+	}
+
+	const char *listen_socket = "ws://127.0.0.1:61413"; 
+	server = orange_ws_server_new("test-www"); 
+	app = orange_new("test-plugins", "test-pwfile", "test-acls");
+	orange_rpc_init(&rpc); 
+
+	// add admin user
+	struct orange_user *admin = orange_user_new("admin"); 
+	orange_user_add_acl(admin, "test-acl"); 
+	orange_add_user(app, &admin); 
 
 	// test scanurl and also test invalid socket connection
 	if(orange_server_listen(server, "asdf://localhostasd") >= 0) return -1; 
@@ -39,16 +49,18 @@ int main(){
         return -1;                       
     }
 
-	while(1){
+	atexit(_cleanup); 
+
+	while(running){
 		int ret = orange_rpc_process_requests(&rpc, server, app, 5000000UL); 
 		if(ret == -ETIMEDOUT){
 			printf("Timed out while waiting for request!\n"); 
 			exit(1); 
-		}
+		} 
 	}
 	
-	orange_server_delete(server); 
-	orange_delete(&app); 
+	//orange_server_delete(server); 
+	//orange_delete(&app); 
 
 	return 0; 
 }

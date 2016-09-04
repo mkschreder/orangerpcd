@@ -9,8 +9,9 @@
 #include "../src/base64.h"
 
 int main(){
-	char ebuf[1000]; 
-	char dbuf[1000]; 
+	char ebuf[1000] = {0}; 
+	char dbuf[1000] = {0}; 
+
 	const char *str = "Hello Whatever"; // check step B 
 	const char *str2 = "Hello The World"; // check step A
 	const char *str3 = "Hello The World Online"; // check step C
@@ -21,7 +22,7 @@ int main(){
 
 	int r = base64_encode(str, ebuf, sizeof(ebuf)); 
 
-	printf("'%s' -> '%s' (%lu)\n", str, ebuf, strlen(ebuf)); 
+	//printf("'%s' -> '%s' (%lu)\n", str, ebuf, strlen(ebuf)); 
 	
 	TEST(strcmp(ebuf, bcheck) == 0); 
 	TEST(r == strlen(ebuf)); 

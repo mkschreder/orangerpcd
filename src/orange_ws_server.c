@@ -50,6 +50,7 @@ struct orange_srv_ws {
 	const struct orange_server_api *api; 
 	bool shutdown; 
 	pthread_t thread; 
+	pthread_mutex_t lock; 
 	pthread_mutex_t qlock; 
 	pthread_cond_t rx_ready; 
 	struct list_head rx_queue; 
@@ -77,7 +78,7 @@ struct orange_srv_ws_frame {
 	int sent_count; 
 }; 
 
-struct orange_srv_ws_frame *orange_srv_ws_frame_new(struct blob_field *msg){
+static struct orange_srv_ws_frame *orange_srv_ws_frame_new(struct blob_field *msg){
 	assert(msg); 
 	struct orange_srv_ws_frame *self = calloc(1, sizeof(struct orange_srv_ws_frame)); 
 	assert(self); 
@@ -91,7 +92,7 @@ struct orange_srv_ws_frame *orange_srv_ws_frame_new(struct blob_field *msg){
 	return self; 
 }
 
-void orange_srv_ws_frame_delete(struct orange_srv_ws_frame **self){
+static void orange_srv_ws_frame_delete(struct orange_srv_ws_frame **self){
 	assert(self && *self); 
 	free((*self)->buf); 
 	free(*self); 
@@ -99,7 +100,7 @@ void orange_srv_ws_frame_delete(struct orange_srv_ws_frame **self){
 }
 
 
-static struct orange_srv_ws_client *orange_srv_ws_client_new(){
+static struct orange_srv_ws_client *orange_srv_ws_client_new(void){
 	struct orange_srv_ws_client *self = calloc(1, sizeof(struct orange_srv_ws_client)); 
 	assert(self); 
 	INIT_LIST_HEAD(&self->tx_queue); 
@@ -134,7 +135,7 @@ static int _orange_socket_callback(struct lws *wsi, enum lws_callback_reasons re
 		case LWS_CALLBACK_ESTABLISHED: {
 			struct orange_srv_ws *self = (struct orange_srv_ws*)proto->user; 
 			pthread_mutex_lock(&self->qlock); 
-			struct orange_srv_ws_client *client = orange_srv_ws_client_new(lws_get_socket_fd(wsi)); 
+			struct orange_srv_ws_client *client = orange_srv_ws_client_new(); 
 			orange_id_alloc(&self->clients, &client->id, 0); 
 			*user = client; 
 			char hostname[255], ipaddr[255]; 
@@ -168,7 +169,7 @@ static int _orange_socket_callback(struct lws *wsi, enum lws_callback_reasons re
 				struct orange_srv_ws_frame *frame = list_first_entry(&(*user)->tx_queue, struct orange_srv_ws_frame, list);
 				do {
 					int left = frame->len - frame->sent_count; 
-					int len = left; 
+					int towrite = left; 
 					int flags; 
 					if(frame->sent_count == 0){
 						flags = LWS_WRITE_TEXT; 
@@ -177,11 +178,11 @@ static int _orange_socket_callback(struct lws *wsi, enum lws_callback_reasons re
 					}
 					// fragment the message by standard mtu size. 
 					if(left > 1500){
-						len = 1500; 
+						towrite = 1500; 
 						flags |= LWS_WRITE_NO_FIN; 
 					} 
 
-					int n = lws_write(wsi, &frame->buf[LWS_SEND_BUFFER_PRE_PADDING]+frame->sent_count, len, flags);
+					int n = lws_write(wsi, &frame->buf[LWS_SEND_BUFFER_PRE_PADDING]+frame->sent_count, towrite, flags);
 					if(n < 0) { 
 						DEBUG("error while sending data over websocket!\n"); 
 						pthread_mutex_unlock(&self->qlock); 
@@ -244,8 +245,8 @@ static int _orange_socket_callback(struct lws *wsi, enum lws_callback_reasons re
 				list_add_tail(&(*user)->msg->list, &self->rx_queue); 
 				(*user)->msg = orange_message_new(); 
 				blob_reset(&(*user)->msg->buf); 
-				pthread_mutex_unlock(&self->qlock); 
 				pthread_cond_signal(&self->rx_ready); 
+				pthread_mutex_unlock(&self->qlock); 
 				(*user)->buffer_start = 0; 
 			} else {
 				// write to scratch buffer
@@ -290,15 +291,20 @@ static int _orange_socket_callback(struct lws *wsi, enum lws_callback_reasons re
 	return 0; 
 }
 
-void _websocket_destroy(orange_server_t socket){
+static void _websocket_destroy(orange_server_t socket){
 	struct orange_srv_ws *self = container_of(socket, struct orange_srv_ws, api); 
+
+	pthread_mutex_lock(&self->lock); 
 	self->shutdown = true; 
+	pthread_mutex_unlock(&self->lock); 
+
 	DEBUG("websocket: joining worker thread..\n"); 
 	pthread_join(self->thread, NULL); 
-	pthread_mutex_destroy(&self->qlock); 
-	pthread_cond_destroy(&self->rx_ready); 
 
 	if(self->ctx) lws_context_destroy(self->ctx); 
+
+	pthread_mutex_destroy(&self->qlock); 
+	pthread_cond_destroy(&self->rx_ready); 
 
 	struct orange_id *id, *tmp; 
 	avl_for_each_element_safe(&self->clients, id, avl, tmp){
@@ -312,6 +318,8 @@ void _websocket_destroy(orange_server_t socket){
 		orange_message_delete(&msg); 
 	}
 
+	JSON_check_free(&self->jc); 
+
 	DEBUG("websocket: context destroyed\n"); 
 	free(self->protocols); 
 	free(self);  
@@ -321,7 +329,7 @@ void _websocket_destroy(orange_server_t socket){
 #include <net/if.h>
 #include <ifaddrs.h>
 
-int _find_interface_from_ip(const char *ip, char *ifname, size_t out_size){
+static int _find_interface_from_ip(const char *ip, char *ifname, size_t out_size){
 	struct ifaddrs *addrs, *iap;
 	struct sockaddr_in *sa;
 	char buf[32];
@@ -332,6 +340,7 @@ int _find_interface_from_ip(const char *ip, char *ifname, size_t out_size){
 			inet_ntop(iap->ifa_addr->sa_family, (void *)&(sa->sin_addr), buf, sizeof(buf));
 			if (strcmp(ip, buf) == 0) {
 				strncpy(ifname, iap->ifa_name, out_size); 
+				freeifaddrs(addrs);
 				return 0; 
 			}
 		}
@@ -340,7 +349,7 @@ int _find_interface_from_ip(const char *ip, char *ifname, size_t out_size){
 	return -ENOENT; 
 }
 
-int _websocket_listen(orange_server_t socket, const char *path){
+static int _websocket_listen(orange_server_t socket, const char *path){
 	struct orange_srv_ws *self = container_of(socket, struct orange_srv_ws, api); 
 	struct lws_context_creation_info info; 
 	memset(&info, 0, sizeof(info)); 
@@ -372,7 +381,9 @@ int _websocket_listen(orange_server_t socket, const char *path){
 	//info.extensions = lws_get_internal_extensions();
 	info.options = LWS_SERVER_OPTION_VALIDATE_UTF8;
 
+	pthread_mutex_lock(&self->lock); 
 	self->ctx = lws_create_context(&info); 
+	pthread_mutex_unlock(&self->lock); 
 
 	return 0; 
 }
@@ -384,9 +395,16 @@ static int _websocket_connect(orange_server_t socket, const char *path){
 
 static void *_websocket_server_thread(void *ptr){
 	struct orange_srv_ws *self = (struct orange_srv_ws*)ptr; 
-	while(!self->shutdown){
-		if(!self->ctx) { sleep(1); continue;} 
-		lws_service(self->ctx, 10);	
+	while(1){
+		pthread_mutex_lock(&self->lock); 
+		if(self->shutdown) {
+			pthread_mutex_unlock(&self->lock); 
+			break; 
+		}
+		if(self->ctx) lws_service(self->ctx, 10);	
+		else usleep(1000); 
+		pthread_mutex_unlock(&self->lock); 
+		usleep(1); 
 	}
 	pthread_exit(0); 
 	return 0; 
@@ -412,7 +430,9 @@ static int _websocket_send(orange_server_t socket, struct orange_message **msg){
 static void *_websocket_userdata(orange_server_t socket, void *ptr){
 	struct orange_srv_ws *self = container_of(socket, struct orange_srv_ws, api); 
 	if(!ptr) return self->user_data; 
+	pthread_mutex_lock(&self->lock); 
 	self->user_data = ptr; 
+	pthread_mutex_unlock(&self->lock); 
 	return ptr; 
 }
 
@@ -426,8 +446,8 @@ static void _timeout_us(struct timespec *t, unsigned long long timeout_us){
 	t->tv_sec += sec; 
 	// nanoseconds can sometimes be more than 1sec but never more than 2.  
 	// TODO: is there no function somewhere for properly adding a timeout to timespec? 
-	if(t->tv_nsec >= 1000000000UL){
-		t->tv_nsec -= 1000000000UL; 
+	if(t->tv_nsec >= 1000000000L){
+		t->tv_nsec -= 1000000000L; 
 		t->tv_sec++; 
 	}
 }
@@ -476,6 +496,7 @@ orange_server_t orange_ws_server_new(const char *www_root){
 		.user = self
 	};
 	orange_id_tree_init(&self->clients); 
+	pthread_mutex_init(&self->lock, NULL); 
 	pthread_mutex_init(&self->qlock, NULL); 
 	pthread_cond_init(&self->rx_ready, NULL); 
 	INIT_LIST_HEAD(&self->rx_queue); 

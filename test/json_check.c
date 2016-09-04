@@ -22,5 +22,6 @@ int main(){
 	for(int c = 0; c < sizeof(tests)/sizeof(tests[0]); c++){
 		TEST(!!JSON_check_string(jc, tests[c].str) == !!tests[c].valid); 
 	}
+	JSON_check_free(&jc); 
 	return 0; 
 }

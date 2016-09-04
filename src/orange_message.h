@@ -47,7 +47,7 @@ struct orange_message {
 	int32_t peer; 
 }; 
 
-struct orange_message *orange_message_new(); 
+struct orange_message *orange_message_new(void); 
 void orange_message_delete(struct orange_message **self); 
 static inline struct blob *orange_message_blob(struct orange_message *self) { return &self->buf; }
 

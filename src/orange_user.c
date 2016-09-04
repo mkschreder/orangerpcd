@@ -28,6 +28,11 @@ struct orange_user *orange_user_new(const char *username){
 void orange_user_delete(struct orange_user **_self){
 	struct orange_user *self = *_self; 	
 	if(self->pwhash) free(self->pwhash); 
+
+	struct orange_user_acl *acl, *nacl;
+    avl_remove_all_elements(&self->acls, acl, avl, nacl)
+		free(acl); 
+
 	free(self->username); 
 	free(self); 
 	*_self = NULL; 

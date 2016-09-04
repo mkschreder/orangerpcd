@@ -86,6 +86,7 @@ DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(top_srcdir)/config/depcomp $(include_HEADERS)
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ax_code_coverage.m4 \
+	$(top_srcdir)/m4/ax_valgrind_check.m4 \
 	$(top_srcdir)/m4/libtool.m4 $(top_srcdir)/m4/ltoptions.m4 \
 	$(top_srcdir)/m4/ltsugar.m4 $(top_srcdir)/m4/ltversion.m4 \
 	$(top_srcdir)/m4/lt~obsolete.m4 $(top_srcdir)/configure.ac
@@ -281,6 +282,12 @@ SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
+VALGRIND = @VALGRIND@
+VALGRIND_ENABLED = @VALGRIND_ENABLED@
+VALGRIND_HAVE_TOOL_drd = @VALGRIND_HAVE_TOOL_drd@
+VALGRIND_HAVE_TOOL_exp_sgcheck = @VALGRIND_HAVE_TOOL_exp_sgcheck@
+VALGRIND_HAVE_TOOL_helgrind = @VALGRIND_HAVE_TOOL_helgrind@
+VALGRIND_HAVE_TOOL_memcheck = @VALGRIND_HAVE_TOOL_memcheck@
 VERSION = @VERSION@
 abs_builddir = @abs_builddir@
 abs_srcdir = @abs_srcdir@
@@ -336,11 +343,18 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 lib_LTLIBRARIES = liborange.la
 include_HEADERS = orange.h orange_id.h orange_lua.h orange_luaobject.h orange_message.h orange_server.h orange_uci.h orange_user.h orange_ws_server.h sha1.h 
+AM_CFLAGS = -Wall -fPIC -Wno-format-y2k -W -Wstrict-prototypes -Wmissing-prototypes \
+-Wpointer-arith -Wreturn-type -Wcast-qual -Wwrite-strings -Wswitch \
+-Wshadow -Wcast-align -Wchar-subscripts -Winline \
+-Wnested-externs -Wredundant-decls -Wmissing-field-initializers -Wextra \
+-Wformat=2 -Wno-format-nonliteral -Wpointer-arith -Wno-missing-braces \
+-Wno-unused-parameter -Wno-unused-variable -Wno-inline
+
 liborange_la_SOURCES = base64.c json_check.c orange_luaobject.c orange_session.c orange_message.c orange_id.c orange_lua.c orange_ws_server.c orange_user.c orange_uci.c sha1.c orange.c orange_rpc.c 
-liborange_la_CFLAGS = $(CODE_COVERAGE_CFLAGS) -std=gnu99 -Wall -Werror
+liborange_la_CFLAGS = $(AM_CFLAGS) $(CODE_COVERAGE_CFLAGS) -std=gnu99 -fstack-protector-all -Wall -Werror
 liborange_la_LIBADD = -lblobpack -lutype -lpthread -lwebsockets -lcrypt -lrt @LIBLUA_LINK@ @LIBUCI_LINK@
 orangerpcd_SOURCES = main.c
-orangerpcd_CFLAGS = -std=gnu99 -Wall -Werror
+orangerpcd_CFLAGS = $(AM_CFLAGS) -std=gnu99 -fstack-protector-all -Wall -Werror
 orangerpcd_LDADD = -lutype -lblobpack -lorange -lrt 
 all: all-am
 
