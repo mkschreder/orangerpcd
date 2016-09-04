@@ -317,19 +317,53 @@ void _websocket_destroy(orange_server_t socket){
 	free(self);  
 }
 
+#include <arpa/inet.h>
+#include <net/if.h>
+#include <ifaddrs.h>
+
 int _websocket_listen(orange_server_t socket, const char *path){
 	struct orange_srv_ws *self = container_of(socket, struct orange_srv_ws, api); 
 	struct lws_context_creation_info info; 
 	memset(&info, 0, sizeof(info)); 
 
-	char proto[NAME_MAX], host[NAME_MAX], file[NAME_MAX]; 
+	char proto[NAME_MAX], ip[NAME_MAX], file[NAME_MAX]; 
 	int port = 5303; 
-	if(!url_scanf(path, proto, host, &port, file)){
+	if(!url_scanf(path, proto, ip, &port, file)){
 		fprintf(stderr, "Could not parse url: %s\n", path); 
 		return -1; 
 	}
 
+	struct ifaddrs *addrs, *iap;
+	struct sockaddr_in *sa;
+	char buf[32];
+	char *ifname = NULL; 
+	getifaddrs(&addrs);
+	for (iap = addrs; iap != NULL; iap = iap->ifa_next) {
+		if (iap->ifa_addr && (iap->ifa_flags & IFF_UP) && iap->ifa_addr->sa_family == AF_INET) {
+			sa = (struct sockaddr_in *)(iap->ifa_addr);
+			inet_ntop(iap->ifa_addr->sa_family, (void *)&(sa->sin_addr), buf, sizeof(buf));
+			if (strcmp(ip, buf) == 0) {
+				ifname = buf; 
+				strncpy(buf, iap->ifa_name, sizeof(buf)); 
+				break; 
+			}
+		}
+	}
+	freeifaddrs(addrs);
+
+	if(strlen(ip) && !ifname){
+		fprintf(stderr, "Could not find interface on which to listen for '%s' when creating websocket!\n", ip); 
+		return -1; 
+	}
+
+	if(!ifname){
+		INFO("WARNING: no interface name supplied so will be listening on ALL interfaces. If this is not what you want then supply an ip address on which to listen!\n"); 
+	}	
+	
+	DEBUG("starting server on '%s:%d'\n", (ifname)?ifname:"ALL", port); 
+
 	info.port = port;
+	info.iface = ifname; 
 	info.gid = -1; 
 	info.uid = -1; 
 	info.user = self; 
