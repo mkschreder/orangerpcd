@@ -98,19 +98,14 @@ int orange_rpc_process_requests(struct orange_rpc *self, orange_server_t server,
 	struct orange_message *msg = NULL;         
 	struct timespec tss, tse; 
 
-	clock_gettime(CLOCK_MONOTONIC, &tss); 
-
 	int ret = orange_server_recv(server, &msg, timeout_us); 
+
+	if(!msg) return 0; 
 
 	if(ret < 0){  
 		return ret; 
 	}
 	
-	if(!msg) return 0; 
-
-	clock_gettime(CLOCK_MONOTONIC, &tse); 
-
-	TRACE("waited %lus %luns for message\n", tse.tv_sec - tss.tv_sec, tse.tv_nsec - tss.tv_nsec); 
 
 	if(orange_debug_level >= JUCI_DBG_DEBUG){
 		DEBUG("got message from %08x: ", msg->peer); 

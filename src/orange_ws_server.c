@@ -405,6 +405,7 @@ static void *_websocket_server_thread(void *ptr){
 		if(self->ctx) lws_service(self->ctx, 10);	
 		else usleep(1000); 
 		pthread_mutex_unlock(&self->lock); 
+		// FIXME: this is wrong design. Need to do more granular locking instead!
 		usleep(1); 
 	}
 	pthread_exit(0); 

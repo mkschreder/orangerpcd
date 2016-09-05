@@ -11,7 +11,7 @@ before_script:
   - pushd libusys && autoreconf -if && ./configure --prefix=/usr/ && make && sudo make install && popd
   - git clone https://github.com/mkschreder/libblobpack.git libblobpack
   - pushd libblobpack && autoreconf -if && ./configure --prefix=/usr/ && make && sudo make install && popd
-script: autoreconf -if && ./configure --enable-code-coverage --enable-valgrind CFLAGS="-g -O0" && make && make check 
+script: autoreconf -if && ./configure --enable-code-coverage --enable-valgrind CFLAGS="-g -O0" && make && make check && make -C test check-valgrind 
 after_success:
   - coveralls
 addons:

@@ -2,6 +2,11 @@ local function test_echo(args)
 	return args; 
 end
 
+local function test_delay_echo(args)
+	os.execute("sleep 1"); 
+	return args; 
+end
+
 local function test_c_calls(args)
 	local t = JSON.parse("{\"foo\":\"bar\"}"); 	
 	if ( t.foo ~= "bar" ) then return -1; end
@@ -24,6 +29,7 @@ end
 
 return {
 	echo = test_echo, 
+	delay_echo = test_delay_echo,
 	test_c_calls = test_c_calls,
 	error_code = test_error_code,
 	exit = test_exit

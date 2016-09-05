@@ -7,6 +7,7 @@ var spawn = require('child_process').spawn;
 var WebSocket = require("ws"); 
 var $ = require("jquery-deferred"); 
 var sha1 = require("sha1"); 
+var async = require("async"); 
 
 var config = { 
 	host: "192.168.1.1", 
@@ -69,7 +70,7 @@ RPC.prototype.connect = function(){
 		console.debug("Websocket RPC connected!"); 
 
 		self.socket.onmessage = function(e){ 
-			console.debug("RESPONSE: "+e.data+"\n"); 
+			console.log("RESPONSE: "+e.data+"\n"); 
 			try {
 				var json = JSON.parse(e.data); 
 				var req = self.requests[json.id]; 
@@ -83,7 +84,7 @@ RPC.prototype.connect = function(){
 				}
 				self.requests[json.id] = undefined; 
 			} catch(e){
-				console.error("### could not parse response!"); 
+				console.error("ERROR: could not parse response: "+e); 
 				process.exit(-1); 
 			}
 		} 
@@ -241,7 +242,48 @@ client.connect({
 				console.error(JSON.stringify({error: r})); 
 				return_code = -1; 
 			}); 
-		} 
+		} else if(action == "speedtest"){
+			// like call but makes many requests and returns metric
+			var object = cli_params.shift(); 
+			var method = cli_params.shift(); 
+			var params = {}; 
+			try {
+				params = JSON.parse(cli_params.shift()); 
+			} catch(e){ }
+			if(!object || !method) {
+				console.error("Call requires an object name and method name!"); 
+				process.exit(-1); 
+			}
+			var metrics = []; 
+			for(var i = 0; i < 10; i++){
+				metrics.push({id: i, time: 0}); 
+			}
+			var def = $.Deferred(); 
+			console.log("SPEEDTEST: running "+metrics.length+" calls.."); 
+			var test_start = new Date(); 
+			async.map(metrics, function(m, next){
+				client.call({
+					object: object, 
+					method: method, 
+					params: params
+				}).done(function(r){
+					m.time = 0; //Date.now() - call_start; 
+					m.ok = true; 
+					next(); 
+				}).fail(function(r){
+					next(); 	
+				}); 
+			}, function done(e){
+				var total = metrics.reduce(function(a, b){ return a.time + b.time; }, 0); 	
+				var total_time = (Date.now() - test_start) * 0.001; 
+				var payload_size = String(JSON.stringify(params)).length; 
+				var total_size = metrics.length * payload_size; 
+				console.log("SPEEDTEST: "+total_time+"s for "+metrics.length+" calls, payload "+payload_size+" bytes, "+Math.floor((total_size / total_time / 1000) * 8)+"Kbps"); 
+				if(e) def.reject(); 
+				else def.resolve(); 	
+			}); 
+			return def.promise(); 
+		}
 	}
 }).then(function(){
 	return client.logout().done(function(){
