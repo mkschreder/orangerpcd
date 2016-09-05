@@ -176,6 +176,7 @@ static int _orange_socket_callback(struct lws *wsi, enum lws_callback_reasons re
 					} else {
 						flags = LWS_WRITE_CONTINUATION; 
 					}
+
 					// fragment the message by standard mtu size. 
 					if(left > 1500){
 						towrite = 1500; 
@@ -211,7 +212,7 @@ static int _orange_socket_callback(struct lws *wsi, enum lws_callback_reasons re
 			pthread_mutex_unlock(&self->qlock); 
 			// FIXME: we need to only call this when we actually either have more data to write. But we do this every time for now just to make sure server works. 
 			lws_callback_on_writable(wsi); 	
-			lws_rx_flow_control(wsi, 1); 
+			//lws_rx_flow_control(wsi, 1); 
 			break; 
 		}
 		case LWS_CALLBACK_RECEIVE: {
@@ -236,7 +237,7 @@ static int _orange_socket_callback(struct lws *wsi, enum lws_callback_reasons re
 
 				// if message is small and we have received all of it then skip the scratch buffer and process it directly 
 				if(!JSON_check_string(self->jc, (*user)->buffer) || !blob_put_json(&(*user)->msg->buf, (*user)->buffer)){
-					ERROR("got bad message!\n"); 
+					ERROR("got bad message: %s\n", (*user)->buffer); 
 					break; 
 				}
 				// place the message on the queue
@@ -255,8 +256,8 @@ static int _orange_socket_callback(struct lws *wsi, enum lws_callback_reasons re
 				ptr[len] = 0; 
 				(*user)->buffer_start += len; 
 			}
-			lws_rx_flow_control(wsi, 0); 
-			lws_callback_on_writable(wsi); 	
+			//lws_rx_flow_control(wsi, 0); 
+			//lws_callback_on_writable(wsi); 	
 			break; 
 		}
 		/*case LWS_CALLBACK_HTTP: {
