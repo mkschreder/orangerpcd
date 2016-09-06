@@ -17,6 +17,7 @@ after_success:
 addons:
   apt:
     packages:
+    - valgrind
     - lcov
     - lua5.1
     - lua5.1-dev
