@@ -5,7 +5,7 @@ bin_PROGRAMS=orangerpcd
 include_HEADERS=orange.h orange_id.h orange_lua.h orange_luaobject.h orange_message.h orange_server.h orange_uci.h orange_user.h orange_ws_server.h sha1.h 
 AM_CFLAGS=-Wall -fPIC -Wno-format-y2k -W -Wstrict-prototypes -Wmissing-prototypes \
 -Wpointer-arith -Wreturn-type -Wwrite-strings -Wswitch \
--Wcast-align -Wchar-subscripts -Winline -Wtype-limits \
+-Wno-cast-align -Wchar-subscripts -Winline -Wtype-limits \
 -Wnested-externs -Wredundant-decls -Wmissing-field-initializers -Wextra \
 -Wformat=2 -Wno-format-nonliteral -Wpointer-arith -Wno-missing-braces \
 -Wno-unused-parameter -Wno-unused-variable -Wno-inline
