@@ -335,6 +335,7 @@ static int _find_interface_from_ip(const char *ip, char *ifname, size_t out_size
 	struct sockaddr_in *sa;
 	getifaddrs(&addrs);
 	for (iap = addrs; iap != NULL; iap = iap->ifa_next) {
+		if(!iap->ifa_addr) continue; 
 		int family = iap->ifa_addr->sa_family; 
 		if (iap->ifa_addr && (iap->ifa_flags & IFF_UP) && (family == AF_INET || family == AF_INET6)) {
 			char host[NI_MAXHOST+1]; 	
