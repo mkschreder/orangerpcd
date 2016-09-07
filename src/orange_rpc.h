@@ -17,15 +17,22 @@
 #pragma once
 
 #include "orange_server.h"
+#include <pthread.h>
 
 struct orange; 
 
 struct orange_rpc{
 	struct blob buf; 
 	struct blob out; 
+	orange_server_t server; 
+	struct orange *ctx; 
+	unsigned long long timeout_us; 
+	pthread_t *threads; 
+	pthread_mutex_t lock; 
+	unsigned int num_workers; 
+	int shutdown; 
 }; 
 
-void orange_rpc_init(struct orange_rpc *self); 
+void orange_rpc_init(struct orange_rpc *self, orange_server_t server, struct orange *ctx, unsigned long long timeout_us, unsigned int num_workers); 
 void orange_rpc_deinit(struct orange_rpc *self); 
-
-int orange_rpc_process_requests(struct orange_rpc *self, orange_server_t server, struct orange *ctx, unsigned long long timeout_us); 
+bool orange_rpc_running(struct orange_rpc *self); 

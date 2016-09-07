@@ -18,6 +18,8 @@
 #include "orange.h"
 #include "orange_rpc.h"
 #include "internal.h"
+#include <pthread.h>
+#include <unistd.h>
 
 static bool rpcmsg_parse_call(struct blob *msg, uint32_t *id, const char **method, struct blob_field **params){
 	if(!msg) return false; 
@@ -84,28 +86,17 @@ static bool rpcmsg_parse_login(struct blob_field *params, const char **username,
 	return !!(username && response); 
 }
 
-void orange_rpc_init(struct orange_rpc *self){
-	blob_init(&self->buf, 0, 0); 
-	blob_init(&self->out, 0, 0); 
-}
-
-void orange_rpc_deinit(struct orange_rpc *self){
-	blob_free(&self->buf); 
-	blob_free(&self->out); 
-}
-
-int orange_rpc_process_requests(struct orange_rpc *self, orange_server_t server, struct orange *ctx, unsigned long long timeout_us){
+static int orange_rpc_process_requests(struct orange_rpc *self){
 	struct orange_message *msg = NULL;         
 	struct timespec tss, tse; 
 
-	int ret = orange_server_recv(server, &msg, timeout_us); 
-
-	if(!msg) return 0; 
+	int ret = orange_server_recv(self->server, &msg, self->timeout_us); 
 
 	if(ret < 0){  
 		return ret; 
 	}
 	
+	if(!msg) return 0; 
 
 	if(orange_debug_level >= JUCI_DBG_DEBUG){
 		DEBUG("got message from %08x: ", msg->peer); 
@@ -134,7 +125,7 @@ int orange_rpc_process_requests(struct orange_rpc *self, orange_server_t server,
 
 	if(rpc_method && strcmp(rpc_method, "call") == 0){
 		if(rpcmsg_parse_call_params(params, &sid, &object, &method, &args)){
-			int res = orange_call(ctx, sid, object, method, args, &result->buf); 
+			int res = orange_call(self->ctx, sid, object, method, args, &result->buf); 
 			if(res < 0) {
 				const char *str = strerror(-res); 
 				if(!str) str = "UNKNOWN"; 
@@ -157,7 +148,7 @@ int orange_rpc_process_requests(struct orange_rpc *self, orange_server_t server,
 			blob_close_table(&result->buf, o); 
 
 			blob_close_table(&result->buf, t); 
-			orange_server_send(server, &result); 	
+			orange_server_send(self->server, &result); 	
 			orange_message_delete(&msg); 
 			return -EPROTO;  
 		}
@@ -165,7 +156,7 @@ int orange_rpc_process_requests(struct orange_rpc *self, orange_server_t server,
 		const char *path = "*"; 	
 		if(rpcmsg_parse_list_params(params, &sid, &path)){
 			blob_put_string(&result->buf, "result"); 
-			orange_list(ctx, sid, path, &result->buf); 
+			orange_list(self->ctx, sid, path, &result->buf); 
 		}
 	} else if(rpc_method && strcmp(rpc_method, "challenge") == 0){
 		blob_put_string(&result->buf, "result"); 
@@ -184,7 +175,7 @@ int orange_rpc_process_requests(struct orange_rpc *self, orange_server_t server,
 		snprintf(token, sizeof(token), "%08x", msg->peer); //TODO: make hash
 
 		if(rpcmsg_parse_login(params, &username, &response)){
-			if(orange_login(ctx, username, token, response, &_sid) == 0){
+			if(orange_login(self->ctx, username, token, response, &_sid) == 0){
 				blob_put_string(&result->buf, "result"); 
 				blob_offset_t o = blob_open_table(&result->buf); 
 				blob_put_string(&result->buf, "success"); 
@@ -207,7 +198,7 @@ int orange_rpc_process_requests(struct orange_rpc *self, orange_server_t server,
 		}
 	} else if(rpc_method && strcmp(rpc_method, "logout") == 0){
 		const char *_sid = NULL; 
-		if(rpcmsg_parse_authenticate(params, &_sid) && orange_logout(ctx, _sid) == 0){
+		if(rpcmsg_parse_authenticate(params, &_sid) && orange_logout(self->ctx, _sid) == 0){
 			blob_put_string(&result->buf, "result"); 
 			blob_offset_t o = blob_open_table(&result->buf); 
 				blob_put_string(&result->buf, "success"); 
@@ -220,7 +211,7 @@ int orange_rpc_process_requests(struct orange_rpc *self, orange_server_t server,
 	} else if(rpc_method && strcmp(rpc_method, "authenticate") == 0){
 		const char *_sid = NULL; 
 		struct orange_session *session = NULL; 
-		if(rpcmsg_parse_authenticate(params, &_sid) && (session = orange_find_session(ctx, _sid))){
+		if(rpcmsg_parse_authenticate(params, &_sid) && (session = orange_find_session(self->ctx, _sid))){
 			blob_put_string(&result->buf, "result"); 
 			blob_offset_t o = blob_open_table(&result->buf); 
 				blob_put_string(&result->buf, "sid"); 
@@ -248,9 +239,60 @@ int orange_rpc_process_requests(struct orange_rpc *self, orange_server_t server,
 		blob_field_dump_json(blob_field_first_child(blob_head(&result->buf))); 
 	}
 
-	orange_server_send(server, &result); 		
+	orange_server_send(self->server, &result); 		
 	orange_message_delete(&msg); 
 
 	return 0; 
 }
 
+static void *_message_dispatcher(void *ptr){
+	struct orange_rpc *self = (struct orange_rpc*)ptr; 
+	pthread_mutex_lock(&self->lock); 
+	while(!self->shutdown){
+		pthread_mutex_unlock(&self->lock); 
+		orange_rpc_process_requests(self);
+		pthread_mutex_lock(&self->lock); 
+	}
+	DEBUG("rpc worker exiting..\n"); 
+	usleep(20000UL); 
+	pthread_mutex_unlock(&self->lock); 
+	pthread_exit(0); 
+	return NULL; 
+}
+
+void orange_rpc_init(struct orange_rpc *self, orange_server_t server, struct orange *ctx, unsigned long long timeout_us, unsigned int num_workers){
+	self->server = server; 
+	self->ctx = ctx; 
+	self->timeout_us = timeout_us; 
+	self->shutdown = 0; 
+	self->num_workers = num_workers; 
+	blob_init(&self->buf, 0, 0); 
+	blob_init(&self->out, 0, 0); 
+
+	if(num_workers == 0) num_workers = 1; 
+	self->threads = malloc(num_workers * sizeof(pthread_t)); 
+	memset(self->threads, 0, num_workers * sizeof(pthread_t)); 
+
+	pthread_mutex_init(&self->lock, NULL); 
+
+	for(unsigned int c = 0; c < num_workers; c++){
+		pthread_create(&self->threads[c], NULL, _message_dispatcher, self); 
+	}
+}
+
+void orange_rpc_deinit(struct orange_rpc *self){
+	pthread_mutex_lock(&self->lock); 
+	self->shutdown = 1; 
+	pthread_mutex_unlock(&self->lock); 
+	for(unsigned c = 0; c < self->num_workers; c++){
+		pthread_join(self->threads[c], NULL); 
+	}
+	pthread_mutex_destroy(&self->lock); 
+	blob_free(&self->buf); 
+	blob_free(&self->out); 
+	free(self->threads); 
+}
+
+bool orange_rpc_running(struct orange_rpc *self){
+	return self->num_workers > 0; 
+}

@@ -88,11 +88,10 @@ int main(int argc, char **argv){
 	struct orange *app = orange_new(plugin_dir, pw_file, acl_dir); 
 
 	struct orange_rpc rpc; 
-	orange_rpc_init(&rpc); 
+	orange_rpc_init(&rpc, server, app, 10000UL, 1); 
 
-	while(running){
-		// FIXME: do we ever need to exit the server? Add this.  
-		orange_rpc_process_requests(&rpc, server, app, 10000UL);  
+	while(orange_rpc_running(&rpc)){
+		usleep(1000); 
 	}
 	
 	DEBUG("cleaning up\n"); 

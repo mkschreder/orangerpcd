@@ -18,6 +18,7 @@ static struct orange_rpc rpc;
 
 void _cleanup(){
 	printf("cleaning up..\n"); 
+	orange_rpc_deinit(&rpc); 
 	orange_server_delete(server); 
 	orange_delete(&app); 
 }
@@ -35,7 +36,6 @@ int main(){
 	const char *listen_socket = "ws://127.0.0.1:61413"; 
 	server = orange_ws_server_new("test-www"); 
 	app = orange_new("test-plugins", "test-pwfile", "test-acls");
-	orange_rpc_init(&rpc); 
 
 	// add admin user
 	struct orange_user *admin = orange_user_new("admin"); 
@@ -49,18 +49,19 @@ int main(){
         return -1;                       
     }
 
+	orange_rpc_init(&rpc, server, app, 10000UL, 1); 
+
 	atexit(_cleanup); 
 
-	while(running){
-		int ret = orange_rpc_process_requests(&rpc, server, app, 5000000UL); 
+	while(orange_rpc_running(&rpc)){
+		usleep(10000); 
+		/*
 		if(ret == -ETIMEDOUT){
 			printf("Timed out while waiting for request!\n"); 
 			exit(1); 
 		} 
+		*/
 	}
 	
-	//orange_server_delete(server); 
-	//orange_delete(&app); 
-
 	return 0; 
 }
