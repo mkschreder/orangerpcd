@@ -333,15 +333,21 @@ static void _websocket_destroy(orange_server_t socket){
 static int _find_interface_from_ip(const char *ip, char *ifname, size_t out_size){
 	struct ifaddrs *addrs, *iap;
 	struct sockaddr_in *sa;
-	char buf[32];
 	getifaddrs(&addrs);
 	for (iap = addrs; iap != NULL; iap = iap->ifa_next) {
-		if (iap->ifa_addr && (iap->ifa_flags & IFF_UP) && iap->ifa_addr->sa_family == AF_INET) {
-			sa = (struct sockaddr_in *)(iap->ifa_addr);
-			inet_ntop(iap->ifa_addr->sa_family, (void *)&(sa->sin_addr), buf, sizeof(buf));
-			if (strcmp(ip, buf) == 0) {
+		int family = iap->ifa_addr->sa_family; 
+		if (iap->ifa_addr && (iap->ifa_flags & IFF_UP) && (family == AF_INET || family == AF_INET6)) {
+			char host[NI_MAXHOST+1]; 	
+			int s = getnameinfo(iap->ifa_addr,
+				   (family == AF_INET) ? sizeof(struct sockaddr_in) :
+										 sizeof(struct sockaddr_in6),
+				   host, NI_MAXHOST,
+				   NULL, 0, NI_NUMERICHOST);
+			if (s != 0) {
+			   printf("getnameinfo() failed: %s\n", gai_strerror(s));
+			} else if(strcmp(ip, host) == 0){
 				strncpy(ifname, iap->ifa_name, out_size); 
-				freeifaddrs(addrs);
+				freeifaddrs(addrs); 
 				return 0; 
 			}
 		}
@@ -396,18 +402,14 @@ static int _websocket_connect(orange_server_t socket, const char *path){
 
 static void *_websocket_server_thread(void *ptr){
 	struct orange_srv_ws *self = (struct orange_srv_ws*)ptr; 
-	while(1){
-		pthread_mutex_lock(&self->lock); 
-		if(self->shutdown) {
-			pthread_mutex_unlock(&self->lock); 
-			break; 
-		}
+	pthread_mutex_lock(&self->lock); 
+	while(!self->shutdown){
+		pthread_mutex_unlock(&self->lock); 
 		if(self->ctx) lws_service(self->ctx, 10);	
 		else usleep(1000); 
-		pthread_mutex_unlock(&self->lock); 
-		// FIXME: this is wrong design. Need to do more granular locking instead!
-		usleep(1); 
+		pthread_mutex_lock(&self->lock); 
 	}
+	pthread_mutex_unlock(&self->lock); 
 	pthread_exit(0); 
 	return 0; 
 }
