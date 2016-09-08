@@ -89,7 +89,7 @@ int main(int argc, char **argv){
 	struct orange *app = orange_new(plugin_dir, pw_file, acl_dir); 
 
 	struct orange_rpc rpc; 
-	orange_rpc_init(&rpc, server, app, 10000UL, 1); 
+	orange_rpc_init(&rpc, server, app, 10000UL, 10); 
 
 	// wait for abort
 	pthread_mutex_lock(&runlock); 
