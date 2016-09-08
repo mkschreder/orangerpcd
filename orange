@@ -70,7 +70,6 @@ RPC.prototype.connect = function(){
 		console.debug("Websocket RPC connected!"); 
 
 		self.socket.onmessage = function(e){ 
-			console.log("RESPONSE: "+e.data+"\n"); 
 			try {
 				var json = JSON.parse(e.data); 
 				var req = self.requests[json.id]; 
