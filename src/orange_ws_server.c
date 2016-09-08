@@ -219,7 +219,7 @@ static int _orange_socket_callback(struct lws *wsi, enum lws_callback_reasons re
 			}
 			pthread_mutex_unlock(&self->qlock); 
 			// FIXME: we need to only call this when we actually either have more data to write. But we do this every time for now just to make sure server works. 
-			lws_callback_on_writable(wsi); 	
+			//lws_callback_on_writable(wsi); 	
 			//lws_rx_flow_control(wsi, 1); 
 			break; 
 		}
@@ -313,6 +313,7 @@ static void _websocket_destroy(orange_server_t socket){
 	if(self->ctx) lws_context_destroy(self->ctx); 
 
 	pthread_mutex_destroy(&self->qlock); 
+	pthread_mutex_destroy(&self->lock); 
 	pthread_cond_destroy(&self->rx_ready); 
 
 	struct orange_id *id, *tmp; 
@@ -414,6 +415,17 @@ static void *_websocket_server_thread(void *ptr){
 	pthread_mutex_lock(&self->lock); 
 	while(!self->shutdown){
 		if(self->ctx){
+			struct orange_id *id; 
+			// go over all clients and fire writable callback if there is data pending
+			pthread_mutex_lock(&self->qlock); 
+			avl_for_each_element(&self->clients, id, avl){
+				struct orange_srv_ws_client *client = (struct orange_srv_ws_client*)container_of(id, struct orange_srv_ws_client, id);  
+				if(!list_empty(&client->tx_queue)){
+					lws_callback_on_writable(client->wsi); 
+				}
+			}
+			pthread_mutex_unlock(&self->qlock); 
+
 			pthread_mutex_unlock(&self->lock); 
 			lws_service(self->ctx, 10);	
 			pthread_mutex_lock(&self->lock); 
@@ -441,7 +453,9 @@ static int _websocket_send(orange_server_t socket, struct orange_message **msg){
 	struct orange_srv_ws_frame *frame = orange_srv_ws_frame_new(blob_field_first_child(blob_head(&(*msg)->buf))); 
 	list_add_tail(&frame->list, &client->tx_queue); 	
 	pthread_mutex_unlock(&self->qlock); 
+
 	orange_message_delete(msg); 
+
 	return 0; 
 }
 
@@ -501,7 +515,12 @@ static int _websocket_recv(orange_server_t socket, struct orange_message **msg, 
 		}
 	}
 
-	if(list_empty(&self->rx_queue)) printf("LIST IS EMPTY!!\n"); 
+	// NOTE: list will always have an element when we get here as long as rx_queue is always properly locked by qlock. 
+	if(list_empty(&self->rx_queue)){
+		TRACE("BUG: RX QUEUE IS EMPTY!\n"); 
+		exit(-1); 
+	}
+
 	// pop a message from the stack
 	struct orange_message *m = list_first_entry(&self->rx_queue, struct orange_message, list); 
 	list_del_init(&m->list); 
