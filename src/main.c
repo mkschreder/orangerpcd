@@ -15,11 +15,6 @@
 	GNU General Public License for more details.
 */
 
-#define _XOPEN_SOURCE
-#define _XOPEN_SOURCE_EXTENDED
-#define _BSD_SOURCE
-#define _POSIX_C_SOURCE 199309L
-
 #include <time.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -33,14 +28,19 @@
 #include "orange_ws_server.h"
 #include "orange_rpc.h"
 
-bool running = true; 
-
+pthread_mutex_t runlock; 
+pthread_cond_t runcond; 
 static void handle_sigint(int sig){
 	DEBUG("Interrupted!\n"); 
-	running = false; 
+	pthread_mutex_lock(&runlock); 
+	pthread_cond_signal(&runcond); 
+	pthread_mutex_unlock(&runlock); 
 }
 
 int main(int argc, char **argv){
+	pthread_mutex_init(&runlock, NULL); 
+	pthread_cond_init(&runcond, NULL); 
+
   	const char *www_root = "/www"; 
 	const char *listen_socket = "ws://127.0.0.1:5303"; 
 	const char *plugin_dir = "/usr/lib/orange/api/"; 
@@ -75,7 +75,7 @@ int main(int argc, char **argv){
 			default: break; 
 		}
 	}
-	
+
     orange_server_t server = orange_ws_server_new(www_root); 
 
     if(orange_server_listen(server, listen_socket) < 0){
@@ -84,20 +84,25 @@ int main(int argc, char **argv){
     }
 
 	signal(SIGINT, handle_sigint); 
+	signal(SIGUSR1, handle_sigint); 
 
 	struct orange *app = orange_new(plugin_dir, pw_file, acl_dir); 
 
 	struct orange_rpc rpc; 
 	orange_rpc_init(&rpc, server, app, 10000UL, 1); 
 
-	while(orange_rpc_running(&rpc)){
-		usleep(1000); 
-	}
-	
+	// wait for abort
+	pthread_mutex_lock(&runlock); 
+	pthread_cond_wait(&runcond, &runlock); 
+	pthread_mutex_unlock(&runlock); 
+
 	DEBUG("cleaning up\n"); 
 	orange_rpc_deinit(&rpc); 
 	orange_server_delete(server); 
 	orange_delete(&app); 
+
+	pthread_mutex_destroy(&runlock); 
+	pthread_cond_destroy(&runcond); 
 
 	return 0; 
 }

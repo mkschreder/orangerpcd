@@ -78,6 +78,14 @@ struct orange_srv_ws_frame {
 	int sent_count; 
 }; 
 
+static bool url_scanf(const char *url, char *proto, char *host, int *port, char *page){
+    if (sscanf(url, "%99[^:]://%99[^:]:%i/%199[^\n]", proto, host, port, page) == 4) return true; 
+    else if (sscanf(url, "%99[^:]://%99[^/]/%199[^\n]", proto, host, page) == 3) return true; 
+    else if (sscanf(url, "%99[^:]://%99[^:]:%i[^\n]", proto, host, port) == 3) return true; 
+    else if (sscanf(url, "%99[^:]://%99[^\n]", proto, host) == 2) return true; 
+    return false;                       
+}
+
 static struct orange_srv_ws_frame *orange_srv_ws_frame_new(struct blob_field *msg){
 	assert(msg); 
 	struct orange_srv_ws_frame *self = calloc(1, sizeof(struct orange_srv_ws_frame)); 
@@ -246,9 +254,9 @@ static int _orange_socket_callback(struct lws *wsi, enum lws_callback_reasons re
 				list_add_tail(&(*user)->msg->list, &self->rx_queue); 
 				(*user)->msg = orange_message_new(); 
 				blob_reset(&(*user)->msg->buf); 
+				(*user)->buffer_start = 0; 
 				pthread_cond_signal(&self->rx_ready); 
 				pthread_mutex_unlock(&self->qlock); 
-				(*user)->buffer_start = 0; 
 			} else {
 				// write to scratch buffer
 				char *ptr = (*user)->buffer + (*user)->buffer_start; 
@@ -335,9 +343,9 @@ static int _find_interface_from_ip(const char *ip, char *ifname, size_t out_size
 	struct sockaddr_in *sa;
 	getifaddrs(&addrs);
 	for (iap = addrs; iap != NULL; iap = iap->ifa_next) {
-		if(!iap->ifa_addr) continue; 
+		if(!iap->ifa_addr) continue; // some interfaces can have this set to null! 
 		int family = iap->ifa_addr->sa_family; 
-		if (iap->ifa_addr && (iap->ifa_flags & IFF_UP) && (family == AF_INET || family == AF_INET6)) {
+		if ((iap->ifa_flags & IFF_UP) && (family == AF_INET || family == AF_INET6)) {
 			char host[NI_MAXHOST+1]; 	
 			int s = getnameinfo(iap->ifa_addr,
 				   (family == AF_INET) ? sizeof(struct sockaddr_in) :
@@ -405,10 +413,15 @@ static void *_websocket_server_thread(void *ptr){
 	struct orange_srv_ws *self = (struct orange_srv_ws*)ptr; 
 	pthread_mutex_lock(&self->lock); 
 	while(!self->shutdown){
-		pthread_mutex_unlock(&self->lock); 
-		if(self->ctx) lws_service(self->ctx, 10);	
-		else usleep(1000); 
-		pthread_mutex_lock(&self->lock); 
+		if(self->ctx){
+			pthread_mutex_unlock(&self->lock); 
+			lws_service(self->ctx, 10);	
+			pthread_mutex_lock(&self->lock); 
+		} else {
+			pthread_mutex_unlock(&self->lock); 
+			usleep(1000); 
+			pthread_mutex_lock(&self->lock); 
+		}
 	}
 	pthread_mutex_unlock(&self->lock); 
 	pthread_exit(0); 
@@ -434,8 +447,12 @@ static int _websocket_send(orange_server_t socket, struct orange_message **msg){
 
 static void *_websocket_userdata(orange_server_t socket, void *ptr){
 	struct orange_srv_ws *self = container_of(socket, struct orange_srv_ws, api); 
-	if(!ptr) return self->user_data; 
 	pthread_mutex_lock(&self->lock); 
+	if(!ptr) {
+		void *ret = self->user_data; 
+		pthread_mutex_unlock(&self->lock); 
+		return ret; 
+	}
 	self->user_data = ptr; 
 	pthread_mutex_unlock(&self->lock); 
 	return ptr; 
@@ -461,14 +478,20 @@ static int _websocket_recv(orange_server_t socket, struct orange_message **msg, 
 	struct orange_srv_ws *self = container_of(socket, struct orange_srv_ws, api); 
 
 	*msg = NULL; 
-	if(self->shutdown) return -1; 
 
+	pthread_mutex_lock(&self->lock); 
+	if(self->shutdown) {
+		pthread_mutex_unlock(&self->lock); 
+		return -1; 
+	}
+	pthread_mutex_unlock(&self->lock); 
+
+	pthread_mutex_lock(&self->qlock); 
 	struct timespec t; 
 	_timeout_us(&t, timeout_us); 
 
 	// lock mutex to check for the queue
-	pthread_mutex_lock(&self->qlock); 
-	if(list_empty(&self->rx_queue)){
+	while(list_empty(&self->rx_queue)){
 		// unlock the mutex and wait for a new event. timeout if no event received for a timeout.  
 		// this will lock mutex after either timeout or if condition is signalled
 		if(pthread_cond_timedwait(&self->rx_ready, &self->qlock, &t) == ETIMEDOUT){
@@ -478,6 +501,7 @@ static int _websocket_recv(orange_server_t socket, struct orange_message **msg, 
 		}
 	}
 
+	if(list_empty(&self->rx_queue)) printf("LIST IS EMPTY!!\n"); 
 	// pop a message from the stack
 	struct orange_message *m = list_first_entry(&self->rx_queue, struct orange_message, list); 
 	list_del_init(&m->list); 

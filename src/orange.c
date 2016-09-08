@@ -27,6 +27,8 @@
 #include <pwd.h>
 #include <crypt.h>
 
+#include <pthread.h>
+
 #include <blobpack/blobpack.h>
 
 #if HAVE_UCI_H
@@ -44,8 +46,7 @@
 
 int orange_debug_level = 0; 
 
-int orange_load_passwords(struct orange *self, const char *pwfile); 
-static int orange_load_plugins(struct orange *self, const char *path, const char *base_path){
+static int _orange_load_plugins(struct orange *self, const char *path, const char *base_path){
     int rv = 0; 
     if(!base_path) base_path = path; 
     DIR *dir = opendir(path); 
@@ -61,7 +62,7 @@ static int orange_load_plugins(struct orange *self, const char *path, const char
         snprintf(fname, sizeof(fname), "%s/%s", path, ent->d_name); 
         
         if(ent->d_type == DT_DIR) {
-            rv |= orange_load_plugins(self, fname, base_path);  
+            rv |= _orange_load_plugins(self, fname, base_path);  
         } else  if(ent->d_type == DT_REG || ent->d_type == DT_LNK){
 			// TODO: is there a better way to get filename without extension? 
 			char *ext = strrchr(fname, '.');  
@@ -164,66 +165,6 @@ static bool _orange_load_users(struct orange *self){
 	return true; 
 }
 
-void orange_add_user(struct orange *self, struct orange_user **user){
-	avl_insert(&self->users, &(*user)->avl); 
-	*user = NULL; 
-}
-
-struct orange* orange_new(const char *plugin_path, const char *pwfile, const char *acl_path ){
-	struct orange *self = calloc(1, sizeof(struct orange)); 
-	assert(self); 
-	avl_init(&self->objects, avl_strcmp, false, NULL); 
-	avl_init(&self->sessions, avl_strcmp, false, NULL); 
-	avl_init(&self->users, avl_strcmp, false, NULL); 
-	
-	// TODO: load users from config file
-	_orange_load_users(self); 
-	/*
-	struct orange_user *admin = orange_user_new("admin"); 
-	orange_user_add_acl(admin, "orange*"); 
-	orange_user_add_acl(admin, "user-admin"); 
-	avl_insert(&self->users, &admin->avl); 
-
-	struct orange_user *support = orange_user_new("support"); 
-	orange_user_add_acl(support, "orange*"); 
-	orange_user_add_acl(support, "user-support"); 
-	avl_insert(&self->users, &support->avl); 
-*/	
-	self->plugin_path = strdup(plugin_path); 
-	self->pwfile = strdup(pwfile); 
-	self->acl_path = strdup(acl_path); 
-
-	if(orange_load_passwords(self, self->pwfile) != 0){
-		ERROR("could not load password file from %s\n", pwfile); 
-	}
-	orange_load_plugins(self, self->plugin_path, NULL); 
-
-	return self; 
-}
-
-void orange_delete(struct orange **_self){
-	struct orange *self = *_self; 
-	struct orange_luaobject *obj, *nobj;
-    struct orange_session *ses, *nses;
-    struct orange_user *user, *nuser;
-
-	avl_remove_all_elements(&self->objects, obj, avl, nobj)
-		orange_luaobject_delete(&obj); 
-
-    avl_remove_all_elements(&self->sessions, ses, avl, nses)
-		orange_session_delete(&ses); 
-
-    avl_remove_all_elements(&self->users, user, avl, nuser)
-		orange_user_delete(&user); 
-	
-	free(self->pwfile); 
-	free(self->plugin_path); 
-	free(self->acl_path); 
-
-	free(self); 
-	_self = NULL; 
-}
-
 static char *_load_file(const char *path){
 	int fd = open(path, O_RDONLY); 
 	if(fd == -1) return NULL; 
@@ -237,7 +178,7 @@ static char *_load_file(const char *path){
 	return text; 
 }
 
-int orange_load_passwords(struct orange *self, const char *pwfile){
+static int _orange_load_passwords(struct orange *self, const char *pwfile){
 	DEBUG("loading passwords from %s\n", pwfile); 
 	char *passwords = _load_file(pwfile); 
 	if(!passwords) return -EACCES; 
@@ -341,22 +282,90 @@ static int _load_session_acls(struct orange_session *ses, const char *dir, const
 	return 0; 
 }
 
+void orange_add_user(struct orange *self, struct orange_user **user){
+	pthread_mutex_lock(&self->lock); 
+	avl_insert(&self->users, &(*user)->avl); 
+	*user = NULL; 
+	pthread_mutex_unlock(&self->lock); 
+}
+
+struct orange* orange_new(const char *plugin_path, const char *pwfile, const char *acl_path ){
+	struct orange *self = calloc(1, sizeof(struct orange)); 
+	assert(self); 
+	avl_init(&self->objects, avl_strcmp, false, NULL); 
+	avl_init(&self->sessions, avl_strcmp, false, NULL); 
+	avl_init(&self->users, avl_strcmp, false, NULL); 
+	
+	_orange_load_users(self); 
+
+	self->plugin_path = strdup(plugin_path); 
+	self->pwfile = strdup(pwfile); 
+	self->acl_path = strdup(acl_path); 
+
+	pthread_mutex_init(&self->lock, NULL); 
+
+	if(_orange_load_passwords(self, self->pwfile) != 0){
+		ERROR("could not load password file from %s\n", pwfile); 
+	}
+
+	_orange_load_plugins(self, self->plugin_path, NULL); 
+
+	return self; 
+}
+
+void orange_delete(struct orange **_self){
+	struct orange *self = *_self; 
+	struct orange_luaobject *obj, *nobj;
+    struct orange_session *ses, *nses;
+    struct orange_user *user, *nuser;
+
+	avl_remove_all_elements(&self->objects, obj, avl, nobj)
+		orange_luaobject_delete(&obj); 
+
+    avl_remove_all_elements(&self->sessions, ses, avl, nses)
+		orange_session_delete(&ses); 
+
+    avl_remove_all_elements(&self->users, user, avl, nuser)
+		orange_user_delete(&user); 
+	
+	free(self->pwfile); 
+	free(self->plugin_path); 
+	free(self->acl_path); 
+
+	pthread_mutex_destroy(&self->lock); 
+
+	free(self); 
+	_self = NULL; 
+}
+
+bool orange_session_is_valid(struct orange *self, const char *sid){
+	pthread_mutex_lock(&self->lock); 
+	struct orange_session *ses = _find_session(self, sid); 
+	bool ret = !!ses; 
+	pthread_mutex_unlock(&self->lock); 
+	return ret; 
+}
+/*
 struct orange_session *orange_find_session(struct orange *self, const char *sid){ 
 	return _find_session(self, sid); 
 }
-
+*/
 int orange_login(struct orange *self, const char *username, const char *challenge, const char *response, struct orange_sid *sid){
 	// always reset the output value
 	memset(sid, 0, sizeof(struct orange_sid)); 
 
+	pthread_mutex_lock(&self->lock); 
+
 	struct avl_node *node = avl_find(&self->users, username); 
 	if(!node){
 		DEBUG("user %s not found!\n", username);
+		pthread_mutex_unlock(&self->lock); 
 		return -EINVAL; 
 	}
 	struct orange_user *user = container_of(node, struct orange_user, avl); 
+
 	// update user hashes (TODO: perhaps this should be loaded into secure memory somehow and discarded after login?)
-	orange_load_passwords(self, self->pwfile); 
+	_orange_load_passwords(self, self->pwfile); 
 
 	if(_try_auth(user->pwhash, challenge, response)){
 		struct orange_session *ses = orange_session_new(user); 	
@@ -373,17 +382,21 @@ int orange_login(struct orange *self, const char *username, const char *challeng
 		if(avl_insert(&self->sessions, &ses->avl) != 0){
 			DEBUG("could not insert session!\n");
 			orange_session_delete(&ses); 
+			pthread_mutex_unlock(&self->lock); 
 			return -EINVAL; 
 		}
 		memcpy(sid, &ses->sid, sizeof(struct orange_sid)); 
+		pthread_mutex_unlock(&self->lock); 
 		return 0; 
 	} else {
 		DEBUG("login failed for %s!\n", username); 
 	}
+	pthread_mutex_unlock(&self->lock); 
 	return -EACCES; 
 }
 
 int orange_login_plaintext(struct orange *self, const char *username, const char *password, struct orange_sid *sid){
+	// NOTE: no locking required. Done by orange_login()
 	unsigned char binhash[SHA1_BLOCK_SIZE+1] = {0}; 
 	SHA1_CTX ctx; 
 	sha1_init(&ctx); 
@@ -402,38 +415,78 @@ int orange_login_plaintext(struct orange *self, const char *username, const char
 }
 
 int orange_logout(struct orange *self, const char *sid){
+	pthread_mutex_lock(&self->lock); 
 	struct avl_node *node = avl_find(&self->sessions, sid); 
-	if(!node) return -EINVAL; 
+	if(!node) {
+		pthread_mutex_unlock(&self->lock); 
+		return -EINVAL; 
+	}
 	struct orange_session *ses = container_of(node, struct orange_session, avl); 
 	avl_delete(&self->sessions, node); 
 	orange_session_delete(&ses); 
+	pthread_mutex_unlock(&self->lock); 
 	return 0; 
 }
 
 int orange_call(struct orange *self, const char *sid, const char *object, const char *method, struct blob_field *args, struct blob *out){
+	pthread_mutex_lock(&self->lock); 
+
 	struct avl_node *avl = avl_find(&self->objects, object); 
 	if(!avl) {
 		ERROR("object not found: %s\n", object); 
+		pthread_mutex_unlock(&self->lock); 
 		return -ENOENT; 
 	}
-	struct orange_luaobject *obj = container_of(avl, struct orange_luaobject, avl); 
-	self->current_session = _find_session(self, sid); 
-	if(self->current_session) {
+	
+	struct orange_session *ses = _find_session(self, sid); 
+	if(ses) {
 		DEBUG("found session for request: %s\n", sid); 
 	} else {
 		DEBUG("could not find session for request!\n"); 
+		pthread_mutex_unlock(&self->lock); 
 		return -EACCES; 
 	}
-	if(	!orange_session_access(self->current_session, "rpc", object, method, "x") && 
-		!orange_session_access(self->current_session, "ubus", object, method, "x") // deprecated
+
+	if(	!orange_session_access(ses, "rpc", object, method, "x") && 
+		!orange_session_access(ses, "ubus", object, method, "x") // deprecated
 	){
-		ERROR("user %s does not have permission to execute rpc call: %s %s\n", self->current_session->user->username, object, method); 
+		ERROR("user %s does not have permission to execute rpc call: %s %s\n", ses->user->username, object, method); 
+		pthread_mutex_unlock(&self->lock); 
 		return -EACCES; 
 	}
-	return orange_luaobject_call(obj, self->current_session, method, args, out); 
+	
+	size_t fnsize = strlen(self->plugin_path) + strlen(object) + 6; 
+	char *fname = alloca(fnsize); 
+	snprintf(fname, fnsize, "%s/%s.lua", self->plugin_path, object); 
+
+	// From here onwards we do not use anything inside self!
+	// so we enable concurrency and run the actual backend script
+	pthread_mutex_unlock(&self->lock); 
+	
+	INFO("loading lua object %s from %s...\n", object, fname); 
+
+	struct orange_luaobject *obj = orange_luaobject_new(object); 
+	if(orange_luaobject_load(obj, fname) != 0){
+		ERROR("ERR: could not load plugin %s\n", fname); 
+		orange_luaobject_delete(&obj); 
+		return -ENOENT; 
+	}
+
+	// export server api to the lua object
+	orange_lua_publish_json_api(obj->lua); 
+	orange_lua_publish_file_api(obj->lua); 
+	orange_lua_publish_session_api(obj->lua); 
+	orange_lua_publish_core_api(obj->lua); 
+	
+	int ret = orange_luaobject_call(obj, ses, method, args, out); 
+
+	orange_luaobject_delete(&obj); 
+
+	return ret; 
 }
 
 int orange_list(struct orange *self, const char *sid, const char *path, struct blob *out){
+	pthread_mutex_lock(&self->lock); 
 	struct orange_luaobject *entry; 
 	blob_offset_t t = blob_open_table(out); 
 	avl_for_each_element(&self->objects, entry, avl){
@@ -441,6 +494,7 @@ int orange_list(struct orange *self, const char *sid, const char *path, struct b
 		blob_put_attr(out, blob_field_first_child(blob_head(&entry->signature))); 
 	}
 	blob_close_table(out, t); 
+	pthread_mutex_unlock(&self->lock); 
 	return 0; 
 }
 

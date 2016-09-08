@@ -29,6 +29,7 @@ struct orange_luaobject {
 	char *name; 
 	struct blob signature; 
 	lua_State *lua; 
+	pthread_mutex_t lock; 
 }; 
 
 struct orange_luaobject* orange_luaobject_new(const char *name); 

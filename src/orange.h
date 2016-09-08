@@ -20,9 +20,12 @@
 #include <blobpack/blobpack.h>
 #include <libutype/avl.h>
 #include <libutype/avl-cmp.h>
+#include <pthread.h>
 
 #include "orange_session.h"
 #include "json_check.h"
+
+struct orange_message; 
 
 struct orange {
 	struct avl_tree objects; 
@@ -33,7 +36,7 @@ struct orange {
 	char *pwfile; 
 	char *acl_path; 
 
-	struct orange_session *current_session; 
+	pthread_mutex_t lock; 
 }; 
 
 struct orange* orange_new(const char *plugin_path, const char *pwfile, const char *acl_dir); 
@@ -44,15 +47,10 @@ void orange_add_user(struct orange *self, struct orange_user **user);
 int orange_login_plaintext(struct orange *self, const char *username, const char *password, struct orange_sid *sid); 
 int orange_login(struct orange *self, const char *username, const char *challenge, const char *response, struct orange_sid *new_sid); 
 int orange_logout(struct orange *self, const char *sid); 
-struct orange_session* orange_find_session(struct orange *self, const char *sid); 
-int orange_call(struct orange *self, const char *sid, const char *object, const char *method, struct blob_field *args, struct blob *out); 
+bool orange_session_is_valid(struct orange *self, const char *sid); 
+//struct orange_session* orange_find_session(struct orange *self, const char *sid); 
 int orange_list(struct orange *self, const char *sid, const char *path, struct blob *out); 
-   
-static inline bool url_scanf(const char *url, char *proto, char *host, int *port, char *page){
-    if (sscanf(url, "%99[^:]://%99[^:]:%i/%199[^\n]", proto, host, port, page) == 4) return true; 
-    else if (sscanf(url, "%99[^:]://%99[^/]/%199[^\n]", proto, host, page) == 3) return true; 
-    else if (sscanf(url, "%99[^:]://%99[^:]:%i[^\n]", proto, host, port) == 3) return true; 
-    else if (sscanf(url, "%99[^:]://%99[^\n]", proto, host) == 2) return true; 
-    return false;                       
-}   
+
+int orange_call(struct orange *self, const char *sid, const char *object, const char *method, struct blob_field *args, struct blob *out); 
+  
 

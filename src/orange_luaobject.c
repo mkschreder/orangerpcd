@@ -16,6 +16,7 @@
 */
 
 #include <dirent.h>
+#include <pthread.h>
 
 #include "internal.h"
 #include "orange_luaobject.h"
@@ -57,6 +58,8 @@ struct orange_luaobject* orange_luaobject_new(const char *name){
 	lua_setfield(self->lua, -2, "path"); 
 	lua_pop(self->lua, 1); 
 
+	pthread_mutex_init(&self->lock, NULL); 
+
 	return self; 
 }
 
@@ -64,17 +67,21 @@ void orange_luaobject_delete(struct orange_luaobject **self){
 	lua_close((*self)->lua); 
 	blob_free(&(*self)->signature); 
 	free((*self)->name); 
+	pthread_mutex_destroy(&(*self)->lock); 
 	free(*self); 
 	*self = NULL; 
 }
 
 int orange_luaobject_load(struct orange_luaobject *self, const char *file){
+	pthread_mutex_lock(&self->lock); 
 	if(luaL_loadfile(self->lua, file) != 0){
 		ERROR("could not load plugin: %s\n", lua_tostring(self->lua, -1)); 
+		pthread_mutex_unlock(&self->lock); 
 		return -1; 
 	}
 	if(lua_pcall(self->lua, 0, 1, 0) != 0){
 		ERROR("could not run plugin: %s\n", lua_tostring(self->lua, -1)); 
+		pthread_mutex_unlock(&self->lock); 
 		return -1; 
 	}
 	// this just dumps the returned object
@@ -89,17 +96,21 @@ int orange_luaobject_load(struct orange_luaobject *self, const char *file){
 		blob_close_array(&self->signature, m); 
 	}
 	blob_close_table(&self->signature, root); 
+
+	pthread_mutex_unlock(&self->lock); 
 	return 0; 
 }
 
 int orange_luaobject_call(struct orange_luaobject *self, struct orange_session *session, const char *method, struct blob_field *in, struct blob *out){
 	if(!self) return -1; 
 
-	// set self pointer of the global session object to point to current session
+	pthread_mutex_lock(&self->lock); 
+	// set self pointer of the global lua session object to point to current session
 	orange_lua_set_session(self->lua, session); 
 
 	if(lua_type(self->lua, -1) != LUA_TTABLE) {
 		ERROR("lua state is broken. No table on stack!\n"); 
+		pthread_mutex_unlock(&self->lock); 
 		return -1; 
 	}
 
@@ -109,6 +120,7 @@ int orange_luaobject_call(struct orange_luaobject *self, struct orange_session *
 		// add an empty object
 		blob_offset_t t = blob_open_table(out); 
 		blob_close_table(out, t); 
+		pthread_mutex_unlock(&self->lock); 
 		return -1; 
 	}
 
@@ -117,6 +129,7 @@ int orange_luaobject_call(struct orange_luaobject *self, struct orange_session *
 
 	if(lua_pcall(self->lua, 1, 1, 0) != 0){
 		ERROR("error calling %s: %s\n", method, lua_tostring(self->lua, -1)); 
+		pthread_mutex_unlock(&self->lock); 
 		return -1; 
 	}
 
@@ -134,6 +147,8 @@ int orange_luaobject_call(struct orange_luaobject *self, struct orange_session *
 	}
 
 	lua_pop(self->lua, 1); 	
+	
+	pthread_mutex_unlock(&self->lock); 
 	return 0; 
 }
 

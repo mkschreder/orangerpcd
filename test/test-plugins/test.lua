@@ -24,7 +24,8 @@ local function test_error_code(args)
 end
 
 local function test_exit(args)
-	os.exit(args.code or 0); 
+	CORE.__interrupt(args.code or 0); 
+	--os.exit(args.code or 0); 
 end
 
 return {

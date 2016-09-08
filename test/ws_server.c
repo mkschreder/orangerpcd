@@ -5,26 +5,30 @@
 #include <blobpack/blobpack.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <signal.h>
 
 #include "../src/orange.h"
 #include "../src/orange_ws_server.h"
 #include "../src/orange_rpc.h"
 #include "../src/internal.h"
 
-static int running = 1; 
 static orange_server_t server = NULL; 
 static struct orange *app = NULL; 
 static struct orange_rpc rpc; 
 
-void _cleanup(){
-	printf("cleaning up..\n"); 
-	orange_rpc_deinit(&rpc); 
-	orange_server_delete(server); 
-	orange_delete(&app); 
+pthread_mutex_t runlock; 
+pthread_cond_t runcond; 
+void _cleanup(int sig){
+	pthread_mutex_lock(&runlock); 
+	pthread_cond_signal(&runcond); 
+	pthread_mutex_unlock(&runlock); 
 }
 
 int main(){
 	orange_debug_level+=4; 
+
+	pthread_mutex_init(&runlock, NULL); 
+	pthread_cond_init(&runcond, NULL); 
 
 	// fork off a test client
 	if(fork() == 0){
@@ -49,19 +53,23 @@ int main(){
         return -1;                       
     }
 
-	orange_rpc_init(&rpc, server, app, 10000UL, 1); 
+	orange_rpc_init(&rpc, server, app, 10000UL, 10); 
 
-	atexit(_cleanup); 
+	signal(SIGINT, _cleanup); 
+	signal(SIGUSR1, _cleanup); 
 
-	while(orange_rpc_running(&rpc)){
-		usleep(10000); 
-		/*
-		if(ret == -ETIMEDOUT){
-			printf("Timed out while waiting for request!\n"); 
-			exit(1); 
-		} 
-		*/
-	}
-	
+	// will wait until lock is unlocked
+	pthread_mutex_lock(&runlock); 
+	pthread_cond_wait(&runcond, &runlock); 
+	pthread_mutex_unlock(&runlock); 
+
+	printf("cleaning up..\n"); 
+	orange_rpc_deinit(&rpc); 
+	orange_server_delete(server); 
+	orange_delete(&app); 
+
+	pthread_mutex_destroy(&runlock); 
+	pthread_cond_destroy(&runcond); 
+
 	return 0; 
 }

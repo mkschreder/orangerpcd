@@ -18,6 +18,9 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <signal.h>
 
 #include <blobpack/blobpack.h>
 
@@ -302,6 +305,13 @@ static int l_core_b64e(lua_State *L){
 	return 1; 
 }
 
+//! used by lua scripts to send user signal to current process
+static int l_core_interrupt(lua_State *L){
+	int ret = luaL_checkint(L, 1); 
+	raise(SIGUSR1); 
+	return 0; 
+}
+
 void orange_lua_publish_session_api(lua_State *L){
 	lua_newtable(L); 
 	lua_pushstring(L, "access"); lua_pushcfunction(L, l_session_access); lua_settable(L, -3); 
@@ -313,6 +323,7 @@ void orange_lua_publish_core_api(lua_State *L){
 	lua_newtable(L); 
 	lua_pushstring(L, "forkshell"); lua_pushcfunction(L, l_core_fork_shell); lua_settable(L, -3); 
 	lua_pushstring(L, "b64_encode"); lua_pushcfunction(L, l_core_b64e); lua_settable(L, -3); 
+	lua_pushstring(L, "__interrupt"); lua_pushcfunction(L, l_core_interrupt); lua_settable(L, -3); 
 	lua_setglobal(L, "CORE"); 
 }
 

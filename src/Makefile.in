@@ -342,7 +342,7 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 lib_LTLIBRARIES = liborange.la
 include_HEADERS = orange.h orange_id.h orange_lua.h orange_luaobject.h orange_message.h orange_server.h orange_uci.h orange_user.h orange_ws_server.h sha1.h 
-AM_CFLAGS = -Wall -fPIC -Wno-format-y2k -W -Wstrict-prototypes -Wmissing-prototypes \
+AM_CFLAGS = -D_POSIX_C_SOURCE=201609L -D_BSD_SOURCE -D_XOPEN_SOURCE -D_XOPEN_SOUCE_EXTENDED -Wall -fPIC -Wno-format-y2k -W -Wstrict-prototypes -Wmissing-prototypes \
 -Wpointer-arith -Wreturn-type -Wwrite-strings -Wswitch \
 -Wcast-align -Wchar-subscripts -Winline -Wtype-limits \
 -Wnested-externs -Wredundant-decls -Wmissing-field-initializers -Wextra \

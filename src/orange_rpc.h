@@ -22,8 +22,8 @@
 struct orange; 
 
 struct orange_rpc{
-	struct blob buf; 
-	struct blob out; 
+	//struct blob buf; 
+	//struct blob out; 
 	orange_server_t server; 
 	struct orange *ctx; 
 	unsigned long long timeout_us; 
