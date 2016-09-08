@@ -473,19 +473,13 @@ static void *_websocket_userdata(orange_server_t socket, void *ptr){
 }
 
 static void _timeout_us(struct timespec *t, unsigned long long timeout_us){
-	unsigned long long sec = (timeout_us >= 1000000UL)?(timeout_us / 1000000UL):0; 
-	unsigned long long nsec = (timeout_us - sec * 1000000UL) * 1000UL; 
-
 	// figure out the exact timeout we should wait for the conditional 
 	clock_gettime(CLOCK_REALTIME, t); 
-	t->tv_nsec += nsec; 
+	unsigned long long nsec = t->tv_nsec + timeout_us * 1000UL; 
+	unsigned long long sec = nsec / 1000000000UL; 
+
+	t->tv_nsec = nsec - sec * 1000000000UL; 
 	t->tv_sec += sec; 
-	// nanoseconds can sometimes be more than 1sec but never more than 2.  
-	// TODO: is there no function somewhere for properly adding a timeout to timespec? 
-	if(t->tv_nsec >= 1000000000L){
-		t->tv_nsec -= 1000000000L; 
-		t->tv_sec++; 
-	}
 }
 
 static int _websocket_recv(orange_server_t socket, struct orange_message **msg, unsigned long long timeout_us){
