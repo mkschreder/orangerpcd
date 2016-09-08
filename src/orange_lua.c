@@ -120,7 +120,7 @@ int orange_lua_table_to_blob(lua_State *L, struct blob *b, bool table){
 			case LUA_TINT:
 		#endif
 			case LUA_TNUMBER:
-				blob_put_int(b, (uint32_t)lua_tointeger(L, -2));
+				blob_put_real(b, (uint32_t)lua_tonumber(L, -2));
 				break;
 			case LUA_TSTRING:
 			case LUA_TUSERDATA:
