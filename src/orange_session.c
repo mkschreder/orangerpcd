@@ -25,7 +25,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#define _GNU_SOURCE	/* crypt() */
+#include <pthread.h>
 
 #include <blobpack/blobpack.h>
 #include <libutype/avl-cmp.h>
@@ -99,6 +99,8 @@ struct orange_session *orange_session_new(struct orange_user *user){
 	avl_init(&self->data, avl_strcmp, false, NULL);
 
 	self->user = user; 
+	
+	pthread_mutex_init(&self->lock, NULL); 
 
 	return self; 
 }
@@ -120,6 +122,8 @@ void orange_session_delete(struct orange_session **_self){
 
     avl_remove_all_elements(&self->data, data, avl, ndata)
         free(data);
+
+	pthread_mutex_destroy(&self->lock); 
 
 	free(self); 
 	*_self = NULL; 
@@ -144,7 +148,7 @@ void orange_session_delete(struct orange_session **_self){
             !fnmatch((_acl)->function, (_func), FNM_NOESCAPE))
 
 
-int orange_session_grant(struct orange_session *ses, const char *scope, const char *object, const char *function, const char *perm){
+int orange_session_grant(struct orange_session *self, const char *scope, const char *object, const char *function, const char *perm){
     struct orange_session_acl *acl;
     struct orange_session_acl_scope *acl_scope;
     char *new_scope, *new_obj, *new_func, *new_id, *new_perms;
@@ -153,27 +157,22 @@ int orange_session_grant(struct orange_session *ses, const char *scope, const ch
     if (!object || !function)
         return -EINVAL;
 
-    acl_scope = avl_find_element(&ses->acl_scopes, scope, acl_scope, avl);
+	pthread_mutex_lock(&self->lock); 
 
-/*
-    if (acl_scope) {
-        uh_foreach_matching_acl_prefix(acl, &acl_scope->acls, object, function) {
-            if (!strcmp(acl->object, object) &&
-                !strcmp(acl->function, function))
-                return 0;
-        }
-    }
-*/
+    acl_scope = avl_find_element(&self->acl_scopes, scope, acl_scope, avl);
+
     if (!acl_scope) {
         acl_scope = calloc_a(sizeof(*acl_scope),
                              &new_scope, strlen(scope) + 1);
 		
-        if (!acl_scope)
+        if (!acl_scope){ 
+			pthread_mutex_unlock(&self->lock); 
             return -1;
+		}
 
         acl_scope->avl.key = strcpy(new_scope, scope);
         avl_init(&acl_scope->acls, avl_strcmp, true, NULL);
-        avl_insert(&ses->acl_scopes, &acl_scope->avl);
+        avl_insert(&self->acl_scopes, &acl_scope->avl);
     }
 
     id_len = strcspn(object, "*?[");
@@ -183,8 +182,10 @@ int orange_session_grant(struct orange_session *ses, const char *scope, const ch
         &new_id, id_len + 1, 
 		&new_perms, strlen(perm) + 1);
 
-    if (!acl)
+    if (!acl){
+		pthread_mutex_unlock(&self->lock); 
         return -1;
+	}
 
     acl->object = strcpy(new_obj, object);
     acl->function = strcpy(new_func, function);
@@ -192,69 +193,19 @@ int orange_session_grant(struct orange_session *ses, const char *scope, const ch
     acl->avl.key = strncpy(new_id, object, id_len);
     avl_insert(&acl_scope->acls, &acl->avl);
 
+	pthread_mutex_unlock(&self->lock); 
     return 0;
 }
-/*
-int orange_session_revoke(struct orange_session *ses,
-                   const char *scope, const char *object, const char *function, const char *perm){
-    struct orange_session_acl *acl, *next;
-    struct orange_session_acl_scope *acl_scope;
-    int id_len;
-    char *id;
-
-    acl_scope = avl_find_element(&ses->acl_scopes, scope, acl_scope, avl);
-
-    if (!acl_scope)
-        return 0;
-
-    if (!object && !function) {
-        avl_remove_all_elements(&acl_scope->acls, acl, avl, next)
-            free(acl);
-        avl_delete(&ses->acl_scopes, &acl_scope->avl);
-        free(acl_scope);
-        return 0;
-    }
-
-    id_len = strcspn(object, "*?[");
-    id = alloca(id_len + 1);
-	assert(id); 
-    strncpy(id, object, id_len);
-    id[id_len] = 0;
-
-    acl = avl_find_element(&acl_scope->acls, id, acl, avl);
-    while (acl) {
-        if (!avl_is_last(&acl_scope->acls, &acl->avl))
-            next = avl_next_element(acl, avl);
-        else
-            next = NULL;
-
-        if (strcmp(id, acl->avl.key) != 0)
-            break;
-
-        if (!strcmp(acl->object, object) &&
-            !strcmp(acl->function, function)) {
-            avl_delete(&acl_scope->acls, &acl->avl);
-            free(acl);
-        }
-        acl = next;
-    }
-
-    if (avl_is_empty(&acl_scope->acls)) {
-        avl_delete(&ses->acl_scopes, &acl_scope->avl);
-        free(acl_scope);
-    }
-
-    return 0;
-}
-*/
 
 //! New revoke marks permissions as '-' without actually deleting any nodes. 
-int orange_session_revoke(struct orange_session *ses,
+int orange_session_revoke(struct orange_session *self,
                const char *scope, const char *object, const char *function, const char *perm){
 	struct orange_session_acl *acl;
 	struct orange_session_acl_scope *acl_scope;
 
-	acl_scope = avl_find_element(&ses->acl_scopes, scope, acl_scope, avl);
+	pthread_mutex_lock(&self->lock); 
+
+	acl_scope = avl_find_element(&self->acl_scopes, scope, acl_scope, avl);
 	if (acl_scope) {
 		size_t len = strlen(perm); 
 
@@ -268,17 +219,21 @@ int orange_session_revoke(struct orange_session *ses,
 				
 			}
 		}
+		pthread_mutex_unlock(&self->lock); 
 		return 0; 
 	}
-
+	
+	pthread_mutex_unlock(&self->lock); 
 	return -ENOENT;
 }
 
-bool orange_session_access(struct orange_session *ses, const char *scope, const char *obj, const char *fun, const char *perm){
+bool orange_session_access(struct orange_session *self, const char *scope, const char *obj, const char *fun, const char *perm){
 	struct orange_session_acl *acl;
 	struct orange_session_acl_scope *acl_scope;
 
-	acl_scope = avl_find_element(&ses->acl_scopes, scope, acl_scope, avl);
+	pthread_mutex_lock(&self->lock); 
+
+	acl_scope = avl_find_element(&self->acl_scopes, scope, acl_scope, avl);
 
 	if (acl_scope) {
 		size_t len = strlen(perm); 
@@ -299,18 +254,25 @@ bool orange_session_access(struct orange_session *ses, const char *scope, const 
 			}
 		}
 		for(size_t i = 0; i < len; i++){
-			if(!found[i]) return false; 
+			if(!found[i]) {
+				pthread_mutex_unlock(&self->lock); 
+				return false; 
+			}
 		}
+		pthread_mutex_unlock(&self->lock); 
 		return true; 
 	}
-
+	
+	pthread_mutex_unlock(&self->lock); 
 	return false;
 }
 
 void orange_session_to_blob(struct orange_session *self, struct blob *buf){
 	struct orange_session_acl *acl;
     struct orange_session_acl_scope *acl_scope;
-	
+
+	pthread_mutex_lock(&self->lock); 
+
 	blob_reset(buf); 
 	blob_offset_t r = blob_open_table(buf); 
     avl_for_each_element(&self->acl_scopes, acl_scope, avl) {
@@ -330,5 +292,7 @@ void orange_session_to_blob(struct orange_session *self, struct blob *buf){
 		blob_close_table(buf, s); 
     }
 	blob_close_table(buf, r); 
+
+	pthread_mutex_unlock(&self->lock); 
 }
 

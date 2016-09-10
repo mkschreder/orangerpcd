@@ -95,10 +95,7 @@ static int _orange_load_plugins(struct orange *self, const char *path, const cha
 			// add to directory
 			avl_insert(&self->objects, &obj->avl); 
 
-			orange_lua_publish_json_api(obj->lua); 
-			orange_lua_publish_file_api(obj->lua); 
-			orange_lua_publish_session_api(obj->lua); 
-			orange_lua_publish_core_api(obj->lua); 
+			orange_luaobject_free_state(obj); 
 		}
     }
     closedir(dir); 

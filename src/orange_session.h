@@ -13,7 +13,8 @@ struct orange_session {
 	struct orange_sid sid; 
 	struct avl_tree data; 
 	struct avl_tree acl_scopes; 
-	
+
+	pthread_mutex_t lock; 
 	struct orange_user *user; 
 }; 
 

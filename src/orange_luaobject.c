@@ -63,8 +63,14 @@ struct orange_luaobject* orange_luaobject_new(const char *name){
 	return self; 
 }
 
+void orange_luaobject_free_state(struct orange_luaobject *self){
+	if(!self->lua) return; 
+	lua_close(self->lua); 
+	self->lua = 0; 
+}
+
 void orange_luaobject_delete(struct orange_luaobject **self){
-	lua_close((*self)->lua); 
+	orange_luaobject_free_state(*self); 
 	blob_free(&(*self)->signature); 
 	free((*self)->name); 
 	pthread_mutex_destroy(&(*self)->lock); 
@@ -73,6 +79,8 @@ void orange_luaobject_delete(struct orange_luaobject **self){
 }
 
 int orange_luaobject_load(struct orange_luaobject *self, const char *file){
+	if(!self->lua) self->lua = luaL_newstate();  
+
 	pthread_mutex_lock(&self->lock); 
 	if(luaL_loadfile(self->lua, file) != 0){
 		ERROR("could not load plugin: %s\n", lua_tostring(self->lua, -1)); 
@@ -102,7 +110,7 @@ int orange_luaobject_load(struct orange_luaobject *self, const char *file){
 }
 
 int orange_luaobject_call(struct orange_luaobject *self, struct orange_session *session, const char *method, struct blob_field *in, struct blob *out){
-	if(!self) return -1; 
+	if(!self || !self->lua) return -1; 
 
 	pthread_mutex_lock(&self->lock); 
 	// set self pointer of the global lua session object to point to current session

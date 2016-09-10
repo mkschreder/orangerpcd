@@ -36,3 +36,6 @@ struct orange_luaobject* orange_luaobject_new(const char *name);
 void orange_luaobject_delete(struct orange_luaobject **self); 
 int orange_luaobject_load(struct orange_luaobject *self, const char *file); 
 int orange_luaobject_call(struct orange_luaobject *self, struct orange_session *ses, const char *method, struct blob_field *in, struct blob *out); 
+
+// frees the lua state but leaves signature etc. 
+void orange_luaobject_free_state(struct orange_luaobject *self); 
