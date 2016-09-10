@@ -362,7 +362,7 @@ static void _orange_lua_stop_deferred_queue(void){
 
 static int l_core_deferred_shell(lua_State *L){
 	const char *cmd = luaL_checkstring(L, 1); 
-	const uint32_t timeout = luaL_checkinteger(L, 2); 
+	const uint32_t timeout = luaL_checkinteger(L, 2) * 1000;  // argument is in ms
 
 	if(!cmd) {
 		lua_pushboolean(L, false); 

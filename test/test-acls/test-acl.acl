@@ -4,3 +4,4 @@ rpc /test test_c_calls x
 rpc /test exit x
 rpc /subdir/submod echo x
 rpc /test error_code x
+rpc /test deferred_shell x

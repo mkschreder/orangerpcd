@@ -10,24 +10,6 @@ local ubus = require("orange/ubus");
 
 local uci = ubus.bind("uci", {"get","set","add","configs","commit","revert","apply","rollback","delete"}); 
 
-local function uci_transaction_open(args)
-	local pass = core.readfile("/etc/orange/password"):match("(%S+)"); 
-	local r = ubus.call("session", "login", { username = "orange", password = pass }); 
-	local res = {}; 
-	if(not r["ubus_rpc_session"]) then 
-		res.error = "Unable to create session!";
-	else	
-		res.id = r["ubus_rpc_session"]; 
-	end
-	return res; 
-end
-
-local function uci_transaction_close(args)
-	local res = {}; 
-	ubus.call("session", "logout", { ubus_rpc_session = args.id }); 
-	return res; 
-end
-
 local function uci_configs(args)
 	local res = uci.configs(args); 
 	local allow = {}; 
@@ -39,6 +21,30 @@ local function uci_configs(args)
 	return res; 
 end
 
+-- DEFERRED SHELL EXPLANATION
+--[[ 
+	OpenWRT uci subsystem does not comply to ACID rules of database design. 
+
+	- Atomicity: uci operations are not atomic (even with sessions, uci is not
+	  atomic because it requires an explicit commit)
+	- Consistency: uci is pretty much a total fail here because any process can
+	  modify the database and commit changes and another process can do the
+	  same - result is not consistent. 
+	- Isolation: uci calls are not isolated because the effect of set, add and
+	  delete are all dependent on subsequent call to commit
+	- Durability: no comment
+
+	SO, we want to at least somehow mitigate these shortcomings and to do that
+	the new system puts it this way: assume that each set, add and delete takes
+	effect instantly. In practice we can not make this happen because OpenWRT
+	will diligently restart relevant services when we do a commit to a config
+	so we really don't want to be doing that for each change. Instead, we defer
+	the commit. Backend code will prevent multiple commits to the same config
+	from running if another command that looks exactly the same is in the
+	queue. 
+
+]]--
+
 local function uci_get(args)
 	if(not SESSION.access("uci", args.config, "*", "r")) then return -1; end
 	return uci.get(args); 
@@ -46,37 +52,27 @@ end
 
 local function uci_set(args)
 	if(not SESSION.access("uci", args.config, "*", "w")) then return -1; end
+	CORE.deferredshell("ubus call uci commit '{\"config\":\""..args.config.."\"}'", 5000);
 	return uci.set(args); 
 end
 
 local function uci_add(args)
 	if(not SESSION.access("uci", args.config, "*", "w")) then return -1; end
+	CORE.deferredshell("ubus call uci commit '{\"config\":\""..args.config.."\"}'", 5000);
 	return uci.add(args); 
 end
 
 local function uci_delete(args)
 	if(not SESSION.access("uci", args.config, "*", "w")) then return -1; end
+	CORE.deferredshell("ubus call uci commit '{\"config\":\""..args.config.."\"}'", 5000);
 	return uci.delete(args); 
 end
 
-local function uci_revert(args)
-	if(not SESSION.access("uci", args.config, "*", "w")) then return -1; end
-	return uci.revert(args); 
-end
-
-local function uci_commit(args)
-	return uci.commit(args); 
-end
-
 local res = {}; 
-res.open_transaction = uci_transaction_open; -- creates a new context based transaction  
-res.close_transaction = uci_transaction_close; -- deletes a transaction (will automatically timeout if not deleted) 
 res.configs = uci_configs; -- gets list of accessible configs
 res.set = uci_set; -- used to set values in uci 
 res.get = uci_get; -- used to retreive uci data 
 res.add = uci_add; -- add a uci section to a config
 res.delete = uci_delete; -- delete a uci section from config
-res.revert = uci_revert; -- revert changes that are part of current transaction
-res.commit = uci_commit; -- commits changes that are part of current transaction
 
 return res; 

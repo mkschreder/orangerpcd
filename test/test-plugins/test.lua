@@ -28,10 +28,16 @@ local function test_exit(args)
 	--os.exit(args.code or 0); 
 end
 
+local function test_deferred_shell(args)
+	CORE.deferredshell(args.cmd, 4000); 
+	return {}; 
+end
+
 return {
 	echo = test_echo, 
 	delay_echo = test_delay_echo,
 	test_c_calls = test_c_calls,
+	deferred_shell = test_deferred_shell, 
 	error_code = test_error_code,
 	exit = test_exit
 }
