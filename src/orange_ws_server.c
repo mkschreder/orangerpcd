@@ -40,6 +40,7 @@
 #include "orange_id.h"
 #include "internal.h"
 #include "json_check.h"
+#include "util.h"
 
 struct lws_context; 
 struct orange_srv_ws {
@@ -472,16 +473,6 @@ static void *_websocket_userdata(orange_server_t socket, void *ptr){
 	return ptr; 
 }
 
-static void _timeout_us(struct timespec *t, unsigned long long timeout_us){
-	// figure out the exact timeout we should wait for the conditional 
-	clock_gettime(CLOCK_REALTIME, t); 
-	unsigned long long nsec = t->tv_nsec + timeout_us * 1000UL; 
-	unsigned long long sec = nsec / 1000000000UL; 
-
-	t->tv_nsec = nsec - sec * 1000000000UL; 
-	t->tv_sec += sec; 
-}
-
 static int _websocket_recv(orange_server_t socket, struct orange_message **msg, unsigned long long timeout_us){
 	struct orange_srv_ws *self = container_of(socket, struct orange_srv_ws, api); 
 
@@ -496,7 +487,7 @@ static int _websocket_recv(orange_server_t socket, struct orange_message **msg, 
 
 	pthread_mutex_lock(&self->qlock); 
 	struct timespec t; 
-	_timeout_us(&t, timeout_us); 
+	timespec_from_now_us(&t, timeout_us); 
 
 	// lock mutex to check for the queue
 	while(list_empty(&self->rx_queue)){

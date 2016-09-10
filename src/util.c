@@ -1,8 +1,33 @@
+/*
+	JUCI Backend Server
+
+	Copyright (C) 2016 Martin K. Schröder <mkschreder.uk@gmail.com>
+
+	Based on code by: 
+	Copyright (C) 2013 Felix Fietkau <nbd@openwrt.org>
+	Copyright (C) 2013-2014 Jo-Philipp Wich <jow@openwrt.org>
+
+	This program is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <memory.h>
 #include <stdint.h>
+#include <time.h>
+#include "util.h"
 
 char* shell_command(const char *cmd, int *exit_code){
 	FILE *pipe = 0;
@@ -52,3 +77,23 @@ char* shell_command(const char *cmd, int *exit_code){
 	}
 }
 
+void timespec_now(struct timespec *t){
+	clock_gettime(CLOCK_REALTIME, t); 
+}
+
+void timespec_from_now_us(struct timespec *t, unsigned long long timeout_us){
+	timespec_now(t); 
+	// figure out the exact timeout we should wait for the conditional 
+	unsigned long long nsec = t->tv_nsec + timeout_us * 1000UL; 
+	unsigned long long sec = nsec / 1000000000UL; 
+
+	t->tv_nsec = nsec - sec * 1000000000UL; 
+	t->tv_sec += sec; 
+}
+
+int timespec_before(struct timespec *a, struct timespec *before_b){
+	if (a->tv_sec == before_b->tv_sec)
+		return a->tv_nsec < before_b->tv_nsec;
+	return a->tv_sec < before_b->tv_sec;
+}	
+	

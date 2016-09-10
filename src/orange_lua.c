@@ -288,6 +288,123 @@ static int l_core_fork_shell(lua_State *L){
 	return 1; 
 }
 
+// ++ DEFERRED SHELL IMPLEMENTATION
+#include <pthread.h>
+#include <libutype/avl.h>
+#include <libutype/avl-cmp.h>
+#include "util.h"
+static struct avl_tree _deferred_commands; 
+static pthread_mutex_t _deferred_lock = PTHREAD_MUTEX_INITIALIZER; 
+static pthread_cond_t _deferred_cond = PTHREAD_COND_INITIALIZER; 
+static pthread_t _deferred_thread; 
+static bool _deferred_running = false; 
+
+struct deferred_command {
+	struct avl_node avl; 
+	struct timespec ts_run; 
+	char *command; 
+}; 
+
+static void *_deferred_worker(void *ptr){
+	pthread_mutex_lock(&_deferred_lock); 
+	while(1){
+		struct deferred_command *cmd, *tmp; 
+		struct timespec ts_max_to; 
+		// set maximum timeout to 1 sec and then find if we have any entries expiring before that
+		timespec_from_now_us(&ts_max_to, 1000000UL); 
+		avl_for_each_element_safe(&_deferred_commands, cmd, avl, tmp){
+			if(timespec_before(&cmd->ts_run, &ts_max_to)){
+				memcpy(&ts_max_to, &cmd->ts_run, sizeof(struct timespec)); 
+			}
+		}
+
+		while(1){
+			// unlock mutex and wait for new messages until it's time to do some processing
+			pthread_cond_timedwait(&_deferred_cond, &_deferred_lock, &ts_max_to); 
+			if(!_deferred_running || avl_size(&_deferred_commands)) break; 
+		}
+
+		avl_for_each_element_safe(&_deferred_commands, cmd, avl, tmp){
+			struct timespec ts_now; 
+			timespec_now(&ts_now); 
+			if(timespec_before(&cmd->ts_run, &ts_now)){
+				int __attribute__((unused)) ret = system(cmd->command); 
+
+				// remove the command from the list
+				avl_delete(&_deferred_commands, &cmd->avl); 
+				free(cmd->command); 
+				free(cmd); 
+			}
+		}
+		if(!_deferred_running && !avl_size(&_deferred_commands)){
+			break; 
+		}
+	}
+	pthread_mutex_unlock(&_deferred_lock); 
+	return NULL; 
+}
+
+static void _orange_lua_start_deferred_queue(void){
+	avl_init(&_deferred_commands, avl_strcmp, false, NULL);
+	_deferred_running = true; 
+	pthread_create(&_deferred_thread, NULL, _deferred_worker, NULL); 
+}
+
+static void _orange_lua_stop_deferred_queue(void){
+	pthread_mutex_lock(&_deferred_lock); 
+	_deferred_running = false; 
+	pthread_mutex_unlock(&_deferred_lock); 
+
+	pthread_join(_deferred_thread, NULL); 
+
+	// deferred queue is always empty when we get here 
+}
+
+static int l_core_deferred_shell(lua_State *L){
+	const char *cmd = luaL_checkstring(L, 1); 
+	const uint32_t timeout = luaL_checkinteger(L, 2); 
+
+	if(!cmd) {
+		lua_pushboolean(L, false); 
+		return 1; 
+	}
+
+	pthread_mutex_lock(&_deferred_lock); 
+
+	// if the deferred queue is not running then we start it here
+	if(!_deferred_running){
+		_orange_lua_start_deferred_queue(); 
+		atexit(&_orange_lua_stop_deferred_queue); 
+	}
+
+	struct deferred_command *cm = NULL;  
+	if((cm = avl_find_element(&_deferred_commands, cmd, cm, avl))){
+		// update timeout and exit
+		TRACE("Found existing entry for deferred command [%s].. updating timeout to %d.\n", cmd, timeout); 
+		timespec_from_now_us(&cm->ts_run, timeout); 
+		pthread_cond_signal(&_deferred_cond); 
+		pthread_mutex_unlock(&_deferred_lock); 
+		lua_pushboolean(L, true); 
+		return 1; 
+	}
+
+	TRACE("Inserting new deferred command [%s] with timeout %d\n", cmd, timeout); 
+	cm = calloc(1, sizeof(struct deferred_command)); 
+	cm->command = calloc(1, strlen(cmd) + 1); 
+	timespec_from_now_us(&cm->ts_run, timeout); 
+	strcpy(cm->command, cmd); 
+	cm->avl.key = cm->command; 
+	
+	avl_insert(&_deferred_commands, &cm->avl); 
+	pthread_cond_signal(&_deferred_cond); 
+	pthread_mutex_unlock(&_deferred_lock); 
+
+	lua_pushboolean(L, true); 
+	return 1; 
+}
+
+// -- DEFERRED SHELL
+
 static int l_core_b64e(lua_State *L){
 	const char *cmd = luaL_checkstring(L, 1); 
 	if(!cmd) {
@@ -322,6 +439,7 @@ void orange_lua_publish_session_api(lua_State *L){
 void orange_lua_publish_core_api(lua_State *L){
 	lua_newtable(L); 
 	lua_pushstring(L, "forkshell"); lua_pushcfunction(L, l_core_fork_shell); lua_settable(L, -3); 
+	lua_pushstring(L, "deferredshell"); lua_pushcfunction(L, l_core_deferred_shell); lua_settable(L, -3); 
 	lua_pushstring(L, "b64_encode"); lua_pushcfunction(L, l_core_b64e); lua_settable(L, -3); 
 	lua_pushstring(L, "__interrupt"); lua_pushcfunction(L, l_core_interrupt); lua_settable(L, -3); 
 	lua_setglobal(L, "CORE"); 

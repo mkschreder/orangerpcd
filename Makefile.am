@@ -7,3 +7,6 @@ node_modules: node_modules.tar.gz
 	@if [ ! -d node_modules ]; then tar -xzf node_modules.tar.gz; fi
 
 all: node_modules
+
+check-valgrind: 
+	make -C test check-valgrind

@@ -132,7 +132,8 @@ am_liborange_la_OBJECTS = liborange_la-base64.lo \
 	liborange_la-orange_id.lo liborange_la-orange_lua.lo \
 	liborange_la-orange_ws_server.lo liborange_la-orange_user.lo \
 	liborange_la-orange_uci.lo liborange_la-sha1.lo \
-	liborange_la-orange.lo liborange_la-orange_rpc.lo
+	liborange_la-orange.lo liborange_la-orange_rpc.lo \
+	liborange_la-util.lo
 liborange_la_OBJECTS = $(am_liborange_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -344,12 +345,12 @@ lib_LTLIBRARIES = liborange.la
 include_HEADERS = orange.h orange_id.h orange_lua.h orange_luaobject.h orange_message.h orange_server.h orange_uci.h orange_user.h orange_ws_server.h sha1.h 
 AM_CFLAGS = -D_POSIX_C_SOURCE=201609L -D_BSD_SOURCE -D_XOPEN_SOURCE -D_XOPEN_SOUCE_EXTENDED -Wall -fPIC -Wno-format-y2k -W -Wstrict-prototypes -Wmissing-prototypes \
 -Wpointer-arith -Wreturn-type -Wwrite-strings -Wswitch \
--Wcast-align -Wchar-subscripts -Winline -Wtype-limits \
+-Wno-cast-align -Wchar-subscripts -Winline -Wtype-limits \
 -Wnested-externs -Wredundant-decls -Wmissing-field-initializers -Wextra \
 -Wformat=2 -Wno-format-nonliteral -Wpointer-arith -Wno-missing-braces \
 -Wno-unused-parameter -Wno-unused-variable -Wno-inline
 
-liborange_la_SOURCES = base64.c json_check.c orange_luaobject.c orange_session.c orange_message.c orange_id.c orange_lua.c orange_ws_server.c orange_user.c orange_uci.c sha1.c orange.c orange_rpc.c 
+liborange_la_SOURCES = base64.c json_check.c orange_luaobject.c orange_session.c orange_message.c orange_id.c orange_lua.c orange_ws_server.c orange_user.c orange_uci.c sha1.c orange.c orange_rpc.c util.c 
 liborange_la_CFLAGS = $(AM_CFLAGS) $(CODE_COVERAGE_CFLAGS) -std=gnu99 -Wall -Werror
 liborange_la_LIBADD = -lblobpack -lutype -lpthread -lwebsockets -lcrypt -lrt @LIBLUA_LINK@ @LIBUCI_LINK@
 orangerpcd_SOURCES = main.c
@@ -500,6 +501,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liborange_la-orange_user.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liborange_la-orange_ws_server.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liborange_la-sha1.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liborange_la-util.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/orangerpcd-main.Po@am__quote@
 
 .c.o:
@@ -613,6 +615,13 @@ liborange_la-orange_rpc.lo: orange_rpc.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='orange_rpc.c' object='liborange_la-orange_rpc.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(liborange_la_CFLAGS) $(CFLAGS) -c -o liborange_la-orange_rpc.lo `test -f 'orange_rpc.c' || echo '$(srcdir)/'`orange_rpc.c
+
+liborange_la-util.lo: util.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(liborange_la_CFLAGS) $(CFLAGS) -MT liborange_la-util.lo -MD -MP -MF $(DEPDIR)/liborange_la-util.Tpo -c -o liborange_la-util.lo `test -f 'util.c' || echo '$(srcdir)/'`util.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/liborange_la-util.Tpo $(DEPDIR)/liborange_la-util.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='util.c' object='liborange_la-util.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(liborange_la_CFLAGS) $(CFLAGS) -c -o liborange_la-util.lo `test -f 'util.c' || echo '$(srcdir)/'`util.c
 
 orangerpcd-main.o: main.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(orangerpcd_CFLAGS) $(CFLAGS) -MT orangerpcd-main.o -MD -MP -MF $(DEPDIR)/orangerpcd-main.Tpo -c -o orangerpcd-main.o `test -f 'main.c' || echo '$(srcdir)/'`main.c
