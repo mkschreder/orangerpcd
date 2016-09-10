@@ -409,7 +409,69 @@ static int l_core_deferred_shell(lua_State *L){
 }
 
 // -- DEFERRED SHELL
+// ++ NAMED LOCKS IMPLEMENTATION
+static struct avl_tree _locks; 
+static pthread_mutex_t _locks_lock = PTHREAD_MUTEX_INITIALIZER; 
 
+struct lock_node {
+	struct avl_node avl; 
+	char *name; 
+	pthread_mutex_t lock; 
+}; 
+
+static void __attribute__((constructor)) _locks_init(void){
+	avl_init(&_deferred_commands, avl_strcmp, false, NULL);
+}
+
+static int l_core_lock(lua_State *L){
+	const char *name = luaL_checkstring(L, 1); 
+	if(!name){
+		lua_pushboolean(L, false); 
+		return 1; 
+	}
+	pthread_mutex_lock(&_locks_lock); 
+	struct avl_node *avl = avl_find(&_locks, name); 
+	struct lock_node *node = NULL; 
+	if(!avl){
+		node = calloc(1, sizeof(struct lock_node)); 
+		node->name = calloc(1, strlen(name) + 1); 
+		node->avl.key = node->name; 
+		pthread_mutex_init(&node->lock, NULL); 
+		avl = &node->avl; 
+	} else {
+		node = container_of(avl, struct lock_node, avl); 
+	}
+	pthread_mutex_lock(&node->lock); 
+	lua_pushboolean(L, true); 
+	pthread_mutex_unlock(&_locks_lock); 
+	return 1; 
+}
+
+static int l_core_unlock(lua_State *L){
+	const char *name = luaL_checkstring(L, 1); 
+	if(!name){
+		lua_pushboolean(L, false); 
+		return 1; 
+	}
+	pthread_mutex_lock(&_locks_lock); 
+	struct avl_node *avl = avl_find(&_locks, name);  
+	if(!avl){
+		pthread_mutex_unlock(&_locks_lock); 
+		lua_pushboolean(L, false); 
+		return 1; 
+	}
+	struct lock_node *node = container_of(avl, struct lock_node, avl); 
+	pthread_mutex_unlock(&node->lock); 
+	avl_delete(&_locks, &node->avl); 
+	free(node->name); 
+	free(node); 
+	pthread_mutex_unlock(&_locks_lock); 
+
+	lua_pushboolean(L, true); 
+	return 1; 
+}
+
+// -- NAMED LOCKS
 static int l_core_b64e(lua_State *L){
 	const char *cmd = luaL_checkstring(L, 1); 
 	if(!cmd) {
@@ -445,6 +507,8 @@ void orange_lua_publish_core_api(lua_State *L){
 	lua_newtable(L); 
 	lua_pushstring(L, "forkshell"); lua_pushcfunction(L, l_core_fork_shell); lua_settable(L, -3); 
 	lua_pushstring(L, "deferredshell"); lua_pushcfunction(L, l_core_deferred_shell); lua_settable(L, -3); 
+	lua_pushstring(L, "lock"); lua_pushcfunction(L, l_core_lock); lua_settable(L, -3); 
+	lua_pushstring(L, "unlock"); lua_pushcfunction(L, l_core_unlock); lua_settable(L, -3); 
 	lua_pushstring(L, "b64_encode"); lua_pushcfunction(L, l_core_b64e); lua_settable(L, -3); 
 	lua_pushstring(L, "__interrupt"); lua_pushcfunction(L, l_core_interrupt); lua_settable(L, -3); 
 	lua_setglobal(L, "CORE"); 

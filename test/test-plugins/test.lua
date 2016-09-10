@@ -17,6 +17,13 @@ local function test_c_calls(args)
 	local s = SESSION.get(); 
 	if (s.username ~= "admin") then return -3; end
 	local b = CORE.b64_encode("Hello World!"); 
+
+	CORE.lock("foo"); 
+	CORE.unlock("bar"); 
+	CORE.lock("bar"); 
+	CORE.unlock("foo"); 
+	CORE.unlock("bar"); 
+
 	if (b ~= "SGVsbG8gV29ybGQh") then return -4; end
 	return {}; 
 end
