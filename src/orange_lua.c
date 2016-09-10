@@ -431,17 +431,16 @@ static int l_core_lock(lua_State *L){
 	}
 	pthread_mutex_lock(&_locks_lock); 
 	struct avl_node *avl = avl_find(&_locks, name); 
-	struct lock_node *node = NULL; 
-	if(!avl){
+	struct lock_node *node = avl_find_element(&_locks, name, node, avl); {
+	if(!node){
 		node = calloc(1, sizeof(struct lock_node)); 
 		node->name = calloc(1, strlen(name) + 1); 
+		strcpy(node->name, name); 
 		node->avl.key = node->name; 
 		pthread_mutex_init(&node->lock, NULL); 
 		avl_insert(&_locks, &node->avl); 
 		avl = &node->avl; 
-	} else {
-		node = container_of(avl, struct lock_node, avl); 
-	}
+	} 
 	TRACE("lock: locking named lock (%s)\n", node->name); 
 	pthread_mutex_lock(&node->lock); 
 	lua_pushboolean(L, true); 
