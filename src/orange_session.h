@@ -13,15 +13,17 @@ struct orange_session {
 	struct orange_sid sid; 
 	struct avl_tree data; 
 	struct avl_tree acl_scopes; 
+	struct timespec ts_expired; 
+	unsigned long long timeout_s; 
 
 	pthread_mutex_t lock; 
 	struct orange_user *user; 
 }; 
 
-struct orange_session *orange_session_new(struct orange_user *user); 
+struct orange_session *orange_session_new(struct orange_user *user, unsigned long long timeout_s); 
 void orange_session_delete(struct orange_session **self); 
 int orange_session_grant(struct orange_session *self, const char *scope, const char *object, const char *method, const char *perm); 
 int orange_session_revoke(struct orange_session *self, const char *scope, const char *object, const char *method, const char *perm); 
-bool orange_session_access(struct orange_session *ses, const char *scope, const char *obj, const char *fun, const char *perm); 
-
+bool orange_session_access(struct orange_session *self, const char *scope, const char *obj, const char *fun, const char *perm); 
+bool orange_session_expired(struct orange_session *self); 
 void orange_session_to_blob(struct orange_session *self, struct blob *buf); 

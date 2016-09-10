@@ -43,6 +43,7 @@
 #include "sha1.h"
 
 #define JUCI_ACL_DIR_PATH "/usr/lib/orange/acl/"
+#define ORANGE_SESSION_DEFAULT_TIMEOUT (60 * 5)
 
 int orange_debug_level = 0; 
 
@@ -217,6 +218,16 @@ static struct orange_session* _find_session(struct orange *self, const char *sid
 	return container_of(id, struct orange_session, avl); 
 }
 
+static void _prune_sessions(struct orange *self){
+	struct orange_session *ses, *tmp; 
+	avl_for_each_element_safe(&self->sessions, ses, avl, tmp){
+		if(orange_session_expired(ses)){
+			avl_delete(&self->sessions, &ses->avl); 
+			orange_session_delete(&ses); 
+		}
+	}
+}
+
 static bool _try_auth(const char *sha1hash, const char *challenge, const char *response){
 	if(!sha1hash) return false; 
 
@@ -353,6 +364,9 @@ int orange_login(struct orange *self, const char *username, const char *challeng
 
 	pthread_mutex_lock(&self->lock); 
 
+	// good time to prune old sessions? 
+	_prune_sessions(self); 
+
 	struct avl_node *node = avl_find(&self->users, username); 
 	if(!node){
 		DEBUG("user %s not found!\n", username);
@@ -365,7 +379,7 @@ int orange_login(struct orange *self, const char *username, const char *challeng
 	_orange_load_passwords(self, self->pwfile); 
 
 	if(_try_auth(user->pwhash, challenge, response)){
-		struct orange_session *ses = orange_session_new(user); 	
+		struct orange_session *ses = orange_session_new(user, ORANGE_SESSION_DEFAULT_TIMEOUT); 	
 		struct orange_user_acl *acl; 
 		orange_user_for_each_acl(user, acl){
 			DEBUG("loading session acl from user profile: %s\n", (const char*)acl->avl.key); 

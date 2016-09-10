@@ -44,6 +44,7 @@
 #endif
 
 #include "internal.h"
+#include "util.h"
 
 #include "orange_session.h"
 
@@ -87,7 +88,7 @@ static int _generate_sid(struct orange_sid *sid){
 	return 0;
 }
 
-struct orange_session *orange_session_new(struct orange_user *user){
+struct orange_session *orange_session_new(struct orange_user *user, unsigned long long timeout_s){
 	struct orange_session *self = calloc(1, sizeof(struct orange_session)); 
 	assert(self); 
 	
@@ -99,7 +100,8 @@ struct orange_session *orange_session_new(struct orange_user *user){
 	avl_init(&self->data, avl_strcmp, false, NULL);
 
 	self->user = user; 
-	
+	timespec_from_now_us(&self->ts_expired, timeout_s * 1000000UL); 
+	self->timeout_s = timeout_s; 	
 	pthread_mutex_init(&self->lock, NULL); 
 
 	return self; 
@@ -233,6 +235,9 @@ bool orange_session_access(struct orange_session *self, const char *scope, const
 
 	pthread_mutex_lock(&self->lock); 
 
+	// update the timeout
+	timespec_from_now_us(&self->ts_expired, self->timeout_s * 1000000UL); 
+
 	acl_scope = avl_find_element(&self->acl_scopes, scope, acl_scope, avl);
 
 	if (acl_scope) {
@@ -265,6 +270,18 @@ bool orange_session_access(struct orange_session *self, const char *scope, const
 	
 	pthread_mutex_unlock(&self->lock); 
 	return false;
+}
+
+bool orange_session_expired(struct orange_session *self){
+	struct timespec ts_now; 
+	timespec_now(&ts_now); 
+	pthread_mutex_lock(&self->lock); 
+	if(timespec_before(&self->ts_expired, &ts_now)){
+		pthread_mutex_unlock(&self->lock); 
+		return true; 
+	}
+	pthread_mutex_unlock(&self->lock); 
+	return false; 
 }
 
 void orange_session_to_blob(struct orange_session *self, struct blob *buf){
