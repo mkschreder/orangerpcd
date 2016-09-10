@@ -17,7 +17,6 @@
 
 #include <blobpack/blobpack.h>
 
-#define _GNU_SOURCE
 #include "orange_ws_server.h"
 
 #include "mimetypes.h"
