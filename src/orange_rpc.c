@@ -98,8 +98,6 @@ static int orange_rpc_process_requests(struct orange_rpc *self){
 	
 	if(!msg) return -EOF; 
 
-	printf("got message %p in thread %d\n", msg, (int)pthread_self()); 
-
 	if(orange_debug_level >= JUCI_DBG_DEBUG){
 		DEBUG("got message from %08x: ", msg->peer); 
 		blob_dump_json(&msg->buf);
@@ -237,6 +235,7 @@ static int orange_rpc_process_requests(struct orange_rpc *self){
 	}	
 
 	blob_close_table(&result->buf, t); 
+
 	if(orange_debug_level >= JUCI_DBG_TRACE){
 		DEBUG("sending back: "); 
 		blob_field_dump_json(blob_field_first_child(blob_head(&result->buf))); 

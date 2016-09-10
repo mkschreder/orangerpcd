@@ -27,6 +27,7 @@
 
 #include <blobpack/blobpack.h>
 #include <libutype/avl-cmp.h>
+#include <pthread.h>
 
 #include "orange_user.h"
 
@@ -46,6 +47,7 @@ struct orange_user *orange_user_new(const char *username){
 	self->username = strdup(username); 
 	self->avl.key = self->username; 
 	avl_init(&self->acls, avl_strcmp, false, NULL); 
+	pthread_mutex_init(&self->lock, NULL); 
 	return self; 
 }
 
@@ -58,20 +60,29 @@ void orange_user_delete(struct orange_user **_self){
 		free(acl); 
 
 	free(self->username); 
+	pthread_mutex_destroy(&self->lock); 
 	free(self); 
 	*_self = NULL; 
 }
 
 void orange_user_set_pw_hash(struct orange_user *self, const char *pwhash){
+	pthread_mutex_lock(&self->lock); 
+	if(self->pwhash && strcmp(self->pwhash, pwhash) == 0) {
+		pthread_mutex_unlock(&self->lock); 
+		return; 
+	}
 	if(self->pwhash) free(self->pwhash); 
 	self->pwhash = strdup(pwhash); 
+	pthread_mutex_unlock(&self->lock); 
 }
 
 void orange_user_add_acl(struct orange_user *self, const char *acl){
+	pthread_mutex_lock(&self->lock); 
 	char *name = NULL; 
 	struct orange_user_acl *node = calloc_a(sizeof(struct orange_user_acl), &name, strlen(acl)+1); 
 	node->avl.key = strcpy(name, acl); 
 	avl_insert(&self->acls, &node->avl); 
+	pthread_mutex_unlock(&self->lock); 
 }
 
 

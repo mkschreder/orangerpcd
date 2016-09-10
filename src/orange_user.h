@@ -35,6 +35,7 @@ struct orange_user {
 	char *username; 
 	char *pwhash; 
 	struct avl_tree acls; 
+	pthread_mutex_t lock; 
 }; 
 
 struct orange_user *orange_user_new(const char *username); 
