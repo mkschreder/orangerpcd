@@ -69,10 +69,15 @@ local function uci_delete(args)
 end
 
 local res = {}; 
-res.configs = uci_configs; -- gets list of accessible configs
-res.set = uci_set; -- used to set values in uci 
-res.get = uci_get; -- used to retreive uci data 
-res.add = uci_add; -- add a uci section to a config
-res.delete = uci_delete; -- delete a uci section from config
+
+-- NOTE: we do not change names of methods yet and just keep them as they are,
+-- but in reality we want to actually have the select, update, and delete
+-- semantics for this kind of interface. 
+
+res.configs = uci_configs; -- describe, gets list of accessible configs
+res.set = uci_set; -- update, used to set values in uci 
+res.get = uci_get; -- select, used to retreive uci data 
+res.add = uci_add; -- create, add a uci section to a config
+res.delete = uci_delete; -- delete, remove a uci section from config
 
 return res; 
