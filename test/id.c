@@ -7,7 +7,7 @@
 #include "../src/orange.h"
 #include "../src/orange_id.h"
 
-int main(){
+int main(void){
 	struct avl_tree t; 
 	struct orange_id n1, n2, n3, n4; 
 

@@ -23,7 +23,7 @@ void orange_lua_publish_json_api(lua_State *L);
 void orange_lua_publish_file_api(lua_State *L); 
 
 int orange_lua_table_to_blob(lua_State *L, struct blob *b, bool table); 
-void orange_lua_blob_to_table(lua_State *lua, struct blob_field *msg, bool table); 
+void orange_lua_blob_to_table(lua_State *lua, const struct blob_field *msg, bool table); 
 
 void orange_lua_publish_session_api(lua_State *L); 
 void orange_lua_set_session(lua_State *L, struct orange_session *self); 

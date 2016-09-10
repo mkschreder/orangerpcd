@@ -30,10 +30,10 @@
 #include "orange_lua.h"
 #include "orange_session.h"
 
-void orange_lua_blob_to_table(lua_State *lua, struct blob_field *msg, bool table){
+void orange_lua_blob_to_table(lua_State *lua, const struct blob_field *msg, bool table){
 	lua_newtable(lua); 
 
-	struct blob_field *child; 
+	const struct blob_field *child; 
 	int index = 1; 
 
 	blob_field_for_each_child(msg, child){

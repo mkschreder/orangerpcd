@@ -21,14 +21,14 @@
 #include <pthread.h>
 #include <unistd.h>
 
-static bool rpcmsg_parse_call(struct blob *msg, uint32_t *id, const char **method, struct blob_field **params){
+static bool rpcmsg_parse_call(struct blob *msg, uint32_t *id, const char **method, const struct blob_field **params){
 	if(!msg) return false; 
 	struct blob_policy policy[] = {
 		{ .name = "id", .type = BLOB_FIELD_ANY, .value = NULL },
 		{ .name = "method", .type = BLOB_FIELD_STRING, .value = NULL },
 		{ .name = "params", .type = BLOB_FIELD_ARRAY, .value = NULL }
 	}; 
-	struct blob_field *b = blob_field_first_child(blob_head(msg));  
+	const struct blob_field *b = blob_field_first_child(blob_head(msg));  
 	blob_field_parse_values(b, policy, 3); 
 	*id = blob_field_get_int(policy[0].value); 
 	*method = blob_field_get_string(policy[1].value); 
@@ -36,7 +36,7 @@ static bool rpcmsg_parse_call(struct blob *msg, uint32_t *id, const char **metho
 	return !!(policy[0].value && method && params); 
 }
 
-static bool rpcmsg_parse_call_params(struct blob_field *params, const char **sid, const char **object, const char **method, struct blob_field **args){
+static bool rpcmsg_parse_call_params(struct blob_field *params, const char **sid, const char **object, const char **method, const struct blob_field **args){
 	if(!params) return false; 
 	struct blob_policy policy[] = {
 		{ .type = BLOB_FIELD_STRING }, // sid
@@ -110,7 +110,7 @@ static int orange_rpc_process_requests(struct orange_rpc *self){
 	struct orange_message *result = orange_message_new(); 
 	result->peer = msg->peer; 
 
-	if(!rpcmsg_parse_call(&msg->buf, &rpc_id, &rpc_method, &params)){
+	if(!rpcmsg_parse_call(&msg->buf, &rpc_id, &rpc_method, (const struct blob_field**)&params)){
 		DEBUG("could not parse incoming message\n"); 
 		// we silently discard invalid messages!
 		orange_message_delete(&msg); 
@@ -124,7 +124,7 @@ static int orange_rpc_process_requests(struct orange_rpc *self){
 	blob_put_int(&result->buf, rpc_id); 
 
 	if(rpc_method && strcmp(rpc_method, "call") == 0){
-		if(rpcmsg_parse_call_params(params, &sid, &object, &method, &args)){
+		if(rpcmsg_parse_call_params(params, &sid, &object, &method, (const struct blob_field**)&args)){
 			int res = orange_call(self->ctx, sid, object, method, args, &result->buf); 
 			if(res < 0) {
 				const char *str = strerror(-res); 

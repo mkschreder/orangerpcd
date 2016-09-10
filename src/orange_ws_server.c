@@ -86,7 +86,7 @@ static bool url_scanf(const char *url, char *proto, char *host, int *port, char 
     return false;                       
 }
 
-static struct orange_srv_ws_frame *orange_srv_ws_frame_new(struct blob_field *msg){
+static struct orange_srv_ws_frame *orange_srv_ws_frame_new(const struct blob_field *msg){
 	assert(msg); 
 	struct orange_srv_ws_frame *self = calloc(1, sizeof(struct orange_srv_ws_frame)); 
 	assert(self); 

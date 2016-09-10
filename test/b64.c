@@ -8,7 +8,7 @@
 #include "../src/orange_id.h"
 #include "../src/base64.h"
 
-int main(){
+int main(void){
 	char ebuf[1000] = {0}; 
 	char dbuf[1000] = {0}; 
 
@@ -25,12 +25,12 @@ int main(){
 	//printf("'%s' -> '%s' (%lu)\n", str, ebuf, strlen(ebuf)); 
 	
 	TEST(strcmp(ebuf, bcheck) == 0); 
-	TEST(r == strlen(ebuf)); 
+	TEST(r == (int)strlen(ebuf)); 
 
 	r = base64_decode(ebuf, dbuf, sizeof(dbuf)); 
 	
 	TEST(strcmp(dbuf, str) == 0); 
-	TEST(r == strlen(dbuf)); 
+	TEST(r == (int)strlen(dbuf)); 
 
 	base64_encode(str2, ebuf, sizeof(ebuf)); 
 	TEST(strcmp(ebuf, bcheck2) == 0); 

@@ -109,7 +109,7 @@ int orange_luaobject_load(struct orange_luaobject *self, const char *file){
 	return 0; 
 }
 
-int orange_luaobject_call(struct orange_luaobject *self, struct orange_session *session, const char *method, struct blob_field *in, struct blob *out){
+int orange_luaobject_call(struct orange_luaobject *self, struct orange_session *session, const char *method, const struct blob_field *in, struct blob *out){
 	if(!self || !self->lua) return -1; 
 
 	pthread_mutex_lock(&self->lock); 

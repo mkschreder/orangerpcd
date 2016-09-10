@@ -5,7 +5,7 @@
 #include <blobpack/blobpack.h>
 #include "../src/orange.h"
 
-int main(){
+int main(void){
 	struct orange_user user; 
 
 	struct orange_session *ses = orange_session_new(&user, 20); 

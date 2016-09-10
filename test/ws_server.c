@@ -18,13 +18,13 @@ static struct orange_rpc rpc;
 
 pthread_mutex_t runlock; 
 pthread_cond_t runcond; 
-void _cleanup(int sig){
+static void _cleanup(int sig){
 	pthread_mutex_lock(&runlock); 
 	pthread_cond_signal(&runcond); 
 	pthread_mutex_unlock(&runlock); 
 }
 
-int main(){
+int main(void){
 	orange_debug_level+=4; 
 
 	pthread_mutex_init(&runlock, NULL); 

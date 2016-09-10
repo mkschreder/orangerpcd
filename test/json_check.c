@@ -17,9 +17,9 @@ struct test tests[] = {
 	{"{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"challenge\",\"params\":{\"FOO\b:\"BAR\"}}", 0}
 }; 
 
-int main(){
+int main(void){
 	JSON_check jc = JSON_check_new(10); 
-	for(int c = 0; c < sizeof(tests)/sizeof(tests[0]); c++){
+	for(size_t c = 0; c < sizeof(tests)/sizeof(tests[0]); c++){
 		TEST(!!JSON_check_string(jc, tests[c].str) == !!tests[c].valid); 
 	}
 	JSON_check_free(&jc); 

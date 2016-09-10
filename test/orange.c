@@ -7,7 +7,7 @@
 #include "../src/orange.h"
 #include "../src/internal.h"
 
-int main(){
+int main(void){
 	orange_debug_level+=4; 
 
 	struct orange *app = orange_new("test-plugins", "test-pwfile", "test-acls");

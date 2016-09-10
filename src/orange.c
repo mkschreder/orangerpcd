@@ -439,7 +439,7 @@ int orange_logout(struct orange *self, const char *sid){
 	return 0; 
 }
 
-int orange_call(struct orange *self, const char *sid, const char *object, const char *method, struct blob_field *args, struct blob *out){
+int orange_call(struct orange *self, const char *sid, const char *object, const char *method, const struct blob_field *args, struct blob *out){
 	pthread_mutex_lock(&self->lock); 
 
 	struct avl_node *avl = avl_find(&self->objects, object); 

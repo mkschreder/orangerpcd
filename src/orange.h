@@ -51,6 +51,6 @@ bool orange_session_is_valid(struct orange *self, const char *sid);
 //struct orange_session* orange_find_session(struct orange *self, const char *sid); 
 int orange_list(struct orange *self, const char *sid, const char *path, struct blob *out); 
 
-int orange_call(struct orange *self, const char *sid, const char *object, const char *method, struct blob_field *args, struct blob *out); 
+int orange_call(struct orange *self, const char *sid, const char *object, const char *method, const struct blob_field *args, struct blob *out); 
   
 
