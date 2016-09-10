@@ -21,6 +21,8 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <signal.h>
+#include <math.h>
+#include <float.h>
 
 #include <blobpack/blobpack.h>
 
@@ -120,7 +122,10 @@ int orange_lua_table_to_blob(lua_State *L, struct blob *b, bool table){
 			case LUA_TINT:
 		#endif
 			case LUA_TNUMBER:
-				blob_put_real(b, lua_tonumber(L, -2));
+				if(fabsf(lua_tointeger(L, -2) - lua_tonumber(L, -2)) < FLT_EPSILON)
+					blob_put_int(b, lua_tointeger(L, -2)); 
+				else 
+					blob_put_real(b, lua_tonumber(L, -2));
 				break;
 			case LUA_TSTRING:
 			case LUA_TUSERDATA:

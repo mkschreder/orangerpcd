@@ -1,4 +1,6 @@
 local function test_echo(args)
+	args.num = 1; 
+	args.float = 2.25; 
 	return args; 
 end
 
