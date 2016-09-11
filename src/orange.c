@@ -182,9 +182,10 @@ static int _orange_load_passwords(struct orange *self, const char *pwfile){
 	int line = 0; 
 	while(1){	
 		char *nl = strchr(cur, '\n'); 
+		char *sp = NULL; 
 		if(nl) *nl = 0; 
-		char *user = strtok(cur, " "); 
-		char *hash = strtok(NULL, " "); 
+		char *user = strtok_r(cur, " ", &sp); 
+		char *hash = strtok_r(NULL, " ", &sp); 
 		if(user && hash){
 			struct avl_node *node = avl_find(&self->users, user); 
 			if(node){
@@ -259,11 +260,12 @@ static int _load_session_acls(struct orange_session *ses, const char *dir, const
 		int line = 1; 
 		while(true){
 			char *nl = strchr(cur, '\n'); 
+			char *sp = NULL; 
 			if(nl) *nl = 0; 
-			char *scope = strtok(cur, " "); 
-			char *object = strtok(NULL, " "); 
-			char *method = strtok(NULL, " "); 
-			char *perm = strtok(NULL, " "); 
+			char *scope = strtok_r(cur, " ", &sp); 
+			char *object = strtok_r(NULL, " ", &sp); 
+			char *method = strtok_r(NULL, " ", &sp); 
+			char *perm = strtok_r(NULL, " ", &sp); 
 			if(scope && object && method && perm){
 				if(scope[0] == '!'){
 					DEBUG("revoking session acl '%s %s %s %s'\n", scope + 1, object, method, perm); 
