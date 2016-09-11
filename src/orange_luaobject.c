@@ -24,10 +24,20 @@
 
 #define JUCI_LUA_LIB_PATH "/usr/lib/orange/lib/"
 
+static lua_State * _luaobject_create_lua_state(void){
+	lua_State *L = luaL_newstate(); 		
+	// export server api to the lua object
+	orange_lua_publish_json_api(L); 
+	orange_lua_publish_file_api(L); 
+	orange_lua_publish_session_api(L); 
+	orange_lua_publish_core_api(L); 
+	return L; 
+}
+
 struct orange_luaobject* orange_luaobject_new(const char *name){
 	struct orange_luaobject *self = calloc(1, sizeof(struct orange_luaobject)); 
 	assert(self); 
-	self->lua = luaL_newstate(); 
+	self->lua = _luaobject_create_lua_state(); 
 	self->name = malloc(strlen(name) + 1); 
 	strcpy(self->name, name); 
 	self->avl.key = self->name; 
@@ -79,7 +89,7 @@ void orange_luaobject_delete(struct orange_luaobject **self){
 }
 
 int orange_luaobject_load(struct orange_luaobject *self, const char *file){
-	if(!self->lua) self->lua = luaL_newstate();  
+	if(!self->lua) self->lua = _luaobject_create_lua_state();  
 
 	pthread_mutex_lock(&self->lock); 
 	if(luaL_loadfile(self->lua, file) != 0){
