@@ -97,3 +97,9 @@ int timespec_before(struct timespec *a, struct timespec *before_b){
 	return a->tv_sec < before_b->tv_sec;
 }	
 	
+int timespec_expired(struct timespec *ts){
+	struct timespec now; 
+	timespec_now(&now); 
+	return timespec_before(ts, &now); 
+}
+ 

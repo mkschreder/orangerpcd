@@ -28,9 +28,11 @@ struct orange_rpc{
 	struct orange *ctx; 
 	unsigned long long timeout_us; 
 	pthread_t *threads; 
+	pthread_t monitor; 
 	pthread_mutex_t lock; 
 	unsigned int num_workers; 
 	int shutdown; 
+	struct avl_tree requests; 
 }; 
 
 void orange_rpc_init(struct orange_rpc *self, orange_server_t server, struct orange *ctx, unsigned long long timeout_us, unsigned int num_workers); 

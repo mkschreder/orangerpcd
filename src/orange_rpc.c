@@ -20,6 +20,13 @@
 #include "internal.h"
 #include <pthread.h>
 #include <unistd.h>
+#include "util.h"
+
+struct request_record {
+	struct avl_node avl; 
+	char *name; 
+	struct timespec ts_expired; 
+}; 
 
 static bool rpcmsg_parse_call(struct blob *msg, uint32_t *id, const char **method, const struct blob_field **params){
 	if(!msg) return false; 
@@ -125,7 +132,26 @@ static int orange_rpc_process_requests(struct orange_rpc *self){
 
 	if(rpc_method && strcmp(rpc_method, "call") == 0){
 		if(rpcmsg_parse_call_params(params, &sid, &object, &method, (const struct blob_field**)&args)){
+			// store the request for monitoring 
+			struct request_record *req = calloc(1, sizeof(struct request_record)); 
+			size_t len = strlen(object) + strlen(method) + 2; 
+			req->name = calloc(1, len); 
+			timespec_from_now_us(&req->ts_expired, 10000000UL); 
+			snprintf(req->name, len, "%s.%s", object, method); 
+			req->avl.key = req->name; 
+
+			pthread_mutex_lock(&self->lock); 
+			avl_insert(&self->requests, &req->avl); 
+			pthread_mutex_unlock(&self->lock); 
+
 			int res = orange_call(self->ctx, sid, object, method, args, &result->buf); 
+
+			pthread_mutex_lock(&self->lock); 
+			avl_delete(&self->requests, &req->avl); 
+			pthread_mutex_unlock(&self->lock); 
+			free(req->name); 
+			free(req); 
+
 			if(res < 0) {
 				const char *str = strerror(-res); 
 				if(!str) str = "UNKNOWN"; 
@@ -261,12 +287,32 @@ static void *_request_dispatcher(void *ptr){
 	return NULL; 
 }
 
+static void *_request_monitor(void *ptr){
+	struct orange_rpc *self = (struct orange_rpc*)ptr; 
+	pthread_mutex_lock(&self->lock); 
+	while(!self->shutdown){
+		struct request_record *req, *tmp; 
+		avl_for_each_element_safe(&self->requests, req, avl, tmp){
+			if(timespec_expired(&req->ts_expired)){
+				DEBUG("Request %s may have hanged!\n", req->name); 
+			}
+		}
+		pthread_mutex_unlock(&self->lock); 
+		sleep(1); 
+		pthread_mutex_lock(&self->lock); 
+	}
+	pthread_mutex_unlock(&self->lock); 
+	pthread_exit(0); 
+	return NULL; 
+}
+
 void orange_rpc_init(struct orange_rpc *self, orange_server_t server, struct orange *ctx, unsigned long long timeout_us, unsigned int num_workers){
 	self->server = server; 
 	self->ctx = ctx; 
 	self->timeout_us = timeout_us; 
 	self->shutdown = 0; 
 	self->num_workers = num_workers; 
+	avl_init(&self->requests, avl_strcmp, true, NULL);
 
 	if(num_workers == 0) num_workers = 1; 
 	self->threads = malloc(num_workers * sizeof(pthread_t)); 
@@ -278,6 +324,9 @@ void orange_rpc_init(struct orange_rpc *self, orange_server_t server, struct ora
 	for(unsigned int c = 0; c < num_workers; c++){
 		pthread_create(&self->threads[c], NULL, _request_dispatcher, self); 
 	}
+
+	// start a monitor thread to check periodically if we are running out of workers
+	pthread_create(&self->monitor, NULL, _request_monitor, self); 
 }
 
 void orange_rpc_deinit(struct orange_rpc *self){
@@ -287,6 +336,7 @@ void orange_rpc_deinit(struct orange_rpc *self){
 	for(unsigned c = 0; c < self->num_workers; c++){
 		pthread_join(self->threads[c], NULL); 
 	}
+	pthread_join(self->monitor, NULL); 
 	pthread_mutex_destroy(&self->lock); 
 	free(self->threads); 
 }
