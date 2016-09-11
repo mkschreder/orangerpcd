@@ -95,8 +95,6 @@ static int _orange_load_plugins(struct orange *self, const char *path, const cha
 			
 			// add to directory
 			avl_insert(&self->objects, &obj->avl); 
-
-			orange_luaobject_free_state(obj); 
 		}
     }
     closedir(dir); 
@@ -470,28 +468,47 @@ int orange_call(struct orange *self, const char *sid, const char *object, const 
 	char *fname = alloca(fnsize); 
 	snprintf(fname, fnsize, "%s/%s.lua", self->plugin_path, object); 
 
+	INFO("loading lua object %s from %s...\n", object, fname); 
+
+	struct orange_luaobject *obj; 
+	/* NOTE: 
+		some libraries in openwrt are nutoriously hard to use correctly in lua
+		when you have multiple lua contexts present in your application.  LUA
+		itself is designed to be fully encapsulated, but openwrt libraries are
+		completely the opposite. 
+		- Example: iwinfo. If you use iwinfo in two lua contexts in the same
+		  application, you get wrong information at best - crash at worst. 
+		- Proper solution: write libraries so they don't have these issues
+		- Plausable solution: do not load any openwrt .so lua plugins in lua
+		  scripts and call external processes instead (ubus does it this way)
+		- Hackery solution: add a new permission 's' that specifies that this
+		  call is 'special' and should run inside the default lua context that
+		  was created when the plugin for it was loaded. 
+	*/
+	bool do_free = false; 
+
+	// FIXME: enusre that lua scripts do not use unsafe libraries and remove this 's' permission..
+	if(orange_session_access(ses, "rpc", object, method, "s")){ 
+		obj = container_of(avl, struct orange_luaobject, avl); 
+		DEBUG("running method %s in default lua object %s\n", method, obj->name); 
+	} else {
+		obj = orange_luaobject_new(object); 
+		if(orange_luaobject_load(obj, fname) != 0){
+			ERROR("ERR: could not load plugin %s\n", fname); 
+			orange_luaobject_delete(&obj); 
+			return -ENOENT; 
+		}
+		do_free = true; 
+	}
+
 	// From here onwards we do not use anything inside self!
 	// so we enable concurrency and run the actual backend script
 	pthread_mutex_unlock(&self->lock); 
-	
-	INFO("loading lua object %s from %s...\n", object, fname); 
 
-	struct orange_luaobject *obj = orange_luaobject_new(object); 
-	if(orange_luaobject_load(obj, fname) != 0){
-		ERROR("ERR: could not load plugin %s\n", fname); 
-		orange_luaobject_delete(&obj); 
-		return -ENOENT; 
-	}
-
-	// export server api to the lua object
-	orange_lua_publish_json_api(obj->lua); 
-	orange_lua_publish_file_api(obj->lua); 
-	orange_lua_publish_session_api(obj->lua); 
-	orange_lua_publish_core_api(obj->lua); 
-	
 	int ret = orange_luaobject_call(obj, ses, method, args, out); 
 
-	orange_luaobject_delete(&obj); 
+	if(do_free)
+		orange_luaobject_delete(&obj); 
 
 	return ret; 
 }

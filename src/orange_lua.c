@@ -166,10 +166,12 @@ static int l_json_parse(lua_State *L){
 		blob_offset_t b = blob_open_table(&tmp); 
 		blob_close_table(&tmp, b); 
 	}
+	/*
 	if(orange_debug_level >= JUCI_DBG_TRACE){
 		TRACE("lua blob: "); 
 		blob_dump_json(&tmp); 
 	}
+	*/
 	orange_lua_blob_to_table(L, blob_field_first_child(blob_head(&tmp)), true);
 	blob_free(&tmp); 
 	return 1; 
@@ -439,10 +441,13 @@ static int l_core_lock(lua_State *L){
 		pthread_mutex_init(&node->lock, NULL); 
 		avl_insert(&_locks, &node->avl); 
 	} 
+
 	TRACE("lock: locking named lock (%s)\n", node->name); 
 	pthread_mutex_lock(&node->lock); 
-	lua_pushboolean(L, true); 
+
 	pthread_mutex_unlock(&_locks_lock); 
+
+	lua_pushboolean(L, true); 
 	return 1; 
 }
 
@@ -453,18 +458,22 @@ static int l_core_unlock(lua_State *L){
 		return 1; 
 	}
 	pthread_mutex_lock(&_locks_lock); 
-	struct avl_node *avl = avl_find(&_locks, name);  
-	if(!avl){
+	struct lock_node *node = avl_find_element(&_locks, name, node, avl);
+	if(!node){
 		pthread_mutex_unlock(&_locks_lock); 
 		lua_pushboolean(L, false); 
 		return 1; 
 	}
-	struct lock_node *node = container_of(avl, struct lock_node, avl); 
+
 	TRACE("lock: unlocking named lock (%s)\n", node->name); 
 	pthread_mutex_unlock(&node->lock); 
+
+	// free the node
 	avl_delete(&_locks, &node->avl); 
+	pthread_mutex_destroy(&node->lock);  
 	free(node->name); 
 	free(node); 
+
 	pthread_mutex_unlock(&_locks_lock); 
 
 	lua_pushboolean(L, true); 
