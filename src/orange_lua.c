@@ -420,7 +420,7 @@ struct lock_node {
 }; 
 
 static void __attribute__((constructor)) _locks_init(void){
-	avl_init(&_deferred_commands, avl_strcmp, false, NULL);
+	avl_init(&_locks, avl_strcmp, false, NULL);
 }
 
 static int l_core_lock(lua_State *L){
