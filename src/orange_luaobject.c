@@ -89,9 +89,9 @@ void orange_luaobject_delete(struct orange_luaobject **self){
 }
 
 int orange_luaobject_load(struct orange_luaobject *self, const char *file){
-	if(!self->lua) self->lua = _luaobject_create_lua_state();  
-
 	pthread_mutex_lock(&self->lock); 
+
+	if(!self->lua) self->lua = _luaobject_create_lua_state();  
 	if(luaL_loadfile(self->lua, file) != 0){
 		ERROR("could not load plugin: %s\n", lua_tostring(self->lua, -1)); 
 		pthread_mutex_unlock(&self->lock); 
