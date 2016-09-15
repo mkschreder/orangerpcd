@@ -8,7 +8,7 @@
 local core = require("orange/core");
 local ubus = require("orange/ubus"); 
 
-local uci = ubus.bind("uci", {"get","set","add","configs","commit","revert","apply","rollback","delete"}); 
+local uci = ubus.bind("uci", {"get","state","set","add","configs","commit","revert","apply","rollback","delete"}); 
 
 local function uci_configs(args)
 	local res = uci.configs(args); 
@@ -47,7 +47,8 @@ end
 
 local function uci_get(args)
 	if(not SESSION.access("uci", args.config, "*", "r")) then return -1; end
-	return uci.get(args); 
+	-- always return latest state (instead of get)
+	return uci.state(args); 
 end
 
 local function uci_set(args)
