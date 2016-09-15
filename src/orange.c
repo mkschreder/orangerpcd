@@ -445,6 +445,15 @@ int orange_call(struct orange *self, const char *sid, const char *object, const 
 	struct avl_node *avl = avl_find(&self->objects, object); 
 	if(!avl) {
 		ERROR("object not found: %s\n", object); 
+
+		blob_put_string(out, "error"); 
+		blob_offset_t t = blob_open_table(out); 
+		blob_put_string(out, "str"); 
+		blob_put_string(out, "Could not find object"); 
+		blob_put_string(out, "code"); 
+		blob_put_int(out, -ENOENT);
+		blob_close_table(out, t); 
+
 		pthread_mutex_unlock(&self->lock); 
 		return -ENOENT; 
 	}
@@ -454,6 +463,15 @@ int orange_call(struct orange *self, const char *sid, const char *object, const 
 		DEBUG("found session for request: %s\n", sid); 
 	} else {
 		DEBUG("could not find session for request!\n"); 
+
+		blob_put_string(out, "error"); 
+		blob_offset_t t = blob_open_table(out); 
+		blob_put_string(out, "str"); 
+		blob_put_string(out, "Not logged in!"); 
+		blob_put_string(out, "code"); 
+		blob_put_int(out, -EACCES);
+		blob_close_table(out, t); 
+
 		pthread_mutex_unlock(&self->lock); 
 		return -EACCES; 
 	}
@@ -462,6 +480,15 @@ int orange_call(struct orange *self, const char *sid, const char *object, const 
 		!orange_session_access(ses, "ubus", object, method, "x") // deprecated
 	){
 		ERROR("user %s does not have permission to execute rpc call: %s %s\n", ses->user->username, object, method); 
+
+		blob_put_string(out, "error"); 
+		blob_offset_t t = blob_open_table(out); 
+		blob_put_string(out, "str"); 
+		blob_put_string(out, "User permission error!"); 
+		blob_put_string(out, "code"); 
+		blob_put_int(out, -EACCES);
+		blob_close_table(out, t); 
+
 		pthread_mutex_unlock(&self->lock); 
 		return -EACCES; 
 	}
@@ -497,6 +524,15 @@ int orange_call(struct orange *self, const char *sid, const char *object, const 
 		obj = orange_luaobject_new(object); 
 		if(orange_luaobject_load(obj, fname) != 0){
 			ERROR("ERR: could not load plugin %s\n", fname); 
+
+			blob_put_string(out, "error"); 
+			blob_offset_t t = blob_open_table(out); 
+			blob_put_string(out, "str"); 
+			blob_put_string(out, "Error in backend lua file!"); 
+			blob_put_string(out, "code"); 
+			blob_put_int(out, -ENOENT);
+			blob_close_table(out, t); 
+
 			orange_luaobject_delete(&obj); 
 			return -ENOENT; 
 		}

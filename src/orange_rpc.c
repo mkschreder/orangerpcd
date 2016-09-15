@@ -20,7 +20,11 @@
 #include "internal.h"
 #include <pthread.h>
 #include <unistd.h>
+#include <syslog.h>
+
 #include "util.h"
+
+#define WORKER_TIMEOUT_US 10000000UL
 
 struct request_record {
 	struct avl_node avl; 
@@ -136,7 +140,7 @@ static int orange_rpc_process_requests(struct orange_rpc *self){
 			struct request_record *req = calloc(1, sizeof(struct request_record)); 
 			size_t len = strlen(object) + strlen(method) + 2; 
 			req->name = calloc(1, len); 
-			timespec_from_now_us(&req->ts_expired, 10000000UL); 
+			timespec_from_now_us(&req->ts_expired, WORKER_TIMEOUT_US); 
 			snprintf(req->name, len, "%s.%s", object, method); 
 			req->avl.key = req->name; 
 
@@ -144,25 +148,13 @@ static int orange_rpc_process_requests(struct orange_rpc *self){
 			avl_insert(&self->requests, &req->avl); 
 			pthread_mutex_unlock(&self->lock); 
 
-			int res = orange_call(self->ctx, sid, object, method, args, &result->buf); 
+			orange_call(self->ctx, sid, object, method, args, &result->buf); 
 
 			pthread_mutex_lock(&self->lock); 
 			avl_delete(&self->requests, &req->avl); 
 			pthread_mutex_unlock(&self->lock); 
 			free(req->name); 
 			free(req); 
-
-			if(res < 0) {
-				const char *str = strerror(-res); 
-				if(!str) str = "UNKNOWN"; 
-				blob_put_string(&result->buf, "error"); 
-				blob_offset_t o = blob_open_table(&result->buf); 
-				blob_put_string(&result->buf, "code"); 
-				blob_put_int(&result->buf, ret); 
-				blob_put_string(&result->buf, "str"); 
-				blob_put_string(&result->buf, str);  
-				blob_close_table(&result->buf, o); 
-			}
 		} else {
 			DEBUG("Could not parse call message!\n"); 
 			blob_put_string(&result->buf, "error"); 
@@ -172,11 +164,6 @@ static int orange_rpc_process_requests(struct orange_rpc *self){
 			blob_put_string(&result->buf, "str"); 
 			blob_put_string(&result->buf, "Invalid call message format!"); 
 			blob_close_table(&result->buf, o); 
-
-			blob_close_table(&result->buf, t); 
-			orange_server_send(self->server, &result); 	
-			orange_message_delete(&msg); 
-			return -EPROTO;  
 		}
 	} else if(rpc_method && strcmp(rpc_method, "list") == 0){
 		const char *path = "*"; 	
@@ -277,9 +264,11 @@ static void *_request_dispatcher(void *ptr){
 	struct orange_rpc *self = (struct orange_rpc*)ptr; 
 	pthread_mutex_lock(&self->lock); 
 	while(!self->shutdown){
+		sem_wait(&self->sem_bw); 
 		pthread_mutex_unlock(&self->lock); 
 		orange_rpc_process_requests(self);
 		pthread_mutex_lock(&self->lock); 
+		sem_post(&self->sem_bw); 
 	}
 	DEBUG("rpc request dispatcher exiting..\n"); 
 	pthread_mutex_unlock(&self->lock); 
@@ -287,18 +276,54 @@ static void *_request_dispatcher(void *ptr){
 	return NULL; 
 }
 
+// NOTE: there is always a possibility that some errornous script will go into an infinite loop and subsequent calls to it will consume all our worker threads. 
+// this is highly critical so we need to monitor for it
 static void *_request_monitor(void *ptr){
 	struct orange_rpc *self = (struct orange_rpc*)ptr; 
 	pthread_mutex_lock(&self->lock); 
 	while(!self->shutdown){
 		struct request_record *req, *tmp; 
+		int hanged = 0; 
 		avl_for_each_element_safe(&self->requests, req, avl, tmp){
 			if(timespec_expired(&req->ts_expired)){
+				syslog(LOG_CRIT, "request %s may have hanged. You can ignore this message if this is expected.", req->name); 
 				DEBUG("Request %s may have hanged!\n", req->name); 
+				hanged++; 
 			}
 		}
+
+		// we probably don't even need to use a semaphore for this..
+		int sem = 0; 
+		sem_getvalue(&self->sem_bw, &sem); 
+		if(sem == 0 && hanged == (int)self->num_workers){
+			// we have a bunch of hanged calls and no free slots so this is bad
+			syslog(LOG_CRIT, "no free request slots left. All %d slots are busy! restarting server..", self->num_workers); 
+			FILE *cf = fopen("/proc/self/cmdline", "r"); 
+			char buf[255]; 
+			int len = fread(buf, 1, sizeof(buf), cf); 
+			int argc = 0; 
+			char **argv = NULL; 
+			for(int c = 0; c < len; c++){
+				if(buf[c] == 0) argc++; 
+			}
+			if(argc > 0){
+				argv = malloc(sizeof(char*) * argc + 1); 
+				memset(argv, 0, sizeof(char*) * argc + 1);  
+				int arg = 0; 
+				char *ptr = argv[arg++] = buf; 
+				for(int c = 0; c < len; c++){
+					if(buf[c] == 0) {
+						while(buf[c] == 0 && c < len) c++; 
+						argv[arg++] = buf + c; 
+					}
+				}
+			}
+			execv("/proc/self/exe", argv); 
+			// never get here. 
+		}
+
 		pthread_mutex_unlock(&self->lock); 
-		sleep(1); 
+		sleep(5); 
 		pthread_mutex_lock(&self->lock); 
 	}
 	pthread_mutex_unlock(&self->lock); 
@@ -319,6 +344,7 @@ void orange_rpc_init(struct orange_rpc *self, orange_server_t server, struct ora
 	memset(self->threads, 0, num_workers * sizeof(pthread_t)); 
 
 	pthread_mutex_init(&self->lock, NULL); 
+	sem_init(&self->sem_bw, false, num_workers); 
 
 	// start threads that will be handling rpc messages
 	for(unsigned int c = 0; c < num_workers; c++){

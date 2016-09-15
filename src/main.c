@@ -20,6 +20,7 @@
 #include <unistd.h>
 #include <dirent.h>
 #include <signal.h>
+#include <syslog.h>
 
 #include <libutype/avl-cmp.h>
 
@@ -50,6 +51,9 @@ int main(int argc, char **argv){
 	printf("Orange RPCD v%s\n",VERSION); 
 	printf("Lua/JSONRPC server\n"); 
 	printf("Copyright (c) 2016 Martin Schröder <mkschreder.uk@gmail.com>\n"); 
+
+	setlogmask(LOG_UPTO(LOG_INFO)); 
+	openlog("orangerpcd", LOG_CONS | LOG_PID | LOG_NDELAY, LOG_LOCAL1); 
 
 	int c = 0; 	
 	while((c = getopt(argc, argv, "d:l:p:vx:a:")) != -1){
@@ -91,6 +95,8 @@ int main(int argc, char **argv){
 	struct orange_rpc rpc; 
 	orange_rpc_init(&rpc, server, app, 10000UL, 10); 
 
+	syslog(LOG_INFO, "orangerpcd jsonrpc server started (%d)", getpid()); 
+
 	// wait for abort
 	pthread_mutex_lock(&runlock); 
 	pthread_cond_wait(&runcond, &runlock); 
@@ -101,8 +107,11 @@ int main(int argc, char **argv){
 	orange_server_delete(server); 
 	orange_delete(&app); 
 
+	syslog(LOG_INFO, "orangerpcd jsonrpc server exiting (%d)", getpid()); 
+
 	pthread_mutex_destroy(&runlock); 
 	pthread_cond_destroy(&runcond); 
 
+	closelog(); 
 	return 0; 
 }

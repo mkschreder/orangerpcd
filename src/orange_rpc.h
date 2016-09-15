@@ -18,6 +18,7 @@
 
 #include "orange_server.h"
 #include <pthread.h>
+#include <semaphore.h>
 
 struct orange; 
 
@@ -33,6 +34,9 @@ struct orange_rpc{
 	unsigned int num_workers; 
 	int shutdown; 
 	struct avl_tree requests; 
+
+	// number of busy workers 
+	sem_t sem_bw; 
 }; 
 
 void orange_rpc_init(struct orange_rpc *self, orange_server_t server, struct orange *ctx, unsigned long long timeout_us, unsigned int num_workers); 
