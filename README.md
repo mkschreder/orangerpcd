@@ -1,12 +1,15 @@
-Juci RPC Server (JuciRPCD)
+Juci RPC Server (OrangeRPCD)
 --------------------------
 
 [![Build Status](https://travis-ci.org/mkschreder/orangerpcd.svg?branch=master)](https://travis-ci.org/mkschreder/orangerpcd)
 [![Coverage Status](https://coveralls.io/repos/github/mkschreder/orangerpcd/badge.svg?branch=master)](https://coveralls.io/github/mkschreder/orangerpcd?branch=master)
 
-JuciRPCD is the new backend server with support for websockets developed for
-latest version of JUCI webgui. It is a small application server with integrated
-lua scripting, access control and easy interface to ubus IPC on OpenWRT. 
+OrangeRPCD is a lua scriptable and multithreaded JSONRPC application server
+with websocket support on the frontend. It is fully portable and builds as part
+of OpenWRT. 
+
+
+[![Design](diagram.jpg)](diagram.jpg)
 
 Building
 --------
@@ -18,7 +21,7 @@ Building
 Core RPC API
 ------------
 
-JuciRPCD implements JSON RPC protocol as it is commonly defined. The protocol
+OrangeRPCD implements JSON RPC protocol as it is commonly defined. The protocol
 thus supports four types of messages: 
 
 	CALL:   {"jsonrpc":"2.0","id":1,"method":"...","params":[...]}
