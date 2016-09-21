@@ -97,7 +97,11 @@ static bool rpcmsg_parse_login(struct blob_field *params, const char **username,
 	return !!(username && response); 
 }
 
+#ifdef CONFIG_THREADS
 static int orange_rpc_process_requests(struct orange_rpc *self){
+#else 
+int orange_rpc_process_requests(struct orange_rpc *self){
+#endif
 	struct orange_message *msg = NULL;         
 	struct timespec tss, tse; 
 
@@ -221,23 +225,7 @@ static int orange_rpc_process_requests(struct orange_rpc *self){
 			blob_put_string(&result->buf, "error"); 
 			blob_put_string(&result->buf, "Could not logout!"); 
 		}
-	} 
-	/*else if(rpc_method && strcmp(rpc_method, "authenticate") == 0){
-		const char *_sid = NULL; 
-		struct orange_session *session = NULL; 
-		if(rpcmsg_parse_authenticate(params, &_sid) && (session = orange_find_session(self->ctx, _sid))){
-			blob_put_string(&result->buf, "result"); 
-			blob_offset_t o = blob_open_table(&result->buf); 
-				blob_put_string(&result->buf, "sid"); 
-				blob_put_string(&result->buf, _sid);
-				//blob_put_string(&result->buf, "username"); 
-				//blob_put_string(&result->buf, session->user->username);  
-			blob_close_table(&result->buf, o); 
-		} else {
-			blob_put_string(&result->buf, "error"); 
-			blob_put_string(&result->buf, "Access Denied"); 
-		}
-	}*/ else {
+	} else {
 		blob_put_string(&result->buf, "error"); 
 		blob_offset_t o = blob_open_table(&result->buf); 
 			blob_put_string(&result->buf, "code"); 
@@ -260,6 +248,7 @@ static int orange_rpc_process_requests(struct orange_rpc *self){
 	return 0; 
 }
 
+#ifdef CONFIG_THREADS
 static void *_request_dispatcher(void *ptr){
 	struct orange_rpc *self = (struct orange_rpc*)ptr; 
 	pthread_mutex_lock(&self->lock); 
@@ -342,6 +331,7 @@ static void *_request_monitor(void *ptr){
 	pthread_exit(0); 
 	return NULL; 
 }
+#endif 
 
 void orange_rpc_init(struct orange_rpc *self, orange_server_t server, struct orange *ctx, unsigned long long timeout_us, unsigned int num_workers){
 	self->server = server; 
@@ -358,6 +348,7 @@ void orange_rpc_init(struct orange_rpc *self, orange_server_t server, struct ora
 	pthread_mutex_init(&self->lock, NULL); 
 	sem_init(&self->sem_bw, false, num_workers); 
 
+	#if CONFIG_THREADS
 	// start threads that will be handling rpc messages
 	for(unsigned int c = 0; c < num_workers; c++){
 		pthread_create(&self->threads[c], NULL, _request_dispatcher, self); 
@@ -365,6 +356,7 @@ void orange_rpc_init(struct orange_rpc *self, orange_server_t server, struct ora
 
 	// start a monitor thread to check periodically if we are running out of workers
 	pthread_create(&self->monitor, NULL, _request_monitor, self); 
+	#endif
 }
 
 void orange_rpc_deinit(struct orange_rpc *self){
@@ -379,6 +371,6 @@ void orange_rpc_deinit(struct orange_rpc *self){
 	free(self->threads); 
 }
 
-bool orange_rpc_running(struct orange_rpc *self){
-	return self->num_workers > 0; 
-}
+//bool orange_rpc_running(struct orange_rpc *self){
+	//return self->num_workers > 0; 
+//}

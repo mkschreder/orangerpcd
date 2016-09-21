@@ -1,6 +1,6 @@
 @CODE_COVERAGE_RULES@
 check_PROGRAMS=json_check session sha1 id ws_server b64 orange
-AM_CFLAGS=$(CODE_COVERAGE_CFLAGS) -I../src/ -D_GNU_SOURCE -std=c99 -D_POSIX_C_SOURCE=201609L -D_BSD_SOURCE -D_XOPEN_SOURCE -D_XOPEN_SOUCE_EXTENDED -D_GNU_SOURCE -Wall -Werror -Wno-format-y2k -W -Wstrict-prototypes -Wmissing-prototypes \
+AM_CFLAGS=$(CODE_COVERAGE_CFLAGS) $(CONFIG_CFLAGS) -I../src/ -D_GNU_SOURCE -std=c99 -D_POSIX_C_SOURCE=201609L -D_BSD_SOURCE -D_XOPEN_SOURCE -D_XOPEN_SOUCE_EXTENDED -D_GNU_SOURCE -Wall -Werror -Wno-format-y2k -W -Wstrict-prototypes -Wmissing-prototypes \
 -Wpointer-arith -Wreturn-type -Wwrite-strings -Wswitch \
 -Wno-cast-align -Wchar-subscripts -Winline -Wtype-limits \
 -Wnested-externs -Wredundant-decls -Wmissing-field-initializers -Wextra \

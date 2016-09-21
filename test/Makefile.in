@@ -425,6 +425,7 @@ CODE_COVERAGE_CXXFLAGS = @CODE_COVERAGE_CXXFLAGS@
 CODE_COVERAGE_ENABLED = @CODE_COVERAGE_ENABLED@
 CODE_COVERAGE_LDFLAGS = @CODE_COVERAGE_LDFLAGS@
 CODE_COVERAGE_LIBS = @CODE_COVERAGE_LIBS@
+CONFIG_CFLAGS = @CONFIG_CFLAGS@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CYGPATH_W = @CYGPATH_W@
@@ -538,7 +539,7 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-AM_CFLAGS = $(CODE_COVERAGE_CFLAGS) -I../src/ -D_GNU_SOURCE -std=c99 -D_POSIX_C_SOURCE=201609L -D_BSD_SOURCE -D_XOPEN_SOURCE -D_XOPEN_SOUCE_EXTENDED -D_GNU_SOURCE -Wall -Werror -Wno-format-y2k -W -Wstrict-prototypes -Wmissing-prototypes \
+AM_CFLAGS = $(CODE_COVERAGE_CFLAGS) $(CONFIG_CFLAGS) -I../src/ -D_GNU_SOURCE -std=c99 -D_POSIX_C_SOURCE=201609L -D_BSD_SOURCE -D_XOPEN_SOURCE -D_XOPEN_SOUCE_EXTENDED -D_GNU_SOURCE -Wall -Werror -Wno-format-y2k -W -Wstrict-prototypes -Wmissing-prototypes \
 -Wpointer-arith -Wreturn-type -Wwrite-strings -Wswitch \
 -Wno-cast-align -Wchar-subscripts -Winline -Wtype-limits \
 -Wnested-externs -Wredundant-decls -Wmissing-field-initializers -Wextra \

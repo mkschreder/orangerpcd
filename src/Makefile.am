@@ -3,7 +3,7 @@ includedir=$(prefix)/include/orangerpcd/
 lib_LTLIBRARIES=liborange.la
 bin_PROGRAMS=orangerpcd
 include_HEADERS=orange.h orange_id.h orange_lua.h orange_luaobject.h orange_message.h orange_server.h orange_uci.h orange_user.h orange_ws_server.h sha1.h 
-AM_CFLAGS=-D_POSIX_C_SOURCE=201609L -D_BSD_SOURCE -D_XOPEN_SOURCE -D_XOPEN_SOUCE_EXTENDED -D_GNU_SOURCE -Wall -Werror -Wno-format-y2k -W -Wstrict-prototypes -Wmissing-prototypes \
+AM_CFLAGS=$(CONFIG_CFLAGS) -D_POSIX_C_SOURCE=201609L -D_BSD_SOURCE -D_XOPEN_SOURCE -D_XOPEN_SOUCE_EXTENDED -D_GNU_SOURCE -Wall -Werror -Wno-format-y2k -W -Wstrict-prototypes -Wmissing-prototypes \
 -Wpointer-arith -Wreturn-type -Wwrite-strings -Wswitch \
 -Wno-cast-align -Wchar-subscripts -Winline -Wtype-limits \
 -Wnested-externs -Wredundant-decls -Wmissing-field-initializers -Wextra \

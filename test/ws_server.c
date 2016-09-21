@@ -18,13 +18,16 @@ static struct orange_rpc rpc;
 
 pthread_mutex_t runlock; 
 pthread_cond_t runcond; 
+sig_atomic_t running; 
 static void _cleanup(int sig){
 	pthread_mutex_lock(&runlock); 
 	pthread_cond_signal(&runcond); 
 	pthread_mutex_unlock(&runlock); 
+	running = false; 
 }
 
 int main(void){
+	running = true; 
 	orange_debug_level+=4; 
 
 	pthread_mutex_init(&runlock, NULL); 
@@ -53,15 +56,27 @@ int main(void){
         return -1;                       
     }
 
+	#if CONFIG_THREADS
+	printf("Threads are enabled! Using 10 workers!\n"); 
 	orange_rpc_init(&rpc, server, app, 10000UL, 10); 
+	#else 
+	printf("Threads are disabled!\n"); 
+	orange_rpc_init(&rpc, server, app, 10000UL, 0); 
+	#endif	
 
 	signal(SIGINT, _cleanup); 
 	signal(SIGUSR1, _cleanup); 
 
+	#if CONFIG_THREADS
 	// will wait until lock is unlocked
 	pthread_mutex_lock(&runlock); 
 	pthread_cond_wait(&runcond, &runlock); 
 	pthread_mutex_unlock(&runlock); 
+	#else
+	while(running){
+		orange_rpc_process_requests(&rpc); 
+	}
+	#endif
 
 	printf("cleaning up..\n"); 
 	orange_rpc_deinit(&rpc); 

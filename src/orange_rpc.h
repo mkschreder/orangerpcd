@@ -41,4 +41,7 @@ struct orange_rpc{
 
 void orange_rpc_init(struct orange_rpc *self, orange_server_t server, struct orange *ctx, unsigned long long timeout_us, unsigned int num_workers); 
 void orange_rpc_deinit(struct orange_rpc *self); 
-bool orange_rpc_running(struct orange_rpc *self); 
+
+#ifndef CONFIG_THREADS
+int orange_rpc_process_requests(struct orange_rpc *self); 
+#endif
