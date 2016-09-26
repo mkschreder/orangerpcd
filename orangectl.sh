@@ -41,6 +41,18 @@ check_user(){
 fixup_env
 ensure_consistency
 
+if [ "$#" = "0" ]; then 
+	echo "Usage: orangectl <command> [args..]"
+	echo ""
+	echo "   - adduser <username> - adds a user"
+	echo "   - rmuser <username|*> - remove a user or all users"
+	echo "   - passwd <username> <password> - set a new password for a user"
+	echo "   - addacl <username> <acl> - add an access control permission group to a user (wildcards allowed)"
+	echo "        Note that <acl> here is matched against acl files, not actual permissions inside them." 
+	echo "   - rmacl <username> <acl|*> - remove acl or all acls. Wildcards not implemented."
+	echo ""
+fi 
+
 case $1 in 
 	passwd)
 		# ensure that there is a line in the shadow file for this user
