@@ -11,6 +11,7 @@ if [ "$(which whoami)" != "" ] && [ $(whoami) != "root" ]; then
 fi
 
 fixup_env() {
+	mkdir -p /etc/orange/
 	if [ ! -d ${HOOKS} ]; then mkdir -p ${HOOKS}; fi
 	if [ ! -f ${SHADOW} ]; then touch ${SHADOW}; fi
 
