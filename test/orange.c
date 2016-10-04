@@ -3,6 +3,7 @@
 #include <math.h>
 #include <memory.h>
 #include <blobpack/blobpack.h>
+#include <unistd.h>
 #include <utype/avl.h>
 #include "../src/orange.h"
 #include "../src/internal.h"
@@ -40,8 +41,29 @@ int main(void){
 	TEST(orange_call(app, sid.hash, "/test", "echo", blob_field_first_child(blob_head(&args)), &out) == 0);   
 	TEST(orange_call(app, sid.hash, "/test", "noexist", blob_field_first_child(blob_head(&args)), &out) < 0);   
 	TEST(orange_call(app, sid.hash, "/test", "test_c_calls", blob_field_first_child(blob_head(&args)), &out) == 0);   
-	TEST(orange_call(app, sid.hash, "/test", "deferred_shell", blob_field_first_child(blob_head(&args)), &out) == 0);   
-	TEST(orange_call(app, sid.hash, "/test", "deferred_shell", blob_field_first_child(blob_head(&args)), &out) == 0);   
+
+	// test deferred
+	struct blob def_args; 
+	blob_init(&def_args, 0, 0); 
+	o = blob_open_table(&def_args); 
+	blob_put_string(&def_args, "cmd"); 
+	char cmd[64]; 
+	char cookie[16]; 
+	snprintf(cookie, sizeof(cookie), "%lu", time(NULL)); 
+	snprintf(cmd, sizeof(cmd), "printf %s > test-deferred.out", cookie); 
+	blob_put_string(&def_args, cmd); 
+	blob_close_table(&def_args, o); 
+	TEST(orange_call(app, sid.hash, "/test", "deferred_shell", blob_field_first_child(blob_head(&def_args)), &out) == 0);   
+	// wait for 5 sec
+	sleep(5); 
+	// try to read the file
+	FILE *f; 
+	TEST(f = fopen("test-deferred.out", "r")); 
+	char cmdr[32] = {0}; 
+	TEST(fread(cmdr, 1, 32, f) > 0); 
+	TEST(strcmp(cookie, cmdr) == 0); 
+	blob_free(&def_args); 
+	
 	TEST(orange_logout(app, sid.hash) == 0); 
 
 	blob_free(&out); 
