@@ -3,7 +3,7 @@
 #include <math.h>
 #include <memory.h>
 #include <blobpack/blobpack.h>
-#include <libutype/avl.h>
+#include <utype/avl.h>
 #include "../src/orange.h"
 #include "../src/internal.h"
 
