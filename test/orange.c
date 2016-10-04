@@ -4,6 +4,8 @@
 #include <memory.h>
 #include <blobpack/blobpack.h>
 #include <unistd.h>
+#include <stdlib.h>
+#include <stdio.h>
 #include <utype/avl.h>
 #include "../src/orange.h"
 #include "../src/internal.h"
@@ -53,12 +55,14 @@ int main(void){
 	snprintf(cmd, sizeof(cmd), "printf %s > test-deferred.out", cookie); 
 	blob_put_string(&def_args, cmd); 
 	blob_close_table(&def_args, o); 
+	int r = system("rm test-deferred.out"); 
 	TEST(orange_call(app, sid.hash, "/test", "deferred_shell", blob_field_first_child(blob_head(&def_args)), &out) == 0);   
-	// wait for 5 sec
-	sleep(5); 
-	// try to read the file
 	FILE *f; 
+	sleep(2); 
+	TEST((f = fopen("test-deferred.out", "r")) == NULL); 
+	sleep(3); 
 	TEST(f = fopen("test-deferred.out", "r")); 
+	// try to read the file
 	char cmdr[32] = {0}; 
 	TEST(fread(cmdr, 1, 32, f) > 0); 
 	TEST(strcmp(cookie, cmdr) == 0); 
