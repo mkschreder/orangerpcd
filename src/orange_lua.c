@@ -24,6 +24,7 @@
 #include <math.h>
 #include <float.h>
 
+#include <utype/utils.h>
 #include <blobpack/blobpack.h>
 
 #include "internal.h"
@@ -297,8 +298,9 @@ static int l_core_fork_shell(lua_State *L){
 
 // ++ DEFERRED SHELL IMPLEMENTATION
 #include <pthread.h>
-#include <libutype/avl.h>
-#include <libutype/avl-cmp.h>
+#include <utype/avl.h>
+#include <utype/avl-cmp.h>
+
 #include "util.h"
 static struct avl_tree _deferred_commands; 
 static pthread_mutex_t _deferred_lock = PTHREAD_MUTEX_INITIALIZER; 
@@ -314,26 +316,19 @@ struct deferred_command {
 
 static void *_deferred_worker(void *ptr){
 	pthread_mutex_lock(&_deferred_lock); 
-	while(1){
+	while(_deferred_running){
 		struct deferred_command *cmd, *tmp; 
-		struct timespec ts_max_to; 
-		// set maximum timeout to 1 sec and then find if we have any entries expiring before that
-		timespec_from_now_us(&ts_max_to, 1000000UL); 
-		avl_for_each_element_safe(&_deferred_commands, cmd, avl, tmp){
-			if(timespec_before(&cmd->ts_run, &ts_max_to)){
-				memcpy(&ts_max_to, &cmd->ts_run, sizeof(struct timespec)); 
-			}
-		}
+		struct timespec ts_sleep_until; 
+		struct timespec ts_now; 
+		
+		timespec_now(&ts_now); 
 
-		while(1){
-			// unlock mutex and wait for new messages until it's time to do some processing
-			pthread_cond_timedwait(&_deferred_cond, &_deferred_lock, &ts_max_to); 
-			if(!_deferred_running || avl_size(&_deferred_commands)) break; 
-		}
+		// set maximum timeout to 1 sec
+		timespec_from_now_us(&ts_sleep_until, 1000000UL); 
 
+		// go through the list and either run commands that need to run 
+		// or update our timeout to the time we need to sleep until next command needs to run
 		avl_for_each_element_safe(&_deferred_commands, cmd, avl, tmp){
-			struct timespec ts_now; 
-			timespec_now(&ts_now); 
 			if(timespec_before(&cmd->ts_run, &ts_now)){
 				int __attribute__((unused)) ret = system(cmd->command); 
 
@@ -341,10 +336,17 @@ static void *_deferred_worker(void *ptr){
 				avl_delete(&_deferred_commands, &cmd->avl); 
 				free(cmd->command); 
 				free(cmd); 
+			} else if(timespec_before(&cmd->ts_run, &ts_sleep_until)){
+				memcpy(&ts_sleep_until, &cmd->ts_run, sizeof(struct timespec)); 
 			}
 		}
-		if(!_deferred_running && !avl_size(&_deferred_commands)){
-			break; 
+
+		// put us into interruptible sleep until timeout expires
+		// sleep can be interrupted by a new command being added into the list 
+		// if sleep is interrupted for any other reason, then we check if timeout expired and go back to sleep if it has not.  
+		while(_deferred_running && avl_size(&_deferred_commands) == 0 && !timespec_expired(&ts_sleep_until)){
+			// unlock mutex and wait for new messages until it's time to do some processing
+			pthread_cond_timedwait(&_deferred_cond, &_deferred_lock, &ts_sleep_until); 
 		}
 	}
 	pthread_mutex_unlock(&_deferred_lock); 
