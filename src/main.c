@@ -22,7 +22,7 @@
 #include <signal.h>
 #include <syslog.h>
 
-#include <libutype/avl-cmp.h>
+#include <utype/avl-cmp.h>
 
 #include "orange.h"
 #include "orange_luaobject.h"

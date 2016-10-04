@@ -26,7 +26,7 @@
 #include <string.h>
 
 #include <blobpack/blobpack.h>
-#include <libutype/avl-cmp.h>
+#include <utype/avl-cmp.h>
 #include <pthread.h>
 
 #include "orange_user.h"

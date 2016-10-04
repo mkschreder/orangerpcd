@@ -20,7 +20,7 @@
 #include "internal.h"
 
 #include <blobpack/blobpack.h>
-#include <libutype/avl.h>
+#include <utype/avl.h>
 
 struct orange_session; 
 

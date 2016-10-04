@@ -17,7 +17,7 @@
 
 #include <stdint.h>
 #include <blobpack/blobpack.h>
-#include <libutype/list.h>
+#include <utype/list.h>
 
 enum orange_msg_type {
 	// initial server message

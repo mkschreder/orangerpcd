@@ -12,7 +12,7 @@
  */
 #pragma once
 
-#include <libutype/avl.h>
+#include <utype/avl.h>
 #include <stdint.h>
 
 struct orange_id {

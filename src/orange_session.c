@@ -27,9 +27,10 @@
 #include <string.h>
 #include <pthread.h>
 
+#include <utype/utils.h>
 #include <blobpack/blobpack.h>
-#include <libutype/avl-cmp.h>
-#include <libutype/list.h>
+#include <utype/avl-cmp.h>
+#include <utype/list.h>
 #include <fnmatch.h>
 #include <glob.h>
 #include <limits.h>
@@ -42,6 +43,7 @@
 #include <sys/types.h>
 #include <pwd.h>
 #endif
+
 
 #include "internal.h"
 #include "util.h"

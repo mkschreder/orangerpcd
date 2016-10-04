@@ -15,7 +15,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <libutype/avl-cmp.h>
+#include <utype/avl-cmp.h>
 
 #include "orange_id.h"
 

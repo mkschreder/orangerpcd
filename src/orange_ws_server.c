@@ -15,13 +15,13 @@
 	GNU General Public License for more details.
 */
 
-#include <blobpack/blobpack.h>
 
 #include "orange_ws_server.h"
 
 #include "mimetypes.h"
-#include <libutype/list.h>
-#include <libutype/avl.h>
+#include <utype/list.h>
+#include <utype/avl.h>
+#include <utype/utils.h>
 #include <libwebsockets.h>
 #include <pthread.h>
 #include <assert.h>
@@ -40,6 +40,8 @@
 #include "internal.h"
 #include "json_check.h"
 #include "util.h"
+
+#include <blobpack/blobpack.h>
 
 struct lws_context; 
 struct orange_srv_ws {
