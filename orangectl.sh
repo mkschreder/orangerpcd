@@ -56,6 +56,10 @@ fi
 
 case $1 in 
 	passwd)
+		if [ ! "$2" ] || [ ! "$3" ]; then 
+			echo "Usage: passwd <user> <newpass>"; 
+			exit 1
+		fi
 		# ensure that there is a line in the shadow file for this user
 		if [ "" != "$(grep "^$2" ${SHADOW} | cut -f 1 -d' ')" ]; then 
 			if [ "$(which sha1sum)" = "" ]; then 

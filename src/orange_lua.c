@@ -341,8 +341,8 @@ static void *_deferred_worker(void *ptr){
 			}
 		}
 
-		// put us into interruptible sleep until timeout expires
-		// sleep can be interrupted by a new command being added into the list 
+		// put us into interruptible sleep with mutex unlocked until timeout expires
+		// sleep can be interrupted by a new command being added into the list  
 		// if sleep is interrupted for any other reason, then we check if timeout expired and go back to sleep if it has not.  
 		while(_deferred_running && avl_size(&_deferred_commands) == 0 && !timespec_expired(&ts_sleep_until)){
 			// unlock mutex and wait for new messages until it's time to do some processing

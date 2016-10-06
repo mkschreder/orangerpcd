@@ -484,7 +484,7 @@ int orange_call(struct orange *self, const char *sid, const char *object, const 
 		blob_put_string(out, "error"); 
 		blob_offset_t t = blob_open_table(out); 
 		blob_put_string(out, "str"); 
-		blob_put_string(out, "User permission error!"); 
+		blob_put_string(out, "Permission denied!"); 
 		blob_put_string(out, "code"); 
 		blob_put_int(out, -EACCES);
 		blob_close_table(out, t); 
