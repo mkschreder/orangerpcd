@@ -8,7 +8,11 @@ local orange = require("orange/core");
 local function ubus_call(o, m, opts)
 	local params = json.encode(opts); 
 	if params == "[]" then params = '{}'; end; 
-	local result = orange.shell("ubus call "..o.." "..m.." '"..params.."'"); 
+	-- fix issue where we have % in the input 
+	params = params:gsub("%%","%%%%"); 
+	-- it is ok (I think) to pass params here like this because params is formatted as json
+	-- TODO: revise the whole system for shell commands taking user input and make sure they are secure!
+	local result = orange.shell("ubus call %s %s '"..params.."'", o, m); 
 	return JSON.parse(result); 
 end
 
