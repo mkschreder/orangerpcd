@@ -26,6 +26,7 @@
 #include <pthread.h>
 #include <assert.h>
 #include <limits.h>
+#include <sys/prctl.h>
 
 #include <libusys/usock.h>
 #include <sys/socket.h>
@@ -414,6 +415,7 @@ static int _websocket_connect(orange_server_t socket, const char *path){
 
 static void *_websocket_server_thread(void *ptr){
 	struct orange_srv_ws *self = (struct orange_srv_ws*)ptr; 
+	prctl(PR_SET_NAME, "ws_server"); 
 	pthread_mutex_lock(&self->lock); 
 	while(!self->shutdown){
 		if(self->ctx){

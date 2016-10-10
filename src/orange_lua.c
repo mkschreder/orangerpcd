@@ -300,6 +300,7 @@ static int l_core_fork_shell(lua_State *L){
 #include <pthread.h>
 #include <utype/avl.h>
 #include <utype/avl-cmp.h>
+#include <sys/prctl.h>
 
 #include "util.h"
 static struct avl_tree _deferred_commands; 
@@ -315,6 +316,7 @@ struct deferred_command {
 }; 
 
 static void *_deferred_worker(void *ptr){
+	prctl(PR_SET_NAME, "deferred_shell"); 
 	pthread_mutex_lock(&_deferred_lock); 
 	while(_deferred_running){
 		struct deferred_command *cmd, *tmp; 

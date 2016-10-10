@@ -21,6 +21,7 @@
 #include <pthread.h>
 #include <unistd.h>
 #include <syslog.h>
+#include <sys/prctl.h>
 
 #include "util.h"
 
@@ -251,6 +252,7 @@ int orange_rpc_process_requests(struct orange_rpc *self){
 #ifdef CONFIG_THREADS
 static void *_request_dispatcher(void *ptr){
 	struct orange_rpc *self = (struct orange_rpc*)ptr; 
+	prctl(PR_SET_NAME, "request_dispatcher"); 
 	pthread_mutex_lock(&self->lock); 
 	while(!self->shutdown){
 		sem_wait(&self->sem_bw); 
@@ -269,6 +271,7 @@ static void *_request_dispatcher(void *ptr){
 // this is highly critical so we need to monitor for it
 static void *_request_monitor(void *ptr){
 	struct orange_rpc *self = (struct orange_rpc*)ptr; 
+	prctl(PR_SET_NAME, "request_monitor"); 
 	pthread_mutex_lock(&self->lock); 
 	while(!self->shutdown){
 		struct request_record *req, *tmp; 
