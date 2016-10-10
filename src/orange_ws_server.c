@@ -431,7 +431,7 @@ static void *_websocket_server_thread(void *ptr){
 			pthread_mutex_unlock(&self->qlock); 
 
 			pthread_mutex_unlock(&self->lock); 
-			lws_service(self->ctx, 10);	
+			lws_service(self->ctx, 60000UL);	
 			pthread_mutex_lock(&self->lock); 
 		} else {
 			pthread_mutex_unlock(&self->lock); 
@@ -459,6 +459,9 @@ static int _websocket_send(orange_server_t socket, struct orange_message **msg){
 	pthread_mutex_unlock(&self->qlock); 
 
 	orange_message_delete(msg); 
+
+	// the ever lasting "beauty" of libwebsockets...
+	lws_cancel_service(self->ctx); // ( cancel service so we can quickly write the outgoing data to the websocket ) 
 
 	return 0; 
 }

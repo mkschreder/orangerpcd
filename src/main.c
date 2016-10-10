@@ -111,7 +111,7 @@ int main(int argc, char **argv){
 	struct orange *app = orange_new(plugin_dir, pw_file, acl_dir); 
 
 	struct orange_rpc rpc; 
-	orange_rpc_init(&rpc, server, app, 10000UL, num_workers); 
+	orange_rpc_init(&rpc, server, app, 5000000UL, num_workers); 
 
 	syslog(LOG_INFO, "orangerpcd jsonrpc server started (%d)", getpid()); 
 

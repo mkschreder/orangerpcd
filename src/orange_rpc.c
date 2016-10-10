@@ -283,49 +283,6 @@ static void *_request_monitor(void *ptr){
 				hanged++; 
 			}
 		}
-
-		// we probably don't even need to use a semaphore for this..
-		#if 0
-		// NOTE: this is so far just a possible solution (it has several problems still)
-		int sem = 0; 
-		sem_getvalue(&self->sem_bw, &sem); 
-		DEBUG("monitor: free slots: %d, hanged threads: %d\n", sem, hanged);  
-		if(sem == 0 && hanged == (int)self->num_workers){
-			// we have a bunch of hanged calls and no free slots so this is bad
-			syslog(LOG_CRIT, "no free request slots left. All %d slots are busy! restarting server..", self->num_workers); 
-			FILE *cf = fopen("/proc/self/cmdline", "r"); 
-			char buf[255]; 
-			int len = fread(buf, 1, sizeof(buf), cf); 
-			int argc = 0; 
-			char **argv = NULL; 
-			for(int c = 0; c < len; c++){
-				if(buf[c] == 0) argc++; 
-			}
-			if(argc > 0){
-				argv = malloc(sizeof(char*) * argc + 1); 
-				memset(argv, 0, sizeof(char*) * argc + 1);  
-				int arg = 0; 
-				char *ptr = argv[arg++] = buf; 
-				for(int c = 0; c < len; c++){
-					if(buf[c] == 0) {
-						while(buf[c] == 0 && c < len) c++; 
-						argv[arg++] = buf + c; 
-					}
-				}
-			}
-			// FIXME: close all file descriptors
-			/*for(int c = 3; c < 1024; c++){
-				close(c); 
-			}*/
-			printf("restarting process with args: "); 
-			char **a = argv; 
-			while(*a){ printf("%s ", *a); a++; }
-			printf("\n"); 
-
-			execv("/proc/self/exe", argv); 
-			// never get here. 
-		}
-#endif
 		pthread_mutex_unlock(&self->lock); 
 		sleep(5); 
 		pthread_mutex_lock(&self->lock); 
