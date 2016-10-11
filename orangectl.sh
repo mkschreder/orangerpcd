@@ -138,6 +138,13 @@ case $1 in
 		fi
 		uci commit
 	;;
+	event) 
+		if [ ! "$2" ] || [ ! "$3" ]; then
+			echo "Usage: event <name> '{..json..}' (single ticks are important!)"; 
+			exit 1; 
+		fi
+		orangerpcd-client broadcast "$2" $3
+	;;
 esac
 
 #while test "$#"; do
