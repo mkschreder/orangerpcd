@@ -256,7 +256,8 @@ static void *_event_queue_task(void *ptr){
 
 	prctl(PR_SET_NAME, "local_event_queue"); 
 	if(orange_eq_open(&eq, NULL, true) != 0){
-		fprintf(stderr, "Unable to open event queue. Sending local events will not be possible!\n"); 
+		perror("Unable to open local message queue"); 
+		fprintf(stderr, "If you see 'Function not implemented' above, then enable CONFIG_POSIX_MQUEUE in your kernel to use local events\n");  
 		return NULL; 
 	}
 
@@ -276,6 +277,8 @@ static void *_event_queue_task(void *ptr){
 
 	orange_eq_close(&eq); 
 
+	DEBUG("rpc queue listener exiting..\n"); 
+	pthread_exit(0); 
 	return NULL; 
 }
 
@@ -318,6 +321,7 @@ static void *_request_monitor(void *ptr){
 		pthread_mutex_lock(&self->lock); 
 	}
 	pthread_mutex_unlock(&self->lock); 
+	DEBUG("rpc monitor exiting..\n"); 
 	pthread_exit(0); 
 	return NULL; 
 }

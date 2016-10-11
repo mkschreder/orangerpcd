@@ -20,8 +20,10 @@
 #include <blobpack/blobpack.h>
 
 #include "orange_eq.h"
+#include "util.h"
 
 int orange_eq_open(struct orange_eq *self, const char *queue_name, bool server){
+	memset(self, 0, sizeof(struct orange_eq)); 
 	if(!queue_name) queue_name = "/orangerpcd-events"; 
 	if(server){
 		mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH;
@@ -53,7 +55,9 @@ int orange_eq_send(struct orange_eq *self, struct blob *in){
 
 int orange_eq_recv(struct orange_eq *self, struct blob *out){
 	if(!self->buf || self->mq == -1) return -EINVAL; 
-	int rsize = mq_receive(self->mq, self->buf, self->attr.mq_msgsize, NULL);  
+	struct timespec ts; 
+	timespec_from_now_us(&ts, 5000000UL); 
+	int rsize = mq_timedreceive(self->mq, self->buf, self->attr.mq_msgsize, NULL, &ts);  
 	if(rsize <= 0) return -EAGAIN; 
 	blob_init(out, self->buf, rsize); 
 	return 1; 
