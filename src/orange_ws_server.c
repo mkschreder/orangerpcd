@@ -308,6 +308,7 @@ static void _websocket_destroy(orange_server_t socket){
 
 	pthread_mutex_lock(&self->lock); 
 	self->shutdown = true; 
+	lws_cancel_service(self->ctx); 
 	pthread_mutex_unlock(&self->lock); 
 
 	DEBUG("websocket: joining worker thread..\n"); 
@@ -446,17 +447,33 @@ static void *_websocket_server_thread(void *ptr){
 
 static int _websocket_send(orange_server_t socket, struct orange_message **msg){
 	struct orange_srv_ws *self = container_of(socket, struct orange_srv_ws, api); 
-	pthread_mutex_lock(&self->qlock); 
-	struct orange_id *id = orange_id_find(&self->clients, (*msg)->peer); 
-	if(!id) {
+
+	if((*msg)->peer == 0){
+		// this is a broadcast message
+		struct orange_id *id, *tmp; 
+		pthread_mutex_lock(&self->lock); 
+		pthread_mutex_lock(&self->qlock); 
+		avl_for_each_element_safe(&self->clients, id, avl, tmp){
+			struct orange_srv_ws_client *client = container_of(id, struct orange_srv_ws_client, id);  
+			struct orange_srv_ws_frame *frame = orange_srv_ws_frame_new(blob_field_first_child(blob_head(&(*msg)->buf))); 
+			list_add_tail(&frame->list, &client->tx_queue); 	
+		}
 		pthread_mutex_unlock(&self->qlock); 
-		return -1; 
+		pthread_mutex_unlock(&self->lock); 
+	} else {
+		pthread_mutex_lock(&self->qlock); 
+		struct orange_id *id = orange_id_find(&self->clients, (*msg)->peer); 
+		if(!id) {
+			pthread_mutex_unlock(&self->qlock); 
+			orange_message_delete(msg); 
+			return -1; 
+		}
+		
+		struct orange_srv_ws_client *client = (struct orange_srv_ws_client*)container_of(id, struct orange_srv_ws_client, id);  
+		struct orange_srv_ws_frame *frame = orange_srv_ws_frame_new(blob_field_first_child(blob_head(&(*msg)->buf))); 
+		list_add_tail(&frame->list, &client->tx_queue); 	
+		pthread_mutex_unlock(&self->qlock); 
 	}
-	
-	struct orange_srv_ws_client *client = (struct orange_srv_ws_client*)container_of(id, struct orange_srv_ws_client, id);  
-	struct orange_srv_ws_frame *frame = orange_srv_ws_frame_new(blob_field_first_child(blob_head(&(*msg)->buf))); 
-	list_add_tail(&frame->list, &client->tx_queue); 	
-	pthread_mutex_unlock(&self->qlock); 
 
 	orange_message_delete(msg); 
 
@@ -505,6 +522,8 @@ static int _websocket_recv(orange_server_t socket, struct orange_message **msg, 
 			return -EAGAIN; 
 		}
 	}
+
+	// TODO: add a way to cancel reads so we can shut down faster. 
 
 	// NOTE: list will always have an element when we get here as long as rx_queue is always properly locked by qlock. 
 	if(list_empty(&self->rx_queue)){

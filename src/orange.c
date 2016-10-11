@@ -39,6 +39,7 @@
 #include "orange_luaobject.h"
 #include "orange_lua.h"
 #include "orange_user.h"
+#include "orange_eq.h"
 
 #include "sha1.h"
 

@@ -15,14 +15,15 @@
 	GNU General Public License for more details.
 */
 
-#include "orange.h"
-#include "orange_rpc.h"
-#include "internal.h"
 #include <pthread.h>
 #include <unistd.h>
 #include <syslog.h>
 #include <sys/prctl.h>
 
+#include "orange.h"
+#include "orange_rpc.h"
+#include "orange_eq.h"
+#include "internal.h"
 #include "util.h"
 
 #define WORKER_TIMEOUT_US 10000000UL
@@ -249,6 +250,30 @@ int orange_rpc_process_requests(struct orange_rpc *self){
 	return 0; 
 }
 
+static void *_event_queue_task(void *ptr){
+	struct orange_rpc *self = (struct orange_rpc*) ptr; 
+	struct orange_eq eq; 
+	prctl(PR_SET_NAME, "local_ev_queue"); 
+	if(orange_eq_open(&eq, NULL, true) != 0){
+		fprintf(stderr, "Unable to open event queue. Sending local events will not be possible!\n"); 
+		return NULL; 
+	}
+	
+	// TODO: implement possibility to cancel this task
+	while(1){
+		struct blob b; 
+		if(orange_eq_recv(&eq, &b) <= 0) continue;
+		const struct blob_field *name = blob_field_first_child(blob_head(&b)); 
+		const struct blob_field *data = blob_field_next_child(blob_head(&b), name); 
+		if(!name || !data ) continue;  
+		orange_rpc_broadcast_event(self, blob_field_get_string(name), data); 		
+	}
+
+	orange_eq_close(&eq); 
+
+	return NULL; 
+}
+
 #ifdef CONFIG_THREADS
 static void *_request_dispatcher(void *ptr){
 	struct orange_rpc *self = (struct orange_rpc*)ptr; 
@@ -316,7 +341,11 @@ void orange_rpc_init(struct orange_rpc *self, orange_server_t server, struct ora
 
 	// start a monitor thread to check periodically if we are running out of workers
 	pthread_create(&self->monitor, NULL, _request_monitor, self); 
+
 	#endif
+
+	// start event queue task
+	pthread_create(&self->eq_task, NULL, _event_queue_task, self);   
 }
 
 void orange_rpc_deinit(struct orange_rpc *self){
@@ -326,9 +355,33 @@ void orange_rpc_deinit(struct orange_rpc *self){
 	for(unsigned c = 0; c < self->num_workers; c++){
 		pthread_join(self->threads[c], NULL); 
 	}
+	//pthread_join(self->eq_task, NULL); 
 	pthread_join(self->monitor, NULL); 
 	pthread_mutex_destroy(&self->lock); 
 	free(self->threads); 
+}
+
+void orange_rpc_broadcast_event(struct orange_rpc *self, const char *name, const struct blob_field *data){
+	pthread_mutex_lock(&self->lock); 
+	// send broadcast message
+	struct orange_message *result = orange_message_new(); 
+	result->peer = 0; 
+
+	blob_offset_t t = blob_open_table(&result->buf); 
+	blob_put_string(&result->buf, "jsonrpc"); 
+	blob_put_string(&result->buf, "2.0"); 
+	blob_put_string(&result->buf, "method"); 
+	blob_put_string(&result->buf, name); 
+	blob_put_string(&result->buf, "params"); 
+	blob_put_attr(&result->buf, data); 
+	blob_close_table(&result->buf, t); 
+
+	printf("broadcast event: \n"); 
+	blob_dump_json(&result->buf); 
+
+	orange_server_send(self->server, &result); 
+
+	pthread_mutex_unlock(&self->lock); 
 }
 
 //bool orange_rpc_running(struct orange_rpc *self){

@@ -30,6 +30,7 @@ struct orange_rpc{
 	unsigned long long timeout_us; 
 	pthread_t *threads; 
 	pthread_t monitor; 
+	pthread_t eq_task; 
 	pthread_mutex_t lock; 
 	unsigned int num_workers; 
 	int shutdown; 
@@ -41,6 +42,8 @@ struct orange_rpc{
 
 void orange_rpc_init(struct orange_rpc *self, orange_server_t server, struct orange *ctx, unsigned long long timeout_us, unsigned int num_workers); 
 void orange_rpc_deinit(struct orange_rpc *self); 
+
+void orange_rpc_broadcast_event(struct orange_rpc *self, const char *name, const struct blob_field *data); 
 
 #ifndef CONFIG_THREADS
 int orange_rpc_process_requests(struct orange_rpc *self); 

@@ -57,6 +57,7 @@ if(!config.host || !config.port){
 
 function RPC(){
 	this.requests = {}; 
+	this.ev_handlers = {}; 
 	this.id = 1; 
 }
 
@@ -77,6 +78,13 @@ RPC.prototype.connect = function(){
 					req.resolve(json.result); 
 				} else if(req && json.error){
 					req.reject(json.error); 
+				} else if(json.method){
+					if(self.ev_handlers[json.method]){
+						console.log("got event"); 
+						self.ev_handlers[json.method].map(function(x){
+							x(json); 
+						}); 
+					}
 				} else if(!req){
 					console.error("Request not found!"); 
 					process.exit(-1); 
@@ -100,6 +108,11 @@ RPC.prototype.connect = function(){
 		process.exit(-1); 
 	}
 	return self.connect.promise(); 
+}
+
+RPC.prototype.event = function(method, handler){
+	if(!this.ev_handlers[method]) this.ev_handlers[method] = []; 
+	this.ev_handlers[method].push(handler); 
 }
 
 RPC.prototype.request = function(params){
@@ -241,6 +254,15 @@ client.connect({
 				console.error(JSON.stringify({error: r})); 
 				return_code = -1; 
 			}); 
+		} else if(action == "listen") {
+			var name = cli_params.shift(); 
+			console.log("listen: "+name); 
+			var def = $.Deferred(); 
+			client.event(name, function(args){
+				console.log(JSON.stringify(args)); 	
+				def.resolve(); 
+			}); 
+			return def.promise(); 
 		} else if(action == "speedtest"){
 			// like call but makes many requests and returns metric
 			var object = cli_params.shift(); 
