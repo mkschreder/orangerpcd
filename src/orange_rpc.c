@@ -253,21 +253,26 @@ int orange_rpc_process_requests(struct orange_rpc *self){
 static void *_event_queue_task(void *ptr){
 	struct orange_rpc *self = (struct orange_rpc*) ptr; 
 	struct orange_eq eq; 
-	prctl(PR_SET_NAME, "local_ev_queue"); 
+
+	prctl(PR_SET_NAME, "local_event_queue"); 
 	if(orange_eq_open(&eq, NULL, true) != 0){
 		fprintf(stderr, "Unable to open event queue. Sending local events will not be possible!\n"); 
 		return NULL; 
 	}
-	
-	// TODO: implement possibility to cancel this task
-	while(1){
+
+	pthread_mutex_lock(&self->lock); 
+	while(!self->shutdown){
+		pthread_mutex_unlock(&self->lock); 
 		struct blob b; 
-		if(orange_eq_recv(&eq, &b) <= 0) continue;
+		if(orange_eq_recv(&eq, &b) <= 0) goto cont;
 		const struct blob_field *name = blob_field_first_child(blob_head(&b)); 
 		const struct blob_field *data = blob_field_next_child(blob_head(&b), name); 
-		if(!name || !data ) continue;  
+		if(!name || !data ) goto cont;  
 		orange_rpc_broadcast_event(self, blob_field_get_string(name), data); 		
+	cont: 
+		pthread_mutex_lock(&self->lock); 
 	}
+	pthread_mutex_unlock(&self->lock); 
 
 	orange_eq_close(&eq); 
 
@@ -355,7 +360,7 @@ void orange_rpc_deinit(struct orange_rpc *self){
 	for(unsigned c = 0; c < self->num_workers; c++){
 		pthread_join(self->threads[c], NULL); 
 	}
-	//pthread_join(self->eq_task, NULL); 
+	pthread_join(self->eq_task, NULL); 
 	pthread_join(self->monitor, NULL); 
 	pthread_mutex_destroy(&self->lock); 
 	free(self->threads); 
@@ -375,9 +380,6 @@ void orange_rpc_broadcast_event(struct orange_rpc *self, const char *name, const
 	blob_put_string(&result->buf, "params"); 
 	blob_put_attr(&result->buf, data); 
 	blob_close_table(&result->buf, t); 
-
-	printf("broadcast event: \n"); 
-	blob_dump_json(&result->buf); 
 
 	orange_server_send(self->server, &result); 
 
