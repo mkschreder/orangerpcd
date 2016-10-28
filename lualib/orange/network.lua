@@ -163,9 +163,23 @@ local function read_clients()
 	return result; 
 end
 
+local function network_filter_online_clients(clients)
+	-- we do support pinging just one client
+	if(type(clients) == "string") then clients = {clients}; end
+	if(type(clients) != "table") then return {}; end
+	
+	local result = {}; 		
+	for _,cl in ipairs(clients) do 
+		local alive = juci.shell("ping -c 1 -W 4 %s | grep 'packets received' | awk '{ if($1 == $4) { print 1 } else { print 0 } }'", cl); 
+		if alive:match("1") then            
+			table.insert(result, cl);                    
+		end
+	end
+	return result; 
+end
 
 local function network_list_connected_clients(opts)
-		local clients_map = read_clients(); 
+	local clients_map = read_clients(); 
 	local clients_list = {}; 
 	for mac,cl in pairs(clients_map) do 
 		--local js = orange.shell("/usr/lib/rpcd/cgi/orange.macdb lookup '{\"mac\": \""..mac.."\"}'"); 
@@ -177,6 +191,7 @@ end
 
 return {
 	clients = network_list_connected_clients,
+	filter_online_clients = network_filter_online_clients,
 	ipv6neigh = read_ip6_clients,
 	ipv4leases = read_dhcp_info,
 	ipv6leases = read_ip6_dhcp_info
