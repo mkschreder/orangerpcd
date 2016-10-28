@@ -15,6 +15,7 @@ var config = {
 	path: "/websocket/",
 	username: "admin", 
 	password: "admin",
+	plaintext: false, 
 	verbose: 0
 };
 
@@ -27,6 +28,7 @@ for(var i = 0; i < process.argv.length; i++){
 	switch(process.argv[i]){
 		case "--host": config.host = process.argv[++i]; break; 
 		case "--port": config.port = parseInt(process.argv[++i]); break; 
+		case "--plaintext": config.plaintext = true; break; 
 		case "--path": config.path = process.argv[++i]; break; 
 		case "--username": config.username = process.argv[++i]; break; 
 		case "--password": config.password = process.argv[++i]; break; 
@@ -44,6 +46,8 @@ function usage(){
 	console.log("		if you are using http then specify http websocket path on which to start websocket (default: "+config.path+")"); 
 	console.log("	--port <port>"); 
 	console.log("		specify port to connect on (default: "+config.port+")"); 
+	console.log("	--plaintext"); 
+	console.log("		use plaintext login (default: no)"); 
 	console.log("	--username <username>"); 
 	console.log("		specify username to login as (default: "+config.username+")"); 
 	console.log("	--password <password>"); 
@@ -144,7 +148,7 @@ RPC.prototype.login = function(params){
 		console.debug("Got challenge: "+ch.token); 
 		self.request({
 			method: "login", 
-			params: [params.username, sha1(ch.token+sha1(params.password))]
+			params: [params.username, (config.plaintext)?params.password:sha1(ch.token+sha1(params.password))]
 		}).done(function(s){
 			console.debug("Got response: "+s.success); 
 			self.sid = s.success; 
