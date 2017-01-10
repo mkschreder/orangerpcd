@@ -8,7 +8,7 @@
 local core = require("orange/core");
 local ubus = require("orange/ubus"); 
 
-local uci = ubus.bind("uci", {"get","state","set","add","configs","commit","revert","apply","rollback","delete"}); 
+local uci = ubus.bind("uci", {"get","state","set","add","configs","commit","revert","apply","rollback","delete","order"}); 
 
 local function uci_configs(args)
 	local res = uci.configs(args); 
