@@ -190,6 +190,11 @@ int orange_luaobject_call(struct orange_luaobject *self, struct orange_session *
 		blob_put_string(out, "code"); 
 		blob_put_int(out, lua_tointeger(self->lua, -1));
 		blob_close_table(out, t); 
+	} else {
+		// for all other return types return an empty object
+		blob_put_string(out, "result"); 
+		blob_offset_t t = blob_open_table(out); 
+		blob_close_table(out, t); 
 	}
 
 	lua_pop(self->lua, 1); 	
