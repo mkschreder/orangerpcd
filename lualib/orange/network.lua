@@ -166,7 +166,7 @@ end
 local function network_filter_online_clients(clients)
 	-- we do support pinging just one client
 	if(type(clients) == "string") then clients = {clients}; end
-	if(type(clients) != "table") then return {}; end
+	if(type(clients) ~= "table") then return {}; end
 	
 	local result = {}; 		
 	for _,cl in ipairs(clients) do 
