@@ -121,6 +121,8 @@ int orange_luaobject_load(struct orange_luaobject *self, const char *file){
 
 int orange_luaobject_call(struct orange_luaobject *self, struct orange_session *session, const char *method, const struct blob_field *in, struct blob *out){
 	if(!self || !self->lua) return -1; 
+	
+	char errbuf[255];
 
 	pthread_mutex_lock(&self->lock); 
 	// set self pointer of the global lua session object to point to current session
@@ -128,13 +130,14 @@ int orange_luaobject_call(struct orange_luaobject *self, struct orange_session *
 
 	// first item on lua stack should always be the table that was returned when the file was run at load time
 	if(lua_type(self->lua, -1) != LUA_TTABLE) {
-		ERROR("lua state is broken. No table on stack!\n"); 
+		ERROR("lua state is broken. No table on stack!\n");
 
 		blob_put_string(out, "error"); 
 		blob_offset_t t = blob_open_table(out); 
 		blob_put_string(out, "str"); 
-		blob_put_string(out, "Lua backend state is broken! This should never happen!"); 
-		blob_put_string(out, "code"); 
+		snprintf(errbuf, sizeof(errbuf), "Lua backend state is broken! This should never happen!"); // TODO: get some kind of description from lua?
+		blob_put_string(out, errbuf);
+		blob_put_string(out, "code");
 		blob_put_int(out, lua_tointeger(self->lua, -1));
 		blob_close_table(out, t); 
 
@@ -145,12 +148,13 @@ int orange_luaobject_call(struct orange_luaobject *self, struct orange_session *
 	// we get the field indexed by supplied method from our lua object
 	lua_getfield(self->lua, -1, method); 
 	if(!lua_isfunction(self->lua, -1)){
-		ERROR("can not call %s on %s: field is not a function!\n", method, self->name); 
+		snprintf(errbuf, sizeof(errbuf), "Can not call %s on %s: field is not a function!", method, self->name);
+		ERROR("%s\n", errbuf);
 
 		blob_put_string(out, "error"); 
 		blob_offset_t t = blob_open_table(out); 
 		blob_put_string(out, "str"); 
-		blob_put_string(out, "Not a function"); 
+		blob_put_string(out, errbuf);
 		blob_put_string(out, "code"); 
 		blob_put_int(out, lua_tointeger(self->lua, -1));
 		blob_close_table(out, t); 
@@ -165,11 +169,13 @@ int orange_luaobject_call(struct orange_luaobject *self, struct orange_session *
 
 	// call the method that we previously poped out of the table
 	if(lua_pcall(self->lua, 1, 1, 0) != 0){
-		ERROR("error calling %s: %s\n", method, lua_tostring(self->lua, -1)); 
+		snprintf(errbuf, sizeof(errbuf), "error calling %s: %s", method, lua_tostring(self->lua, -1));
+		ERROR("%s\n", errbuf);
+
 		blob_put_string(out, "error"); 
 		blob_offset_t t = blob_open_table(out); 
 		blob_put_string(out, "str"); 
-		blob_put_string(out, "LUA error in backend function"); 
+		blob_put_string(out, errbuf); 
 		blob_put_string(out, "code"); 
 		blob_put_int(out, lua_tointeger(self->lua, -1));
 		blob_close_table(out, t); 
@@ -187,6 +193,8 @@ int orange_luaobject_call(struct orange_luaobject *self, struct orange_session *
 	} else if(lua_type(self->lua, -1) == LUA_TNUMBER){
 		blob_put_string(out, "error"); 
 		blob_offset_t t = blob_open_table(out); 
+		blob_put_string(out, "str");
+		blob_put_string(out, "Lua function returned error."); // if your intention is to return a success, always return an object. Even an empty one: {}
 		blob_put_string(out, "code"); 
 		blob_put_int(out, lua_tointeger(self->lua, -1));
 		blob_close_table(out, t); 
