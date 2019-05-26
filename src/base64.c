@@ -69,6 +69,7 @@ static int base64_encode_block(const char* plaintext_in, char* code_out, int siz
 			result = (fragment & 0x0fc) >> 2;
 			*codechar++ = base64_encode_value(result);
 			result = (fragment & 0x003) << 4;
+			__attribute__((fallthrough));
 	case step_B:
 			if (plainchar == plaintextend)
 			{
@@ -80,6 +81,7 @@ static int base64_encode_block(const char* plaintext_in, char* code_out, int siz
 			result |= (fragment & 0x0f0) >> 4;
 			*codechar++ = base64_encode_value(result);
 			result = (fragment & 0x00f) << 2;
+			__attribute__((fallthrough));
 	case step_C:
 			if (plainchar == plaintextend)
 			{
@@ -163,7 +165,8 @@ static int base64_decode_block(const char* code_in, const int length_in, char* p
 				fragment = (char)base64_decode_value(*codechar++);
 			} while (fragment < 0);
 			*plainchar    = (fragment & 0x03f) << 2;
-			if(plainchar >= (plaintext_out + size_out - 1)) break; 
+			if(plainchar >= (plaintext_out + size_out - 1)) break;
+			__attribute__((fallthrough));
 	case step_b:
 			do {
 				if (codechar == code_in+length_in)
@@ -176,7 +179,8 @@ static int base64_decode_block(const char* code_in, const int length_in, char* p
 			} while (fragment < 0);
 			*plainchar++ |= (fragment & 0x030) >> 4;
 			*plainchar    = (fragment & 0x00f) << 4;
-			if(plainchar >= (plaintext_out + size_out - 1)) break; 
+			if(plainchar >= (plaintext_out + size_out - 1)) break;
+			__attribute__((fallthrough));
 	case step_c:
 			do {
 				if (codechar == code_in+length_in)
@@ -189,7 +193,8 @@ static int base64_decode_block(const char* code_in, const int length_in, char* p
 			} while (fragment < 0);
 			*plainchar++ |= (fragment & 0x03c) >> 2;
 			*plainchar    = (fragment & 0x003) << 6;
-			if(plainchar >= (plaintext_out + size_out - 1)) break; 
+			if(plainchar >= (plaintext_out + size_out - 1)) break;
+			__attribute__((fallthrough));
 	case step_d:
 			do {
 				if (codechar == code_in+length_in)
@@ -201,7 +206,7 @@ static int base64_decode_block(const char* code_in, const int length_in, char* p
 				fragment = (char)base64_decode_value(*codechar++);
 			} while (fragment < 0);
 			*plainchar++   |= (fragment & 0x03f);
-			if(plainchar >= (plaintext_out + size_out - 1)) break; 
+			if(plainchar >= (plaintext_out + size_out - 1)) break;
 		}
 	}
 	/* control should not reach here */

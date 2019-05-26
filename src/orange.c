@@ -1,20 +1,55 @@
-/*
-	JUCI Backend Websocket API Server
-
-	Copyright (C) 2016 Martin K. Schröder <mkschreder.uk@gmail.com>
-
-	This program is free software: you can redistribute it and/or modify
-	it under the terms of the GNU General Public License as published by
-	the Free Software Foundation, either version 3 of the License, or
-	(at your option) any later version. (Please read LICENSE file on special
-	permission to include this software in signed images). 
-
-	This program is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License for more details.
-*/
-
+/** :ms-top-comment
+* +-------------------------------------------------------------------------------+
+* |                      ____                  _ _     _                          |
+* |                     / ___|_      _____  __| (_)___| |__                       |
+* |                     \___ \ \ /\ / / _ \/ _` | / __| '_ \                      |
+* |                      ___) \ V  V /  __/ (_| | \__ \ | | |                     |
+* |                     |____/ \_/\_/ \___|\__,_|_|___/_| |_|                     |
+* |                                                                               |
+* |               _____           _              _     _          _               |
+* |              | ____|_ __ ___ | |__   ___  __| | __| | ___  __| |              |
+* |              |  _| | '_ ` _ \| '_ \ / _ \/ _` |/ _` |/ _ \/ _` |              |
+* |              | |___| | | | | | |_) |  __/ (_| | (_| |  __/ (_| |              |
+* |              |_____|_| |_| |_|_.__/ \___|\__,_|\__,_|\___|\__,_|              |
+* |                                                                               |
+* |                       We design hardware and program it                       |
+* |                                                                               |
+* |               If you have software that needs to be developed or              |
+* |                      hardware that needs to be designed,                      |
+* |                               then get in touch!                              |
+* |                                                                               |
+* |                            info@swedishembedded.com                           |
+* +-------------------------------------------------------------------------------+
+*
+*                       This file is part of TheBoss Project
+*
+* FILE ............... src/orange.c
+* AUTHOR ............. Martin K. Schröder
+* VERSION ............ Not tagged
+* DATE ............... 2019-05-26
+* GIT ................ https://github.com/mkschreder/orangerpcd
+* WEBSITE ............ http://swedishembedded.com
+* LICENSE ............ Swedish Embedded Open Source License
+*
+*          Copyright (C) 2014-2019 Martin Schröder. All rights reserved.
+*
+* Permission is hereby granted, free of charge, to any person obtaining a copy of
+* this software and associated documentation files (the "Software"), to deal in
+* the Software without restriction, including without limitation the rights to
+* use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+* the Software, and to permit persons to whom the Software is furnished to do so,
+* subject to the following conditions:
+*
+* The above copyright notice and this text, in full, shall be included in all
+* copies or substantial portions of the Software.
+*
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+* FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+* COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+* IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+* CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+**/
 #include <stdio.h>
 #include <unistd.h>
 #include <dirent.h>
@@ -30,7 +65,7 @@
 #include <pthread.h>
 
 #include <blobpack/blobpack.h>
-
+#include <linux/limits.h>
 #if HAVE_UCI_H
 #include <uci.h>
 #endif
@@ -57,11 +92,11 @@ static int _orange_load_plugins(struct orange *self, const char *path, const cha
         return -ENOENT; 
     }
     struct dirent *ent = 0; 
-    char fname[255]; 
+    char fname[PATH_MAX];
     while((ent = readdir(dir))){
         if(strcmp(ent->d_name, ".") == 0 || strcmp(ent->d_name, "..") == 0) continue; 
 
-        snprintf(fname, sizeof(fname), "%s/%s", path, ent->d_name); 
+        snprintf(fname, PATH_MAX, "%s/%s", path, ent->d_name);
         
         if(ent->d_type == DT_DIR) {
             rv |= _orange_load_plugins(self, fname, base_path);  
